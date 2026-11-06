@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * A deactivated user loses access immediately, for open sessions and MCP tokens alike
- * (RF-01.10, RF-12.03).
+ * A deactivated user (or a user of a deactivated client) loses access immediately, for open
+ * sessions and MCP tokens alike (RF-01.10, RF-12.03, D-038).
  */
 class EnsureUserIsActive
 {
@@ -18,7 +18,7 @@ class EnsureUserIsActive
     {
         $user = $request->user();
 
-        if ($user instanceof User && ! $user->isActive()) {
+        if ($user instanceof User && ! $user->canLogin()) {
             return ApiResponse::error('Tu usuario está inactivo.', 401);
         }
 

@@ -28,6 +28,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property UserStatus $status
  * @property string $locale
  * @property string|null $timezone
+ * @property string|null $discord_user_id
  */
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable
@@ -38,7 +39,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'company_id', 'role_id', 'client_id', 'first_name', 'last_name', 'email', 'password',
-        'status', 'locale', 'timezone',
+        'status', 'locale', 'timezone', 'discord_user_id',
     ];
 
     protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
@@ -90,6 +91,23 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;
+    }
+
+    /** Inactivating a client also signs its portal users out (D-038). */
+    public function canLogin(): bool
+    {
+        return $this->isActive() && ($this->client_id === null || $this->client->active);
+    }
+
+    /**
+     * The client user that may enter the portal with exactly this address, byte for byte (D-076):
+     * the column's collation ignores accents, so `ana@exámple.com` would find `ana@example.com`.
+     */
+    public static function portalUserByEmail(string $email): ?self
+    {
+        $user = self::query()->where('email', $email)->whereNotNull('client_id')->first();
+
+        return $user !== null && $user->email === $email && $user->canLogin() ? $user : null;
     }
 
     /**

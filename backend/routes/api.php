@@ -13,6 +13,9 @@ Route::get('/errors', [ErrorLogController::class, 'index']);
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [SessionController::class, 'store'])->middleware('throttle:login');
 
+    // Client portal (RF-13.07): its own login and routes, closed to the team.
+    Route::prefix('portal')->group(base_path('routes/portal.php'));
+
     Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/auth/logout', [SessionController::class, 'destroy']);
         Route::get('/me', [MeController::class, 'show']);

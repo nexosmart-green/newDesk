@@ -41,3 +41,16 @@ it('refuses other companies, users without monitoring.view, client users and gue
     $this->actingAs($collaborator)->postJson('/api/v1/broadcasting/auth', authorizeMonitoring($admin->company_id))->assertForbidden();
     $this->actingAs($portalUser)->postJson('/api/v1/broadcasting/auth', authorizeMonitoring($admin->company_id))->assertForbidden();
 });
+
+it('lets client users subscribe only to their own client portal channel (RF-13.07)', function () {
+    $admin = provisionCompany();
+    [$playinn, $other] = Client::factory()->count(2)->create(['company_id' => $admin->company_id]);
+    $portalUser = User::factory()->forRole(roleNamed($admin, DefaultRoles::CLIENT))->create(['client_id' => $playinn->id]);
+    $channel = fn (int $clientId) => ['socket_id' => '1234.5678', 'channel_name' => "private-portal.client.{$clientId}"];
+
+    $this->actingAs($portalUser)->postJson('/api/v1/broadcasting/auth', $channel($playinn->id))
+        ->assertOk()
+        ->assertJsonStructure(['auth']);
+    $this->actingAs($portalUser)->postJson('/api/v1/broadcasting/auth', $channel($other->id))->assertForbidden();
+    $this->actingAs($admin)->postJson('/api/v1/broadcasting/auth', $channel($playinn->id))->assertForbidden();
+});

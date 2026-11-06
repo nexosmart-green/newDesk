@@ -30,6 +30,8 @@ class CurrentUserResource extends JsonResource
                 'currency' => $this->company->currency,
                 'timezone' => $this->company->timezone,
             ],
+            // Set for client users, who only reach the portal (RF-13.07).
+            'client' => $this->client_id === null ? null : ['id' => $this->client->id, 'name' => $this->client->name],
         ];
     }
 

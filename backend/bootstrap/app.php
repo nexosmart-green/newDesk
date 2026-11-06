@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Http\Middleware\EnsureClientUser;
 use App\Http\Middleware\EnsureTeamUser;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
@@ -12,6 +13,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -39,7 +41,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->append(RemoveStackHeaders::class);
-        $middleware->alias(['active' => EnsureUserIsActive::class, 'team' => EnsureTeamUser::class]);
+        $middleware->alias([
+            'active' => EnsureUserIsActive::class,
+            'team' => EnsureTeamUser::class,
+            'client' => EnsureClientUser::class,
+        ]);
+        // Who may enter is decided before route-model binding: the wrong side gets 403, never a 404
+        // that tells whether the record exists (CA-13.14).
+        foreach ([EnsureUserIsActive::class, EnsureTeamUser::class, EnsureClientUser::class] as $gate) {
+            $middleware->prependToPriorityList(SubstituteBindings::class, $gate);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions) use ($sensitiveInput, $traceShort): void {
         $exceptions->dontReport([BusinessRuleViolation::class]);

@@ -10,3 +10,6 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('monitoring.{companyId}', fn (User $user, int $companyId) => ! $user->isClient()
     && $user->company_id === $companyId
     && $user->hasPermission(Permission::MonitoringView));
+
+// RF-13.07: one client's portal events, only for that client's users.
+Broadcast::channel('portal.client.{clientId}', fn (User $user, int $clientId) => $user->client_id === $clientId);

@@ -42,6 +42,19 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(30)->by($request->ip()),
         ]);
 
+        // Portal login (RF-13.07): monitoreo's per-address and per-IP filters. The per-account
+        // budget is counted in portal_login_codes from any IP (D-081, D-087).
+        RateLimiter::for('portal-code', function (Request $request) {
+            $address = mb_strtolower(trim((string) $request->input('email'))).'|'.$request->ip();
+
+            return [
+                Limit::perMinute(1)->by('minute:'.$address),
+                Limit::perHour(5)->by('hour:'.$address),
+                Limit::perHour(20)->by('ip:'.$request->ip()),
+            ];
+        });
+        RateLimiter::for('portal-verify', fn (Request $request) => Limit::perHour(30)->by($request->ip()));
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
     }
 }
