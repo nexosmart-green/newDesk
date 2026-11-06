@@ -8,13 +8,20 @@ use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Creates a project, or updates it when one is given (RF-03.01). The leader is always
- * a member, so whoever is responsible can see it (RF-03.03).
+ * a member, so whoever is responsible can see it (RF-03.03). A new project without a slug
+ * gets one from its name, as monitoreo does: it is in the client's portal URL (RF-13.07).
  */
 final class SaveProject
 {
+    /** Slugs the portal SPA uses for its own routes (/portal/login): a project there would be shadowed. */
+    public const RESERVED_SLUGS = ['login'];
+
+    public const SLUG_TAKEN = 'Ese identificador ya está en uso.';
+
     public function __construct(private readonly RecordActivity $recordActivity) {}
 
     /** @param  array<string, mixed>  $attributes */
@@ -25,6 +32,12 @@ final class SaveProject
             && ! Client::query()->whereKey($clientId)->where('active', true)->exists()) {
             // CA-02.01: an inactive client does not take new projects.
             throw new BusinessRuleViolation('El cliente está inactivo: no admite proyectos nuevos.', 'client_inactive');
+        }
+
+        if ($project === null && blank($attributes['slug'] ?? null)) {
+            $attributes['slug'] = $this->availableSlug((string) $attributes['name'], $actor->company_id);
+        } elseif (in_array($attributes['slug'] ?? null, self::RESERVED_SLUGS, true)) {
+            throw ValidationException::withMessages(['slug' => self::SLUG_TAKEN]);
         }
 
         return DB::transaction(function () use ($attributes, $actor, $project) {
@@ -47,6 +60,22 @@ final class SaveProject
 
             return $project;
         });
+    }
+
+    /** "Café Nueva Córdoba" → cafe-nueva-cordoba; a taken one gets a number up to -20 (monitoreo portal.Slugify). */
+    private function availableSlug(string $name, int $companyId): string
+    {
+        $folded = strtr(mb_strtolower($name), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+        $base = trim(substr(trim((string) preg_replace('/[^a-z0-9]+/u', '-', $folded), '-'), 0, 50), '-') ?: 'proyecto';
+
+        foreach ([$base, ...array_map(fn (int $n) => "{$base}-{$n}", range(2, 20))] as $candidate) {
+            if (! in_array($candidate, self::RESERVED_SLUGS, true)
+                && ! Project::query()->forCompany($companyId)->where('slug', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        throw ValidationException::withMessages(['slug' => self::SLUG_TAKEN]);
     }
 
     /**

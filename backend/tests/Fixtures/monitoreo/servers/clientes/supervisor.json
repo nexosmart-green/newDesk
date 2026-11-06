@@ -1,0 +1,31 @@
+{
+  "available": true,
+  "programs": [
+    {"name": "bhinfo-worker:bhinfo-worker_00", "group": "bhinfo-worker", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "calculate-day:calculate-day_00", "group": "calculate-day", "state": "RUNNING", "pid": 7101, "uptime_seconds": 29476, "healthy": true, "autostart": true},
+    {"name": "cobro.laravel-queue:cobro.laravel-queue_00", "group": "cobro.laravel-queue", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "dev.reaquila.laravel-queue:dev.reaquila.laravel-queue_00", "group": "dev.reaquila.laravel-queue", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "geovictoria-process-pending:geovictoria-process-pending_00", "group": "geovictoria-process-pending", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "geovictoria-sync-users:geovictoria-sync-users_00", "group": "geovictoria-sync-users", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "medplace.geovictoria-queue:medplace.geovictoria-queue_00", "group": "medplace.geovictoria-queue", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false, "project": "/var/www/clientes.nexosmart.com.ar/medplace-backend"},
+    {"name": "medplace.geovictoria-queue:medplace.geovictoria-queue_01", "group": "medplace.geovictoria-queue", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false, "project": "/var/www/clientes.nexosmart.com.ar/medplace-backend"},
+    {"name": "medplace.laravel-queue:medplace.laravel-queue_00", "group": "medplace.laravel-queue", "state": "RUNNING", "pid": 7120, "uptime_seconds": 642, "healthy": true, "autostart": true, "directory": "/var/www/clientes.nexosmart.com.ar/medplace-backend", "project": "/var/www/clientes.nexosmart.com.ar/medplace-backend"},
+    {"name": "medplace.laravel-queue:medplace.laravel-queue_01", "group": "medplace.laravel-queue", "state": "RUNNING", "pid": 7121, "uptime_seconds": 644, "healthy": true, "autostart": true, "directory": "/var/www/clientes.nexosmart.com.ar/medplace-backend", "project": "/var/www/clientes.nexosmart.com.ar/medplace-backend"},
+    {"name": "playinn-queue:playinn-queue_00", "group": "playinn-queue", "state": "RUNNING", "pid": 7130, "uptime_seconds": 663, "healthy": true, "autostart": true, "directory": "/var/www/clientes.nexosmart.com.ar/playinn/back", "project": "/var/www/clientes.nexosmart.com.ar/playinn/back"},
+    {"name": "playinn-queue:playinn-queue_01", "group": "playinn-queue", "state": "RUNNING", "pid": 7131, "uptime_seconds": 662, "healthy": true, "autostart": true, "directory": "/var/www/clientes.nexosmart.com.ar/playinn/back", "project": "/var/www/clientes.nexosmart.com.ar/playinn/back"},
+    {"name": "playinn-scheduler", "state": "RUNNING", "pid": 7140, "uptime_seconds": 29476, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/playinn/back"},
+    {"name": "reaquila-reverb:reaquila-reverb_00", "group": "reaquila-reverb", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "reverb:reverb_00", "group": "reverb", "state": "RUNNING", "pid": 7150, "uptime_seconds": 29476, "healthy": true, "autostart": true},
+    {"name": "sierra.laravel-echo-server:sierra.laravel-echo-server_00", "group": "sierra.laravel-echo-server", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false},
+    {"name": "sierra.laravel-queue:sierra.laravel-queue_00", "group": "sierra.laravel-queue", "state": "RUNNING", "pid": 7160, "uptime_seconds": 29476, "healthy": true, "autostart": true},
+    {"name": "sierra.reverb", "state": "RUNNING", "pid": 7170, "uptime_seconds": 29476, "healthy": true, "autostart": true},
+    {"name": "teka-email-worker:teka-email-worker_00", "group": "teka-email-worker", "state": "RUNNING", "pid": 7180, "uptime_seconds": 658, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tekatickets.com"},
+    {"name": "teka-scheduler", "state": "RUNNING", "pid": 7190, "uptime_seconds": 29476, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tekatickets.com"},
+    {"name": "teka-worker:teka-worker_00", "group": "teka-worker", "state": "RUNNING", "pid": 7200, "uptime_seconds": 657, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tekatickets.com"},
+    {"name": "teka-worker:teka-worker_01", "group": "teka-worker", "state": "RUNNING", "pid": 7201, "uptime_seconds": 657, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tekatickets.com"},
+    {"name": "tennisopenleague.laravel-queue:tennisopenleague.laravel-queue_00", "group": "tennisopenleague.laravel-queue", "state": "RUNNING", "pid": 7210, "uptime_seconds": 647, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tennisopenleague_backend"},
+    {"name": "tennisopenleague.scheduler", "state": "RUNNING", "pid": 7220, "uptime_seconds": 29476, "healthy": true, "autostart": true, "project": "/var/www/clientes.nexosmart.com.ar/tennisopenleague_backend"},
+    {"name": "tooki.laravel-queue:tooki.laravel-queue_00", "group": "tooki.laravel-queue", "state": "RUNNING", "pid": 7230, "uptime_seconds": 29475, "healthy": true, "autostart": true, "directory": "/var/www/clientes.nexosmart.com.ar/tooki-backend", "project": "/var/www/clientes.nexosmart.com.ar/tooki-backend"},
+    {"name": "universitario.laravel-echo-server:universitario.laravel-echo-server_00", "group": "universitario.laravel-echo-server", "state": "STOPPED", "description": "Not started", "healthy": true, "autostart": false, "project": "/var/www/clientes.nexosmart.com.ar/universitario"}
+  ]
+}

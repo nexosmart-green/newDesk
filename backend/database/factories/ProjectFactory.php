@@ -19,6 +19,7 @@ class ProjectFactory extends Factory
             'company_id' => fn (array $attributes) => Client::query()->withoutGlobalScopes()->findOrFail($attributes['client_id'])->company_id,
             'name' => fake()->unique()->catchPhrase(),
             'code_prefix' => fake()->unique()->lexify('???????'),
+            'slug' => fn (array $attributes) => $attributes['code_prefix'],
             'status' => ProjectStatus::Active,
         ];
     }

@@ -58,7 +58,8 @@ it('keeps raw samples 7 days, hourly rollups 1 year and site history 30 days', f
     ]);
 
     expect(app(PurgeExpiredMetrics::class)(now()))
-        ->toBe(['monitoring_metrics_raw' => 1, 'monitoring_metrics_hourly' => 1, 'monitoring_site_check_history' => 1])
+        ->toBe(['monitoring_metrics_raw' => 1, 'monitoring_metrics_hourly' => 1, 'monitoring_site_check_history' => 1,
+            'status_checks' => 0, 'status_checks_hourly' => 0, 'status_periods' => 0, 'status_pagespeed_runs' => 0])
         ->and(DB::table('monitoring_metrics_raw')->count())->toBe(1)
         ->and(DB::table('monitoring_metrics_hourly')->count())->toBe(1)
         ->and(DB::table('monitoring_site_check_history')->count())->toBe(1);
