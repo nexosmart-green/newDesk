@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -92,6 +93,17 @@ class Task extends Model
     public function isOverdue(?Carbon $today = null): bool
     {
         return $this->completed_at === null && $this->due_on !== null && $this->due_on->lt(($today ?? today())->startOfDay());
+    }
+
+    /** By current code or by a code it had before moving projects (RF-04.12). Case-insensitive. */
+    public function scopeWithCode(Builder $query, string $code): Builder
+    {
+        $code = mb_strtolower(trim($code));
+
+        return $query->where(fn (Builder $inner) => $inner
+            ->where($inner->qualifyColumn('code'), $code)
+            ->orWhereIn($inner->qualifyColumn('id'), DB::table('task_code_aliases')->select('task_id')
+                ->where('code', $code)->whereColumn('task_code_aliases.company_id', 'tasks.company_id')));
     }
 
     public function scopeOpen(Builder $query): Builder

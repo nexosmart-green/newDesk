@@ -6,6 +6,7 @@ use App\Domain\Projects\Models\Project;
 use App\Domain\Tasks\Actions\AssignTask;
 use App\Domain\Tasks\Actions\ChangeTaskStatus;
 use App\Domain\Tasks\Actions\CreateTask;
+use App\Domain\Tasks\Actions\MoveTask;
 use App\Domain\Tasks\Actions\UpdateTask;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskStatus;
@@ -74,6 +75,23 @@ class TaskController extends Controller
         $task = $changeStatus($request->user(), $task, $status);
 
         return ApiResponse::ok(TaskResource::make($task->load(['assignees', 'project'])), 'Estado actualizado.');
+    }
+
+    /** RF-04.12: move to another project with its hours. */
+    public function move(Request $request, Task $task, MoveTask $moveTask): JsonResponse
+    {
+        $request->validate(['project_id' => ['required', 'integer']]);
+        $destination = Project::query()->findOrFail($request->integer('project_id'));
+        Gate::authorize('move', [$task, $destination]);
+
+        $result = $moveTask($request->user(), $task, $destination);
+        $task = $result['task']->load(['status', 'assignees', 'project']);
+
+        return ApiResponse::ok([
+            'task' => TaskResource::make($task),
+            'seconds_moved' => $result['seconds_moved'],
+            'unassigned' => $result['unassigned'],
+        ], "La tarea ahora es {$task->code} en {$task->project->name}.");
     }
 
     public function assign(Request $request, Task $task, AssignTask $assignTask): JsonResponse

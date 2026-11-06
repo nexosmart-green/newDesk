@@ -69,9 +69,10 @@ class AppServiceProvider extends ServiceProvider
             ->findOrFail((int) $value));
 
         // Tasks are addressed by id or by their human code (`bhn-60`, used in commits and by MCP).
-        Route::bind('task', fn (string $value) => Task::query()
-            ->where(ctype_digit($value) ? 'id' : 'code', ctype_digit($value) ? (int) $value : mb_strtolower($value))
-            ->firstOrFail());
+        Route::bind('task', fn (string $value) => (ctype_digit($value)
+            ? Task::query()->whereKey((int) $value)
+            : Task::query()->withCode($value)
+        )->firstOrFail());
     }
 
     private function registerRateLimiters(): void

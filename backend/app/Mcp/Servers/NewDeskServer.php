@@ -32,6 +32,7 @@ class NewDeskServer extends Server
         Tools\GetTask::class,
         Tools\CreateTaskTool::class,
         Tools\AssignTaskTool::class,
+        Tools\MoveTaskTool::class,
         Tools\UpdateTaskStatus::class,
         Tools\CommentTask::class,
         Tools\StartTimerTool::class,

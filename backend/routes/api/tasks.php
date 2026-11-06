@@ -20,5 +20,6 @@ Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show')
 Route::put('/tasks/{task}', [TaskController::class, 'update']);
 Route::put('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
 Route::put('/tasks/{task}/assignees', [TaskController::class, 'assign']);
+Route::put('/tasks/{task}/project', [TaskController::class, 'move']);
 Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index']);
 Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store']);

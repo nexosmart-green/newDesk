@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Projects\Policies\ProjectPolicy;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\TimeTracking\Models\TimeEntry;
 use Illuminate\Auth\Access\Response;
 
 /**
@@ -42,6 +43,23 @@ class TaskPolicy
         }
 
         return $user->hasPermission(Permission::TasksAssign) ? Response::allow() : Response::deny();
+    }
+
+    /**
+     * RF-04.12 / CA-04.12d: participant in both projects; if the task already has hours, moving it changes
+     * which client pays them, so it also needs `hours.allocate`.
+     */
+    public function move(User $user, Task $task, Project $destination): Response
+    {
+        if (! $this->participates($user, $task->project) || ! $this->participates($user, $destination)) {
+            return Response::denyAsNotFound();
+        }
+
+        $hasHours = TimeEntry::query()->forCompany($task->company_id)->where('task_id', $task->id)->exists();
+
+        return ! $hasHours || $user->hasPermission(Permission::HoursAllocate)
+            ? Response::allow()
+            : Response::deny('Esta tarea ya tiene horas registradas: moverla cambia qué cliente las paga. Pedíselo a quien gestiona las horas.');
     }
 
     /** Members work on the project; `projects.manage` sees and acts on every project. */

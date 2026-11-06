@@ -17,7 +17,7 @@ final class McpLookup
 {
     public function task(User $user, string $code): Task
     {
-        $task = Task::query()->forCompany($user->company_id)->where('code', mb_strtolower(trim($code)))->first()
+        $task = Task::query()->forCompany($user->company_id)->withCode($code)->first()
             ?? throw new BusinessRuleViolation("No existe la tarea {$code} o no tenés acceso.", 'not_found', 404);
         Gate::forUser($user)->authorize('view', $task);
 
