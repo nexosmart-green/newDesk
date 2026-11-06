@@ -6,7 +6,8 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Retention as in monitoreo: raw samples 7 days, hourly rollups 1 year.
+ * Retention as in monitoreo: raw samples 7 days, hourly rollups 1 year, site check history 30 days.
+ * Alerts are kept.
  */
 final class PurgeExpiredMetrics
 {
@@ -17,6 +18,7 @@ final class PurgeExpiredMetrics
         $jobs = [
             'monitoring_metrics_raw' => ['ts', $now->subDays(7)],
             'monitoring_metrics_hourly' => ['hour', $now->subYear()],
+            'monitoring_site_check_history' => ['checked_at', $now->subDays(30)],
         ];
 
         $deleted = [];

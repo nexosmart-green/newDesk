@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Monitoring;
 use App\Domain\Monitoring\Actions\TestServerConnection;
 use App\Domain\Monitoring\Agent\Section;
 use App\Domain\Monitoring\Models\Server;
+use App\Domain\Monitoring\Models\SiteCheck;
 use App\Domain\Monitoring\Polling\PollerSignals;
 use App\Domain\Monitoring\Queries\MetricSeries;
 use App\Http\Controllers\Controller;
@@ -14,7 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * What the server's detail asks about its agent: test, refresh, live mode and metric charts.
+ * What the server's detail asks besides its sections: test, refresh, live mode, metric charts and
+ * the site checks.
  */
 class ServerAgentController extends Controller
 {
@@ -52,5 +54,14 @@ class ServerAgentController extends Controller
         );
 
         return ApiResponse::ok($series($server, $request->query('range') ?: '24h'));
+    }
+
+    /** The last check of each public name of the server (RF-13.05), by name. */
+    public function sites(Server $server): JsonResponse
+    {
+        $now = now();
+
+        return ApiResponse::ok(SiteCheck::query()->where('server_id', $server->id)->orderBy('server_name')->get()
+            ->map(fn (SiteCheck $check) => $check->toPayload($now))->all());
     }
 }

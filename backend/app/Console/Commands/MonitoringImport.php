@@ -17,7 +17,7 @@ class MonitoringImport extends Command
         {--company= : Company that owns the servers (default: the only one)}
         {--fresh : Empty the monitoring tables first}';
 
-    protected $description = 'Import servers, snapshots and metrics from the monitoreo database (read-only)';
+    protected $description = 'Import servers, snapshots, metrics, alerts and site checks from the monitoreo database (read-only)';
 
     public function handle(): int
     {

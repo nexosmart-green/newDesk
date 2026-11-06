@@ -23,7 +23,9 @@ class ServerController extends Controller
     /** Not paginated: monitoreo returns every server at once. */
     public function index(): AnonymousResourceCollection
     {
-        return MonitoringServerResource::collection(Server::query()->with('metricsSnapshot')->orderBy('name')->get());
+        return MonitoringServerResource::collection(
+            Server::query()->with('metricsSnapshot')->withCount('firingAlerts')->orderBy('name')->get(),
+        );
     }
 
     public function store(ServerRequest $request, SaveServer $save): JsonResponse
@@ -37,7 +39,7 @@ class ServerController extends Controller
     public function show(Request $request, Server $server): JsonResponse
     {
         $snapshots = $server->snapshots()->get()->keyBy('section');
-        $server->setRelation('metricsSnapshot', $snapshots->get(Section::METRICS));
+        $server->setRelation('metricsSnapshot', $snapshots->get(Section::METRICS))->loadCount('firingAlerts');
 
         $sections = [];
         foreach (Section::ALL as $section) {
@@ -64,7 +66,7 @@ class ServerController extends Controller
 
     private function summary(Request $request, Server $server, string $message, int $status = 200): JsonResponse
     {
-        $server->load('metricsSnapshot');
+        $server->load('metricsSnapshot')->loadCount('firingAlerts');
 
         return ApiResponse::ok(MonitoringServerResource::make($server)->resolve($request), $message, $status);
     }

@@ -39,7 +39,7 @@ it('rolls an hour of raw samples into averages and maxima, idempotently', functi
     expect((float) $row->cpu)->toBe(30.0)->and($row->samples)->toBe(3);
 });
 
-it('keeps raw samples 7 days and hourly rollups 1 year', function () {
+it('keeps raw samples 7 days, hourly rollups 1 year and site history 30 days', function () {
     ($this->rawPoint)(now()->subDays(8), 10);
     ($this->rawPoint)(now()->subDays(6), 10);
     $hourly = ['company_id' => $this->server->company_id, 'server_id' => $this->server->id, 'cpu' => 1, 'cpu_max' => 1, 'memory' => 1,
@@ -50,9 +50,18 @@ it('keeps raw samples 7 days and hourly rollups 1 year', function () {
         ['hour' => now()->subDays(300)->startOfHour(), ...$hourly],
     ]);
 
-    expect(app(PurgeExpiredMetrics::class)(now()))->toBe(['monitoring_metrics_raw' => 1, 'monitoring_metrics_hourly' => 1])
+    $check = ['company_id' => $this->server->company_id, 'server_id' => $this->server->id, 'server_name' => 'www.reaquila.com',
+        'status_code' => 200, 'latency_ms' => 80, 'ok' => true];
+    DB::table('monitoring_site_check_history')->insert([
+        ['checked_at' => now()->subDays(31), ...$check],
+        ['checked_at' => now()->subDays(29), ...$check],
+    ]);
+
+    expect(app(PurgeExpiredMetrics::class)(now()))
+        ->toBe(['monitoring_metrics_raw' => 1, 'monitoring_metrics_hourly' => 1, 'monitoring_site_check_history' => 1])
         ->and(DB::table('monitoring_metrics_raw')->count())->toBe(1)
-        ->and(DB::table('monitoring_metrics_hourly')->count())->toBe(1);
+        ->and(DB::table('monitoring_metrics_hourly')->count())->toBe(1)
+        ->and(DB::table('monitoring_site_check_history')->count())->toBe(1);
 });
 
 it('aggregates the last three complete hours every hour from the scheduler', function () {

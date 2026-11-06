@@ -15,3 +15,11 @@
 - Decisión: canal `monitoring.{companyId}` en vez de `monitoring` (multi-empresa).
 - F3 (agente de front, revisado): dashboard, detalle con todas las pestañas, alertas y ABM de servers con la piel de monitoreo; comparación visual lado a lado con Playwright.
 - Tests: back 77 ok (+1 que falla solo por falta de Redis local), front 63 ok, typecheck/lint/build ok.
+
+## 2026-11-06 — Monitoreo F2b + pantallas de proyectos, clientes y reportes
+
+- F2b (agente de backend, revisado): 15 reglas con umbrales y antirrebote del Go, estado en Cache con TTL, motor `ApplyAlertResults` (locks por server+regla, resumen de avalancha D-107), evento `alert`, chequeo de sitios (IP pública fijada con `CURLOPT_RESOLVE`, reintentos, 429 = arriba, vencimiento SSL), `GET alerts`, `GET servers/{id}/sites`, `GET inventory/projects`, retención (historial de sitios 30 d; alertas no se purgan, igual que el Go), importador de alertas y sitios.
+- Decisión: el chequeo de sitios corre como job en la cola `monitoring` (en PHP el DNS y las esperas de 10 s bloquean y frenarían el poller).
+- Pendiente para F7: `AlertChanged` se transmite en el momento; si Reverb cae, los listeners de ese evento no corren. En F7 el aviso a Discord/mail se separa de la transmisión. También separar el worker de `discord` (1 proceso, orden) del de `monitoring` (más procesos).
+- Front (agente, revisado): Proyectos, Clientes, admin de proyecto, Reportes con chat, roadmap, ventanas flotantes y "Generar reporte", con código de proyecto agregado. Confirmación de borrar cliente corregida a "¿Borrar el cliente y sus usuarios?" (CA-02.01).
+- Tests: back 124 ok (+1 Redis local), front 127 ok.

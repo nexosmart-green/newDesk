@@ -1,10 +1,12 @@
 <?php
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Monitoring\Alerts\AlertState;
 use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Monitoring\Events\MetricsCollected;
 use App\Domain\Monitoring\Events\ServerStatusChanged;
 use App\Domain\Monitoring\Events\SnapshotSaved;
+use App\Domain\Monitoring\Models\Alert;
 use App\Domain\Monitoring\Models\Server;
 use App\Domain\Monitoring\Models\ServerSnapshot;
 use App\Domain\Monitoring\Polling\Poller;
@@ -218,6 +220,61 @@ it('polls metrics every 5 s while someone watches, without flooding the raw tabl
     pollOnce($this->poller);
     expect($this->agent->hits('metrics'))->toBe($afterLive)
         ->and(DB::table('monitoring_metrics_raw')->count())->toBe(1);
+});
+
+it('raises and resolves alerts from health and sections as it polls (RF-13.04)', function () {
+    $firing = fn (string $rule) => Alert::query()->where('rule', $rule)->where('state', 'firing')->get();
+    pollOnce($this->poller);
+    pollOnce($this->poller);
+
+    // The disk alert needs two evaluations in a row.
+    $this->agent->sections['metrics'] = FakeAgentGateway::metricsWithDisk(96);
+    $this->travel(61)->seconds();
+    pollOnce($this->poller);
+    expect($firing('disk_usage'))->toHaveCount(0);
+    $this->travel(61)->seconds();
+    pollOnce($this->poller);
+    expect($firing('disk_usage')->sole()->only(['target', 'severity', 'company_id']))
+        ->toBe(['target' => '/', 'severity' => 'critical', 'company_id' => $this->admin->company_id]);
+
+    // The agent breaks but SSH answers: agent_down from the second failure.
+    $this->agent->broken = true;
+    $this->agent->sshUp = true;
+    $this->travel(31)->seconds();
+    pollOnce($this->poller);
+    expect($firing('agent_down'))->toHaveCount(0);
+    $this->travel(31)->seconds();
+    pollOnce($this->poller);
+    expect($firing('agent_down'))->toHaveCount(1);
+
+    // SSH gone too: server_down, and agent_down resolves.
+    $this->agent->sshUp = false;
+    $this->travel(31)->seconds();
+    pollOnce($this->poller);
+    expect($firing('server_down')->sole()->message)->toBe('El servidor no responde (ni el agente ni SSH)')
+        ->and($firing('agent_down'))->toHaveCount(0);
+
+    // Back online with a sane disk: everything resolves.
+    $this->agent->broken = false;
+    $this->agent->sections['metrics'] = FakeAgentGateway::metricsWithDisk(50);
+    $this->travel(31)->seconds();
+    pollOnce($this->poller);
+    pollOnce($this->poller);
+    expect($this->server->refresh()->status)->toBe('online')
+        ->and(Alert::query()->where('state', 'firing')->count())->toBe(0)
+        ->and(Alert::query()->count())->toBe(3);
+});
+
+it('forgets the alert state of a deleted server', function () {
+    pollOnce($this->poller);
+    $state = app(AlertState::class);
+    $state->saveStreaks($this->server->id, 'disk_usage', ['/' => ['since' => 1, 'count' => 1]]);
+
+    $this->server->delete();
+    app(PollerSignals::class)->requestReload();
+    pollOnce($this->poller);
+
+    expect($state->streaks($this->server->id, 'disk_usage'))->toBe([]);
 });
 
 it('picks up a new server at once when asked to reload, and skips disabled ones', function () {

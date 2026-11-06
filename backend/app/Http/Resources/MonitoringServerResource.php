@@ -7,7 +7,8 @@ use App\Domain\Monitoring\Models\Server;
 use Illuminate\Http\Request;
 
 /**
- * monitoreo's ServerSummary, field for field (CA-13.01: no token, no pin). Needs `metricsSnapshot` loaded.
+ * monitoreo's ServerSummary, field for field (CA-13.01: no token, no pin). Needs `metricsSnapshot`
+ * loaded and `firingAlerts` counted.
  *
  * @mixin Server
  */
@@ -28,7 +29,7 @@ class MonitoringServerResource extends ApiResource
             'hostname' => $this->hostname,
             'os' => $this->os,
             'metrics' => MetricsSummary::fromSnapshot($this->metricsSnapshot),
-            'active_alerts' => 0, // alerts arrive in the next phase
+            'active_alerts' => $this->firing_alerts_count,
             'agent_version' => $this->agent_version,
         ];
     }

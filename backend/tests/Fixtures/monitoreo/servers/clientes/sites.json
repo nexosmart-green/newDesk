@@ -1,0 +1,41 @@
+{
+  "web_server": {"name": "nginx", "version": "1.28.3", "config_ok": true},
+  "items": [
+    {"file": "/etc/nginx/sites-enabled/00-default.conf", "server_names": ["_"], "listen": ["80", "[::]:80"], "root_exists": false,
+     "fastcgi": "unix:/run/php/php8.4-fpm.sock",
+     "access_log": "/var/log/nginx/access.log", "error_log": "/var/log/nginx/error.log",
+     "projects": ["/var/www/nothinghere!"]},
+    {"file": "/etc/nginx/sites-enabled/clientes.nexosmart.com.ar", "server_names": ["clientes.nexosmart.com.ar"], "listen": ["80"], "root": "/var/www/clientes.nexosmart.com.ar", "root_exists": true, "fastcgi": "unix:/run/php/php8.4-fpm.sock",
+     "proxies": [
+       {"location": "/tooki-web", "upstream": "127.0.0.1:3000", "listening": false},
+       {"location": "/landing-olimpo", "upstream": "127.0.0.1:3006", "listening": true},
+       {"location": "/tol_frontend_web/", "upstream": "127.0.0.1:3005", "listening": true},
+       {"location": "/mlambiental", "upstream": "127.0.0.1:3002", "listening": false},
+       {"location": "/agente_sierra/web", "upstream": "127.0.0.1:3003", "listening": true},
+       {"location": "/agente_sierra/app", "upstream": "127.0.0.1:8003", "listening": true},
+       {"location": "/app", "upstream": "127.0.0.1:8080", "listening": true},
+       {"location": "/tekatickets/app/", "upstream": "127.0.0.1:8081", "listening": false},
+       {"location": "/bankz/app", "upstream": "127.0.0.1:8085", "listening": true},
+       {"location": "/playinn/", "upstream": "127.0.0.1:3007", "listening": true}
+     ],
+     "access_log": "/var/log/nginx/clientes.nexosmart.com.ar-access.log", "error_log": "/var/log/nginx/clientes.nexosmart.com.ar-error.log",
+     "projects": [
+       "/var/www/clientes.nexosmart.com.ar/agente_sierra", "/var/www/clientes.nexosmart.com.ar/bankz", "/var/www/clientes.nexosmart.com.ar/bhinfo",
+       "/var/www/clientes.nexosmart.com.ar/contador_digital", "/var/www/clientes.nexosmart.com.ar/landing-olimpo", "/var/www/clientes.nexosmart.com.ar/medplace-cms",
+       "/var/www/clientes.nexosmart.com.ar/medplace-cms-staging", "/var/www/clientes.nexosmart.com.ar/medplace-staging", "/var/www/clientes.nexosmart.com.ar/mlambiental",
+       "/var/www/clientes.nexosmart.com.ar/olimpo_app", "/var/www/clientes.nexosmart.com.ar/playinn/back", "/var/www/clientes.nexosmart.com.ar/playinn/front",
+       "/var/www/clientes.nexosmart.com.ar/tekatickets.com", "/var/www/clientes.nexosmart.com.ar/tol_frontend_web", "/var/www/clientes.nexosmart.com.ar/tooki-backend",
+       "/var/www/clientes.nexosmart.com.ar/tooki-web", "/var/www/nothinghere!"
+     ]},
+    {"file": "/etc/nginx/sites-enabled/dev.reaquila.com", "server_names": ["dev.reaquila.com"], "listen": ["80"], "root": "/var/www/dev.reaquila.com", "root_exists": true, "fastcgi": "unix:/run/php/php8.4-fpm.sock",
+     "proxies": [
+       {"location": "/reaquila", "upstream": "127.0.0.1:3001", "listening": false},
+       {"location": "/app", "upstream": "127.0.0.1:8081", "listening": false}
+     ],
+     "access_log": "/var/log/nginx/dev.reaquila-access.log", "error_log": "/var/log/nginx/dev.reaquila-error.log",
+     "projects": ["/var/www/dev.reaquila.com"]},
+    {"file": "/etc/nginx/sites-enabled/playinn-api-internal", "server_names": ["_"], "listen": ["127.0.0.1:8000"], "root": "/var/www/clientes.nexosmart.com.ar/playinn/back/public", "root_exists": true, "fastcgi": "unix:/run/php/php8.4-fpm-playinn.sock",
+     "access_log": "/var/log/nginx/playinn-api-internal-access.log", "error_log": "/var/log/nginx/playinn-api-internal-error.log",
+     "projects": ["/var/www/clientes.nexosmart.com.ar/playinn/back"]}
+  ]
+}

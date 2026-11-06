@@ -14,7 +14,7 @@ class MonitoringRetention extends Command
 {
     protected $signature = 'monitoring:retention';
 
-    protected $description = 'Aggregate hourly metrics and purge expired ones';
+    protected $description = 'Aggregate hourly metrics and purge expired metrics and site history';
 
     public function handle(AggregateHourlyMetrics $aggregate, PurgeExpiredMetrics $purge): int
     {

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Monitoring\AlertController;
+use App\Http\Controllers\Api\V1\Monitoring\InventoryController;
 use App\Http\Controllers\Api\V1\Monitoring\ServerAgentController;
 use App\Http\Controllers\Api\V1\Monitoring\ServerController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +15,9 @@ Route::prefix('monitoring')->group(function () {
         Route::post('servers/{server}/refresh', [ServerAgentController::class, 'refresh']);
         Route::post('servers/{server}/live', [ServerAgentController::class, 'live']);
         Route::get('servers/{server}/metrics', [ServerAgentController::class, 'metrics']);
+        Route::get('servers/{server}/sites', [ServerAgentController::class, 'sites']);
+        Route::get('alerts', [AlertController::class, 'index']);
+        Route::get('inventory/projects', [InventoryController::class, 'projects']);
     });
 
     Route::middleware('can:monitoring.manage')->group(function () {

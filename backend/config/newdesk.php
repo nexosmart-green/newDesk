@@ -8,6 +8,11 @@ return [
         'encryption_key' => env('MONITOREO_ENCRYPTION_KEY'),
     ],
 
+    'monitoring' => [
+        // Some origins block bot-like agents in nginx (403/444); empty = monitoreo's default.
+        'sitecheck_user_agent' => env('SITECHECK_USER_AGENT'),
+    ],
+
     'supervisor' => [
         'conf_dir' => env('SUPERVISOR_CONF_DIR', '/etc/supervisor/conf.d'),
         'user' => env('SUPERVISOR_USER', 'www-data'),

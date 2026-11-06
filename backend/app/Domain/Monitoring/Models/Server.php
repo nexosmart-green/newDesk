@@ -85,6 +85,12 @@ class Server extends Model
         return $this->hasOne(ServerSnapshot::class)->where('section', Section::METRICS);
     }
 
+    /** The open ones: `withCount('firingAlerts')` is the summary's `active_alerts`. @return HasMany<Alert, $this> */
+    public function firingAlerts(): HasMany
+    {
+        return $this->hasMany(Alert::class)->where('state', Alert::FIRING);
+    }
+
     /**
      * Stores a pin derived from this address and fingerprint, unless someone changed them
      * meanwhile: then the pin would vouch for a certificate nobody entered.

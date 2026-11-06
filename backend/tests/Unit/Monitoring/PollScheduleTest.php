@@ -44,32 +44,34 @@ it('waits for the agent to be online before polling sections, then follows each 
     $schedule = new PollSchedule;
     $schedule->sync([scheduledServer(1, 'unknown')], 0);
 
-    expect(runTick($schedule, 0))->toBe(['1|health']);
+    // The site check does not need the agent (RF-13.05).
+    expect(runTick($schedule, 0))->toBe(['1|health', '1|sitecheck']);
 
     $schedule->setStatus(1, 'online');
     expect(runTick($schedule, 1))->toHaveCount(count(Section::ALL));
     expect(runTick($schedule, 2))->toBe([]);
     expect(runTick($schedule, 30))->toBe(['1|health']);
     expect(runTick($schedule, 61))->toContain('1|metrics', '1|services', '1|pm2', '1|supervisor')->not->toContain('1|packages');
+    expect(runTick($schedule, 300))->toContain('1|sitecheck');
 });
 
-it('lets one server hold 2 of the 6 shared slots, while health checks take none (CA-13.05)', function () {
+it('lets one server hold 2 of the 6 shared slots, while health and site checks take none (CA-13.05)', function () {
     $schedule = new PollSchedule;
     $schedule->sync([scheduledServer(1), scheduledServer(2), scheduledServer(3), scheduledServer(4)], 0);
     $schedule->collect(0);
 
     // Nothing finishes: the slow servers keep their slots.
     $running = $schedule->startable();
-    $perServer = array_count_values(array_map(fn (array $task) => $task[0], array_filter($running, fn (array $task) => $task[1] !== Section::HEALTH)));
-    $health = array_filter($running, fn (array $task) => $task[1] === Section::HEALTH);
+    $checks = array_filter($running, fn (array $task) => in_array($task[1], [Section::HEALTH, PollSchedule::SITECHECK], true));
+    $perServer = array_count_values(array_map(fn (array $task) => $task[0], array_diff_key($running, $checks)));
 
     expect(array_sum($perServer))->toBe(PollSchedule::SHARED_SLOTS)
         ->and(max($perServer))->toBe(PollSchedule::SLOTS_PER_SERVER)
-        ->and($health)->toHaveCount(4)
+        ->and($checks)->toHaveCount(8)
         ->and($schedule->startable())->toBe([]);
 
     // Every slot is taken, yet a health check that comes due runs right away.
-    foreach ($health as [$id, $task]) {
+    foreach ($checks as [$id, $task]) {
         $schedule->finish($id, $task);
     }
     $schedule->collect(30);
@@ -77,7 +79,7 @@ it('lets one server hold 2 of the 6 shared slots, while health checks take none 
     expect($healthAgain)->toEqual([[1, 'health'], [2, 'health'], [3, 'health'], [4, 'health']]);
 
     // Once the slow calls end, the waiting tasks get their slots; nothing queued is lost.
-    foreach ([...$healthAgain, ...array_diff_key($running, $health)] as [$id, $task]) {
+    foreach ([...$healthAgain, ...array_diff_key($running, $checks)] as [$id, $task]) {
         $schedule->finish($id, $task);
     }
     $sections = PollSchedule::SHARED_SLOTS;
@@ -152,7 +154,7 @@ it('starts a server over when its credentials change, and forgets a deleted one'
     $schedule->healthFailed(1);
 
     $schedule->sync([scheduledServer(1, credentials: 'b')], 10);
-    expect(runTick($schedule, 10))->toHaveCount(count(Section::ALL) + 1)
+    expect(runTick($schedule, 10))->toHaveCount(count(Section::ALL) + 2)
         ->and($schedule->healthFailed(1))->toBe(1);
 
     $schedule->sync([], 20);
@@ -167,6 +169,6 @@ it('runs a forced refresh at once and asks for a reload when the server is unkno
     expect($schedule->trigger(1, 'packages', 5))->toBeTrue()
         ->and(runTick($schedule, 5))->toBe(['1|packages'])
         ->and($schedule->trigger(1, null, 6))->toBeTrue()
-        ->and(runTick($schedule, 6))->toHaveCount(count(Section::ALL) + 1)
+        ->and(runTick($schedule, 6))->toHaveCount(count(Section::ALL) + 2)
         ->and($schedule->trigger(99, null, 7))->toBeFalse();
 });

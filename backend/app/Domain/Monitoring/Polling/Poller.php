@@ -2,15 +2,20 @@
 
 namespace App\Domain\Monitoring\Polling;
 
+use App\Domain\Monitoring\Actions\ApplyAlertResults;
 use App\Domain\Monitoring\Agent\AgentError;
 use App\Domain\Monitoring\Agent\AgentResponse;
 use App\Domain\Monitoring\Agent\AgentTarget;
 use App\Domain\Monitoring\Agent\MetricsSummary;
 use App\Domain\Monitoring\Agent\Section;
+use App\Domain\Monitoring\Alerts\AlertResult;
+use App\Domain\Monitoring\Alerts\AlertRules;
+use App\Domain\Monitoring\Alerts\AlertState;
 use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Monitoring\Events\MetricsCollected;
 use App\Domain\Monitoring\Events\ServerStatusChanged;
 use App\Domain\Monitoring\Events\SnapshotSaved;
+use App\Domain\Monitoring\Jobs\CheckServerSites;
 use App\Domain\Monitoring\Models\Server;
 use App\Domain\Monitoring\Models\ServerSnapshot;
 use Carbon\CarbonImmutable;
@@ -23,8 +28,9 @@ use Throwable;
 
 /**
  * Polls every agent (RF-13.02): health and each section on its interval, all at once through
- * the gateway's promises. PollSchedule decides what is due; this class does the I/O and saves
- * what comes back. Driven by `monitoring:poll`; tests call tick() and drain() with a fake clock.
+ * the gateway's promises. PollSchedule decides what is due; this class does the I/O, saves what
+ * comes back and applies the alert rules to it (RF-13.04). Site checks are queued (RF-13.05).
+ * Driven by `monitoring:poll`; tests call tick() and drain() with a fake clock.
  */
 final class Poller
 {
@@ -46,6 +52,9 @@ final class Poller
     public function __construct(
         private readonly AgentGateway $gateway,
         private readonly PollerSignals $signals,
+        private readonly AlertRules $rules,
+        private readonly ApplyAlertResults $alerts,
+        private readonly AlertState $alertState,
     ) {
         $this->schedule = new PollSchedule;
     }
@@ -120,6 +129,9 @@ final class Poller
             // A new address, fingerprint or token starts the server over.
             'credentials' => implode('|', [$server->ip, $server->agent_port, $server->tls_fingerprint, $server->getRawOriginal('token')]),
         ])->values()->all(), $now);
+        foreach (array_keys(array_diff_key($this->servers, $servers->all())) as $deletedId) {
+            $this->alertState->forgetServer($deletedId);
+        }
         $this->servers = $servers->all();
         $this->dirty = false;
         $this->lastReload = $now;
@@ -132,6 +144,7 @@ final class Poller
             $promise = match (true) {
                 $server === null => Create::promiseFor(null),
                 $task === Section::HEALTH => $this->checkHealth($server),
+                $task === PollSchedule::SITECHECK => $this->queueSiteCheck($server),
                 default => $this->pollSection($server, $task),
             };
         } catch (Throwable $e) {
@@ -144,6 +157,14 @@ final class Poller
                 report($e);
             })
             ->then(fn () => $this->schedule->finish($serverId, $task));
+    }
+
+    /** ShouldBeUnique: while a round of this server is queued or running, this is a no-op. */
+    private function queueSiteCheck(Server $server): PromiseInterface
+    {
+        CheckServerSites::dispatch($server->id);
+
+        return Create::promiseFor(null);
     }
 
     /**
@@ -217,6 +238,7 @@ final class Poller
             Log::info('monitoring poller: status changed', ['server' => $server->name, 'from' => $previous, 'to' => $status]);
             $this->broadcast(new ServerStatusChanged($server->company_id, $serverId, $status, $server->last_seen_at?->toIso8601ZuluString()));
         }
+        $this->applyAlerts($server, fn () => AlertRules::serverStatus($status, $server->sshPortOrDefault()));
     }
 
     private function pollSection(Server $server, string $section): PromiseInterface
@@ -268,6 +290,22 @@ final class Poller
             $this->afterMetrics($server, $response->data, $collectedAt);
         } elseif ($section === Section::SYSTEM) {
             $this->saveIdentity($server, $response->data);
+        }
+        $this->applyAlerts($server, fn () => $this->rules->forSection($server->id, $section, $response->data, CarbonImmutable::now()));
+    }
+
+    /**
+     * An alert failure is logged and the polling goes on, as in monitoreo.
+     *
+     * @param  callable(): list<AlertResult>  $results
+     */
+    private function applyAlerts(Server $server, callable $results): void
+    {
+        try {
+            ($this->alerts)($server, $results());
+        } catch (Throwable $e) {
+            Log::error('monitoring poller: alerts failed', ['server' => $server->name, 'error' => $e->getMessage()]);
+            report($e);
         }
     }
 

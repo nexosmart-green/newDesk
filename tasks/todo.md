@@ -40,7 +40,7 @@
 - [x] F0 `install:broadcasting --reverb`
 - [x] F1 Clientes y proyectos básicos (RF-02.01, RF-03.01, RF-03.03), rol Cliente, `users.client_id`, grupos de rutas equipo/cliente
 - [x] F2a Servidores: ABM + probar conexión, gateway con pin, `monitoring:poll`, snapshots, métricas, `/health`, eventos Reverb, importador de servers
-- [ ] F2b Reglas de alerta + motor, API de alertas, chequeo de sitios/SSL, inventario, vulnerabilidades, retención
+- [x] F2b Reglas de alerta + motor, API de alertas, chequeo de sitios/SSL, inventario, vulnerabilidades, retención
 - [x] F3 Pantallas del equipo (piel monitoreo): dashboard, detalle con pestañas, uPlot, modo en vivo, alertas, ABM servers
 - [ ] F4 Estado de proyectos (componentes, 10 min, períodos, uptime, incidentes, PageSpeed, RDAP, carpetas) + importador
 - [ ] F5 Portal de clientes (login por código, páginas de estado, tiempo real)

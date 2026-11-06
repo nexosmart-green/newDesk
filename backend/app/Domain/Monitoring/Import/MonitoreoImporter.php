@@ -8,19 +8,27 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Copies monitoreo's servers, snapshots and metrics (RF-13.12). Reads the legacy database and
+ * Copies monitoreo's servers, snapshots, metrics, alerts and site checks (RF-13.12). Reads the legacy database and
  * never writes it (CA-13.23); ids are kept and every row is upserted by key, so running it
  * again gives the same result. Each token is decrypted and sealed again for newDesk (CA-13.24).
  */
 final class MonitoreoImporter
 {
     private const MONITORING_TABLES = [
+        'monitoring_site_check_history', 'monitoring_site_checks', 'monitoring_alerts',
         'monitoring_metrics_hourly', 'monitoring_metrics_raw', 'monitoring_server_snapshots', 'monitoring_servers',
     ];
 
     private const METRICS = ['cpu', 'memory', 'swap', 'disk', 'load1', 'rx_bps', 'tx_bps'];
 
     private const HOURLY_EXTRA = ['cpu_max', 'memory_max', 'swap_max', 'disk_max', 'load1_max', 'samples'];
+
+    private const ALERT = ['server_id', 'rule', 'target', 'severity', 'state', 'message', 'value',
+        'first_seen_at', 'last_seen_at', 'resolved_at', 'last_notified_at'];
+
+    private const SITE_CHECK = ['url', 'status_code', 'latency_ms', 'ok', 'error', 'ssl_expires_at', 'checked_at'];
+
+    private const SITE_HISTORY = ['server_id', 'server_name', 'status_code', 'latency_ms', 'ok', 'checked_at'];
 
     /** @param  string  $connection  the legacy database (`monitoreo_legacy`; tests pass their own) */
     public function __construct(
@@ -44,8 +52,11 @@ final class MonitoreoImporter
         return [
             'servers' => $this->servers($legacy, $companyId),
             'server_snapshots' => $this->snapshots($legacy, $companyId),
-            'metrics_raw' => $this->rawMetrics($legacy, $companyId),
+            'metrics_raw' => $this->byId($legacy, 'metrics_raw', 'monitoring_metrics_raw', ['server_id', 'ts', ...self::METRICS], $companyId),
             'metrics_hourly' => $this->hourlyMetrics($legacy, $companyId),
+            'alerts' => $this->byId($legacy, 'alerts', 'monitoring_alerts', self::ALERT, $companyId),
+            'site_checks' => $this->siteChecks($legacy, $companyId),
+            'site_check_history' => $this->byId($legacy, 'site_check_history', 'monitoring_site_check_history', self::SITE_HISTORY, $companyId),
         ];
     }
 
@@ -95,17 +106,34 @@ final class MonitoreoImporter
         return $count;
     }
 
-    private function rawMetrics(ConnectionInterface $legacy, int $companyId): int
+    /** A legacy table with an `id`, copied with the same ids. @param  list<string>  $columns */
+    private function byId(ConnectionInterface $legacy, string $from, string $to, array $columns, int $companyId): int
     {
         $count = 0;
-        $legacy->table('metrics_raw')->chunkById(2000, function ($rows) use ($companyId, &$count) {
-            DB::table('monitoring_metrics_raw')->upsert(
+        $legacy->table($from)->chunkById(2000, function ($rows) use ($to, $columns, $companyId, &$count) {
+            DB::table($to)->upsert(
                 $rows->map(fn (object $row) => ['company_id' => $companyId, ...(array) $row])->all(),
                 ['id'],
-                ['company_id', 'server_id', 'ts', ...self::METRICS],
+                ['company_id', ...$columns],
             );
             $count += $rows->count();
         });
+
+        return $count;
+    }
+
+    private function siteChecks(ConnectionInterface $legacy, int $companyId): int
+    {
+        $count = 0;
+        $legacy->table('site_checks')->orderBy('server_id')->orderBy('server_name')
+            ->chunk(2000, function ($rows) use ($companyId, &$count) {
+                DB::table('monitoring_site_checks')->upsert(
+                    $rows->map(fn (object $row) => ['company_id' => $companyId, ...(array) $row])->all(),
+                    ['server_id', 'server_name'],
+                    ['company_id', ...self::SITE_CHECK],
+                );
+                $count += $rows->count();
+            });
 
         return $count;
     }

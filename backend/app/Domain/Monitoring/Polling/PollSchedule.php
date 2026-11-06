@@ -11,7 +11,7 @@ use App\Domain\Monitoring\Models\Server;
  *
  * A due task is dispatched (its next run is set) and waits for a slot: one server holds at
  * most 2 of the 6 shared slots so a slow agent cannot starve the rest; health takes no slot
- * (D-106, CA-13.05).
+ * (D-106, CA-13.05), and neither does the site check, which only queues a job.
  */
 final class PollSchedule
 {
@@ -34,7 +34,11 @@ final class PollSchedule
         'large_files' => 21600,
         // security-scan.sh runs once a day; hourly is enough to see it the same morning.
         'vulnerabilities' => 3600,
+        self::SITECHECK => 300,
     ];
+
+    /** The panel's own HTTPS checks of the server's sites (RF-13.05), queued as CheckServerSites. */
+    public const SITECHECK = 'sitecheck';
 
     /** Metrics cadence while someone has the server's detail open (CA-13.06). */
     public const LIVE_METRICS_INTERVAL = 5;
@@ -104,7 +108,7 @@ final class PollSchedule
         $this->live = array_intersect_key($this->live, $seen);
     }
 
-    /** Dispatches every due task. Sections need a reachable agent: they wait until it is online. */
+    /** Dispatches every due task. Sections need a reachable agent: they wait until it is online; sites do not. */
     public function collect(int $now): void
     {
         foreach ($this->servers as $id => $state) {
@@ -115,7 +119,7 @@ final class PollSchedule
                 if ($due > $now || isset($this->inflight["{$id}|{$task}"])) {
                     continue;
                 }
-                if ($task !== Section::HEALTH && $state['status'] !== Server::STATUS_ONLINE) {
+                if (! self::isCheck($task) && $state['status'] !== Server::STATUS_ONLINE) {
                     continue;
                 }
                 $interval = $task === Section::METRICS && isset($this->live[$id])
@@ -129,7 +133,7 @@ final class PollSchedule
     }
 
     /**
-     * Takes the dispatched tasks that may run now: every health check, and sections while
+     * Takes the dispatched tasks that may run now: every health and site check, and sections while
      * their server and the shared pool have slots. Each one must be finish()ed.
      *
      * @return list<array{int, string}>
@@ -145,7 +149,7 @@ final class PollSchedule
 
                 continue;
             }
-            if ($task === Section::HEALTH) {
+            if (self::isCheck($task)) {
                 $start[] = [$id, $task];
             } elseif (count($this->holding) < self::SHARED_SLOTS && $this->servers[$id]['slots'] < self::SLOTS_PER_SERVER) {
                 $this->servers[$id]['slots']++;
@@ -158,6 +162,12 @@ final class PollSchedule
         $this->waiting = $waiting;
 
         return $start;
+    }
+
+    /** Health and site checks: they take no slot and run whatever the server status. */
+    private static function isCheck(string $task): bool
+    {
+        return $task === Section::HEALTH || $task === self::SITECHECK;
     }
 
     public function finish(int $serverId, string $task): void
