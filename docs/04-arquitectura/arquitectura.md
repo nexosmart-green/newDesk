@@ -36,6 +36,13 @@ StatusPage    componentes, uptime, incidentes, PageSpeed, portal de clientes    
 Support       reportes de clientes, chat, roadmap                              (RF-13)
 ```
 
+## Monitoreo (RF-13, ADR-0002)
+
+- `monitoring:poll` (supervisord `monitoring-poller`): daemon que consulta a cada `monitor-agent` por HTTPS con pin de clave pública (`app/Infrastructure/Agent/CurlAgentGateway`), guarda `monitoring_server_snapshots` y `monitoring_metrics_raw`, y emite por Reverb en `private-monitoring.{companyId}` (`server.status`, `snapshot`, `metrics`, `alert`).
+- Señales web → daemon por Cache (`PollerSignals`): recargar servers, refrescar sección, latido del modo en vivo (`POST /api/v1/monitoring/servers/{id}/live`), tick que mira `/health`.
+- API espejo del Go en `/api/v1/monitoring/*` (equipo) y `/api/v1/portal/*` (clientes). Front en `frontend/src/features/monitoreo` con la piel bajo `[data-skin="monitoreo"]`.
+- `monitoring:import` lee la base `monitoreo` (conexión `monitoreo_legacy`, sesión read-only) y conserva IDs.
+
 ## Puntos de diseño críticos
 
 1. **Timer en servidor.** `time_entries` con `ended_at NULL` = timer activo. Índice único parcial lógico: un usuario no puede tener dos `ended_at NULL` (se garantiza con lock por usuario en Redis + verificación en transacción, porque MySQL no tiene índices parciales: columna generada `active_user_id = IF(ended_at IS NULL, user_id, NULL)` con UNIQUE).
