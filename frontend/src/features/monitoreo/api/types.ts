@@ -194,8 +194,9 @@ export interface ComponentAdmin {
   status: PortalState; status_since: string | null; detail: string | null; last_checked_at: string | null
   last_ok_at: string | null; latency_ms: number | null; status_code: number | null; ssl_expires_at: string | null
 }
+// code_prefix: el código del proyecto de newDesk (RF-03.01), que monitoreo no tenía: minúsculas y dígitos, 2 a 12.
 export interface ProjectInput {
-  name: string; slug: string; primary_color: string | null; domain: string | null; domain_expires_manual: string | null; active: boolean
+  name: string; slug: string; code_prefix: string; primary_color: string | null; domain: string | null; domain_expires_manual: string | null; active: boolean
   // /api/errors del bug-report del proyecto: null o "" borra la URL y el token; el token vacío o ausente no cambia.
   errors_url?: string | null; errors_token?: string
   // Canal de Discord del proyecto, de la lista del bot. Ausente = no cambia, null o "" = sin canal.
@@ -211,7 +212,7 @@ export interface ProjectAdmin extends Omit<ProjectInput, 'errors_url' | 'errors_
 }
 // create_discord_channel: el bot crea el canal y lo estrena etiquetando al dev principal.
 // Si no puede, el proyecto se crea igual y el message del sobre lo avisa.
-export interface ProjectCreateInput { name: string; slug?: string; lead_user_id?: number; discord_channel_id?: string; create_discord_channel?: boolean }
+export interface ProjectCreateInput { name: string; code_prefix: string; slug?: string; lead_user_id?: number; discord_channel_id?: string; create_discord_channel?: boolean }
 
 // Lo que ve el bot de Discord (GET /api/discord/channels y /members). Sin bot configurado, 503.
 // can_send false = el bot ve el canal pero no puede escribir ahí.

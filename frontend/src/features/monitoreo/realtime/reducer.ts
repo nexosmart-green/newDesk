@@ -9,6 +9,11 @@ export type PanelEvent =
   | { type: 'metrics'; payload: MetricsEvent }
   | { type: 'snapshot'; payload: SnapshotEvent }
   | { type: 'alert'; payload: { server_id: number } }
+  | { type: 'report'; payload: ReportEvent }
+  | { type: 'report.message'; payload: ReportEvent }
+
+// Un reporte de cliente cambió o tiene un mensaje nuevo (D-049). Llega igual al equipo y al portal.
+export interface ReportEvent { report_id: number; project_slug: string }
 
 export function applyStatus(servers: ServerSummary[] | undefined, event: StatusEvent): ServerSummary[] | undefined {
   if (!servers) return servers
@@ -27,7 +32,7 @@ export function applyMetrics(servers: ServerSummary[] | undefined, event: Metric
 }
 
 export function applyToDetail(detail: ServerDetail | undefined, event: PanelEvent): ServerDetail | undefined {
-  if (!detail || event.type === 'snapshot' || event.type === 'alert') return detail
+  if (!detail || event.type === 'snapshot' || event.type === 'alert' || event.type === 'report' || event.type === 'report.message') return detail
   if (detail.server.id !== event.payload.server_id) return detail
   if (event.type === 'server.status') {
     const [server] = applyStatus([detail.server], event.payload) ?? [detail.server]
@@ -54,7 +59,9 @@ export function applyToDetail(detail: ServerDetail | undefined, event: PanelEven
 
 // Valida el nombre (broadcastAs) y el payload que entrega Echo. Devuelve null si no es un evento conocido.
 export function parseEvent(type: string, payload: unknown): PanelEvent | null {
-  if (typeof payload !== 'object' || payload === null || !('server_id' in payload)) return null
+  if (typeof payload !== 'object' || payload === null) return null
+  if (type === 'report' || type === 'report.message') return 'report_id' in payload ? { type, payload: payload as ReportEvent } : null
+  if (!('server_id' in payload)) return null
   switch (type) {
     case 'server.status':
       return { type, payload: payload as StatusEvent }
@@ -70,6 +77,11 @@ export function parseEvent(type: string, payload: unknown): PanelEvent | null {
 }
 
 export function dispatchEvent(client: QueryClient, event: PanelEvent): void {
+  if (event.type === 'report' || event.type === 'report.message') {
+    // Las listas, ese detalle, el roadmap y el número del menú.
+    void client.invalidateQueries({ queryKey: keys.allReports })
+    return
+  }
   const serverId = event.payload.server_id
   switch (event.type) {
     case 'server.status':

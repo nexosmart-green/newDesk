@@ -82,4 +82,22 @@ describe('reducer de eventos en tiempo real', () => {
     expect(client.getQueryState(keys.servers)?.isInvalidated).toBe(true)
     expect(client.getQueryState(keys.server(1))?.isInvalidated).toBe(false)
   })
+
+  it('un mensaje de un reporte invalida las listas, ese detalle, el roadmap y el número del menú', () => {
+    const event = parseEvent('report.message', { report_id: 3, project_slug: 'playinn' })
+    expect(event?.type).toBe('report.message')
+    expect(parseEvent('report', { foo: 1 })).toBeNull()
+
+    const client = new QueryClient()
+    client.setQueryData(keys.reports('received', 1), { data: [] })
+    client.setQueryData(keys.report(3), {})
+    client.setQueryData(keys.reportsAttention, { count: 1 })
+    client.setQueryData(keys.roadmap, [])
+    client.setQueryData(keys.servers, [base])
+    if (event) dispatchEvent(client, event)
+    for (const key of [keys.reports('received', 1), keys.report(3), keys.reportsAttention, keys.roadmap]) {
+      expect(client.getQueryState(key)?.isInvalidated).toBe(true)
+    }
+    expect(client.getQueryState(keys.servers)?.isInvalidated).toBe(false)
+  })
 })

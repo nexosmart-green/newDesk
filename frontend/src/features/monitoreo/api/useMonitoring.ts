@@ -2,7 +2,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import type { Section } from './contract'
 import { monitoringApi as api } from './monitoringApi'
 import type {
-  Alert, AlertState, IndexedProject, MetricsRange, MetricsSeries, ServerDetail, ServerInput, ServerSummary, SiteCheck, TestResult,
+  Alert, AlertState, IndexedProject, MetricsRange, MetricsSeries, ReportStatus, ResponseRange, ServerDetail, ServerInput, ServerSummary, SiteCheck,
+  TestResult,
 } from './types'
 
 // Todo bajo 'monitoring' para no chocar con las keys de los demás módulos de newDesk.
@@ -14,6 +15,29 @@ export const keys = {
   allAlerts: ['monitoring', 'alerts'] as const,
   alerts: (state: AlertState, page: number, serverId?: number) => ['monitoring', 'alerts', state, page, serverId ?? null] as const,
   inventory: ['monitoring', 'inventory', 'projects'] as const,
+  // Clientes, proyectos y reportes: el árbol 'portal-admin' de monitoreo, también bajo 'monitoring'.
+  portalAdmin: ['monitoring', 'portal-admin'] as const,
+  allProjects: ['monitoring', 'portal-admin', 'projects'] as const,
+  clients: ['monitoring', 'portal-admin', 'clients'] as const,
+  client: (id: number) => ['monitoring', 'portal-admin', 'clients', id] as const,
+  adminProject: (id: number) => ['monitoring', 'portal-admin', 'projects', id] as const,
+  preview: (id: number) => ['monitoring', 'portal-admin', 'projects', id, 'preview'] as const,
+  incidents: (id: number) => ['monitoring', 'portal-admin', 'projects', id, 'incidents'] as const,
+  suggestions: (id: number) => ['monitoring', 'portal-admin', 'projects', id, 'suggestions'] as const,
+  vulnerabilities: (id: number) => ['monitoring', 'portal-admin', 'projects', id, 'vulnerabilities'] as const,
+  targets: ['monitoring', 'portal-admin', 'targets'] as const,
+  folders: ['monitoring', 'portal-admin', 'folders'] as const,
+  // path = la base del proyecto (portal-admin/projects/<id> en la vista previa del equipo).
+  responseTimes: (path: string, range: ResponseRange) => ['monitoring', 'response-times', path, range] as const,
+  allReports: ['monitoring', 'portal-admin', 'reports'] as const,
+  reports: (status: ReportStatus | null, page: number) => ['monitoring', 'portal-admin', 'reports', status, page] as const,
+  report: (id: number) => ['monitoring', 'portal-admin', 'reports', id] as const,
+  reportsAttention: ['monitoring', 'portal-admin', 'reports', 'attention'] as const,
+  // Bajo "reports": lo que refresca los reportes (estado, chat, Reverb) refresca también el roadmap.
+  roadmap: ['monitoring', 'portal-admin', 'reports', 'roadmap'] as const,
+  teamUsers: ['monitoring', 'users'] as const,
+  discordChannels: ['monitoring', 'discord', 'channels'] as const,
+  dailyReportStatus: ['monitoring', 'daily-report', 'status'] as const,
 }
 
 export function useServers() {

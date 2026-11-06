@@ -1,4 +1,4 @@
-import type { ServerStatus } from '../api/types'
+import type { PortalState, ServerStatus } from '../api/types'
 
 export type Tone = 'ok' | 'warn' | 'crit' | 'info' | 'idle'
 
@@ -24,4 +24,12 @@ export function processTone(state: string): Tone {
 // Supervisor: STOPPED con autostart=false es un programa estacionado a propósito (neutro, no error).
 export function isParked(program: { state: string; autostart?: boolean }): boolean {
   return program.state === 'STOPPED' && program.autostart === false
+}
+
+// Portal de clientes: el general es el peor componente; "Sin datos" nunca cuenta como caído.
+export const portalStateMeta: Record<PortalState, { label: string; tone: Tone }> = {
+  operational: { label: 'Operativo', tone: 'ok' },
+  degraded: { label: 'Degradado', tone: 'warn' },
+  down: { label: 'Caído', tone: 'crit' },
+  unknown: { label: 'Sin datos', tone: 'idle' },
 }

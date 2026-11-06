@@ -6,7 +6,7 @@ import { dispatchEvent, parseEvent } from './reducer'
 
 export type Connection = 'connecting' | 'open' | 'retrying'
 
-const eventTypes = ['server.status', 'metrics', 'snapshot', 'alert'] as const
+const eventTypes = ['server.status', 'metrics', 'snapshot', 'alert', 'report', 'report.message'] as const
 
 // Una sola conexión a Reverb para todo el módulo (canal privado `monitoring.{companyId}`, ADR-0002 punto 4).
 // 'open' = suscripto al canal; si se corta, Pusher reintenta solo y se ve 'retrying' hasta volver.

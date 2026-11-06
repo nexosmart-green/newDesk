@@ -32,6 +32,11 @@ export class ApiError extends Error {
     this.status = status
     this.fieldErrors = fieldErrors
   }
+
+  /** First error of a field; for arrays Laravel keys them per item (`images.0`), so those count too. */
+  field(name: string): string | undefined {
+    return this.fieldErrors[name]?.[0] ?? Object.entries(this.fieldErrors).find(([key]) => key.startsWith(`${name}.`))?.[1][0]
+  }
 }
 
 export function toApiError(error: unknown): ApiError {

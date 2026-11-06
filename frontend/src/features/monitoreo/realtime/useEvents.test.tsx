@@ -41,7 +41,7 @@ describe('useEvents', () => {
     const { result, unmount } = renderHook(() => useEvents(), { wrapper })
 
     expect(fake.echo.private).toHaveBeenCalledWith('monitoring.3')
-    expect([...fake.listeners.keys()]).toEqual(['.server.status', '.metrics', '.snapshot', '.alert'])
+    expect([...fake.listeners.keys()]).toEqual(['.server.status', '.metrics', '.snapshot', '.alert', '.report', '.report.message'])
     expect(result.current).toBe('connecting')
 
     act(() => fake.subscribe())
@@ -49,6 +49,11 @@ describe('useEvents', () => {
 
     act(() => fake.listeners.get('.server.status')?.({ server_id: 1, status: 'down', last_seen_at: null }))
     expect(client.getQueryData<ServerSummary[]>(keys.servers)?.[0]?.status).toBe('down')
+
+    // Los reportes viajan por el mismo canal (D-049): un mensaje nuevo refresca la cola del equipo.
+    client.setQueryData(keys.reportsAttention, { count: 0 })
+    act(() => fake.listeners.get('.report.message')?.({ report_id: 3, project_slug: 'playinn' }))
+    expect(client.getQueryState(keys.reportsAttention)?.isInvalidated).toBe(true)
 
     act(() => fake.status('connecting'))
     expect(result.current).toBe('retrying')

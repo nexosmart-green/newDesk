@@ -26,3 +26,18 @@ export function matchesSearch(query: string, fields: readonly (string | undefine
 export function lastSegment(path: string): string {
   return path.split('/').filter(Boolean).pop() ?? path
 }
+
+// Tipos del agente que son back; la DB del proyecto vive en su mismo server (D-072).
+const backTypes = new Set(['laravel', 'php', 'node-express', 'node'])
+const frontTypes = new Set(['nextjs', 'react', 'react-vite', 'static'])
+
+// En qué server está cada parte del proyecto, según sus carpetas vinculadas.
+export function partServers(folders: readonly { server_name: string; types: readonly string[] }[]): { part: string; servers: string[] }[] {
+  const on = (kinds: Set<string>) => [...new Set(folders.filter((folder) => folder.types.some((type) => kinds.has(type))).map((folder) => folder.server_name))]
+  const back = on(backTypes)
+  return [
+    { part: 'Front', servers: on(frontTypes) },
+    { part: 'Back', servers: back },
+    { part: 'DB', servers: back },
+  ].filter((row) => row.servers.length > 0)
+}
