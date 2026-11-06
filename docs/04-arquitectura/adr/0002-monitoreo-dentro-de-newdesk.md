@@ -31,7 +31,8 @@ Se reescribe el panel en newDesk; el agente no cambia. Puntos de diseño:
 7. **Login:** el equipo usa el de newDesk; los clientes, un código de 6 dígitos por mail (rol Cliente, rutas en un grupo aparte).
 8. **Estilos:** la piel de monitoreo vive bajo `[data-skin="monitoreo"]`, que redefine las variables de color solo en ese subárbol.
 9. **Migración:** importador de solo lectura sobre la base `monitoreo` que conserva los IDs de servidores, alertas, componentes y reportes (los links viejos siguen andando tras el redirect). Los cruces de clientes, proyectos y usuarios quedan en `import_mappings`.
-10. **Convivencia:** hasta el corte, newDesk consulta a los agentes con el mismo token pero con `MONITORING_NOTIFY=false` (sin Discord, mails ni heartbeat).
+10. **API espejo:** cada endpoint Go `/api/<ruta>` del equipo vive en `/api/v1/monitoring/<ruta>` y cada uno del portal `/api/portal/<ruta>` en `/api/v1/portal/<ruta>`, con el mismo request y la misma respuesta (el Go ya usa `{data, message, errors}` y `meta {page, per_page, total}`). Así el front se porta cambiando solo el prefijo. Acceso: "staff" del Go = permiso `monitoring.view`; "admin" = `monitoring.manage`. Validación: 422 con `errors` por campo (el Go devolvía 400).
+11. **Convivencia:** hasta el corte, newDesk consulta a los agentes con el mismo token pero con `MONITORING_NOTIFY=false` (sin Discord, mails ni heartbeat).
 
 ## Consecuencias
 
