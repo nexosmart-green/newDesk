@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { PendingCommentDialog } from './PendingCommentDialog'
 import { toPendingSummary } from './pendingEntry'
@@ -15,10 +15,9 @@ export function PendingCommentsBanner() {
   const pending = timer.data?.pending_comments ?? []
   const current = pending[0]
 
-  // The dialog unmounts with the banner when the last entry is completed: reset so it never reopens by itself.
-  useEffect(() => {
-    if (!current) setCompleting(false)
-  }, [current])
+  // The dialog unmounts with the banner when the last entry is completed: reset (during render, the React
+  // pattern for adjusting state to new data) so it never reopens by itself on the next automatic cut.
+  if (!current && completing) setCompleting(false)
 
   if (!current) return null
 

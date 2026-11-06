@@ -85,7 +85,7 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
             <TaskDue task={current} />
           </div>
         </div>
-        {mine && <StartTimerButton task={current} projectId={current.project?.id} />}
+        {mine && <StartTimerButton task={current} />}
       </header>
       <Panel title="Estado">
         <StatusPanel task={current} />

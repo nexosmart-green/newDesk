@@ -10,7 +10,7 @@ import type { Holiday } from '@/features/shifts/types'
 import { fieldErrorOf } from '@/lib/api'
 import { formatDate } from '@/lib/dates'
 import { holidayScopeLabels, type HolidayInput } from './types'
-import { useCreateHoliday, useDeleteHoliday, useMyCalendar } from './useCalendar'
+import { useCreateHoliday, useDeleteHoliday, useHolidays } from './useCalendar'
 
 const emptyHoliday: HolidayInput = { date: '', name: '', scope: 'company' }
 
@@ -18,8 +18,7 @@ const emptyHoliday: HolidayInput = { date: '', name: '', scope: 'company' }
 export function HolidaysTab() {
   const [currentYear] = useState(() => new Date().getFullYear())
   const [year, setYear] = useState(currentYear)
-  // There is no holidays index endpoint: the calendar query returns the company's holidays in a range.
-  const calendar = useMyCalendar(`${year}-01-01`, `${year}-12-31`)
+  const holidays = useHolidays(year)
   const create = useCreateHoliday()
   const remove = useDeleteHoliday()
   const [form, setForm] = useState<HolidayInput>(emptyHoliday)
@@ -62,13 +61,13 @@ export function HolidaysTab() {
         onToday={() => setYear(currentYear)}
         onNext={() => setYear(year + 1)}
       />
-      {!calendar.data ? (
-        <PageState isPending={calendar.isPending} error={calendar.error} />
-      ) : calendar.data.holidays.length === 0 ? (
+      {!holidays.data ? (
+        <PageState isPending={holidays.isPending} error={holidays.error} />
+      ) : holidays.data.length === 0 ? (
         <p className="text-sm text-muted">No hay feriados cargados en {year}.</p>
       ) : (
         <ul aria-label={`Feriados ${year}`} className="divide-y divide-border rounded-lg border border-border bg-surface">
-          {calendar.data.holidays.map((holiday) => (
+          {holidays.data.map((holiday) => (
             <li key={holiday.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
               <span className="font-mono">{formatDate(holiday.date)}</span>
               <span className="min-w-0 flex-1">{holiday.name}</span>

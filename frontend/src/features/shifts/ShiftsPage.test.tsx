@@ -59,8 +59,9 @@ describe('ShiftsPage', () => {
     expect(screen.getByRole('columnheader', { name: /jueves 5\/11.*Feriado: Día del equipo/ })).toBeInTheDocument()
   })
 
-  it('assigns a template to several selected cells, one request per weekday set', async () => {
-    const assign = vi.spyOn(shiftsApi, 'assignShifts').mockResolvedValue(1)
+  it('assigns a template to every selected cell in one request', async () => {
+    const setCells = vi.spyOn(shiftsApi, 'setShiftCells').mockResolvedValue(3)
+    const assign = vi.spyOn(shiftsApi, 'assignShifts')
     renderShifts()
 
     await userEvent.click(await screen.findByRole('button', { name: /Ana García, martes 3\/11/ }))
@@ -72,9 +73,18 @@ describe('ShiftsPage', () => {
     await userEvent.selectOptions(within(dialog).getByLabelText('Turno'), '4')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Aplicar' }))
 
-    const week = { from: '2026-11-02', to: '2026-11-08' }
-    expect(assign).toHaveBeenCalledWith({ user_ids: [1], shift_template_id: 4, ...week, weekdays: [2] })
-    expect(assign).toHaveBeenCalledWith({ user_ids: [2], shift_template_id: 4, ...week, weekdays: [2, 3] })
+    expect(setCells).toHaveBeenCalledTimes(1)
+    expect(setCells).toHaveBeenCalledWith({
+      cells: [
+        { user_id: 1, date: '2026-11-03' },
+        { user_id: 2, date: '2026-11-03' },
+        { user_id: 2, date: '2026-11-04' },
+      ],
+      shift_template_id: 4,
+    })
+    expect(assign).not.toHaveBeenCalled()
+    expect(await screen.findByText('Listo: 3 días actualizados.')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Selección' })).not.toBeInTheDocument()
   })
 
   it('bulk assigns people × date range × weekdays', async () => {

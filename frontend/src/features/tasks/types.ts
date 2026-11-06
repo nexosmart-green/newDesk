@@ -37,7 +37,8 @@ export interface Task {
   id: number
   code: string
   title: string
-  project?: { id: number; name: string; code_prefix: string }
+  /** `hours_exhausted`: the project's hour bag is spent, so ▶ can't start (RF-05.05). */
+  project?: { id: number; name: string; code_prefix: string; hours_exhausted: boolean }
   status?: Omit<TaskStatus, 'position'>
   priority: TaskPriority
   starts_on: string | null

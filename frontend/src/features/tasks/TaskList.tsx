@@ -34,7 +34,7 @@ export function TaskList({ tasks, userId, showProject = false }: TaskListProps) 
               <TaskDue task={task} />
             </div>
           </div>
-          {isAssignedTo(task, userId) && <StartTimerButton task={task} projectId={task.project?.id} compact />}
+          {isAssignedTo(task, userId) && <StartTimerButton task={task} compact />}
         </li>
       ))}
     </ul>

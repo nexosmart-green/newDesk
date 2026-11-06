@@ -11,8 +11,19 @@ const task = { code: 'bhn-60', title: 'Arreglar el login' }
 const otherEntry = buildTimeEntry({ task: { id: 12, code: 'bhn-12', title: 'Maquetar home' } })
 const previousComment = 'Terminé la maqueta de la home'
 
-function renderButton() {
-  return renderAt(<StartTimerButton task={task} projectId={9} />)
+function renderButton(hoursExhausted = false) {
+  return renderAt(<StartTimerButton task={{ ...task, project: { id: 9, hours_exhausted: hoursExhausted } }} />)
+}
+
+function mockExtensionRequest() {
+  return vi.spyOn(hoursApi, 'requestExtension').mockResolvedValue({
+    id: 1,
+    status: 'pending',
+    message: null,
+    project: { id: 9, name: 'Bahía Web' },
+    requested_by: { id: 1, full_name: 'Ana García' },
+    created_at: null,
+  })
 }
 
 describe('StartTimerButton', () => {
@@ -65,14 +76,7 @@ describe('StartTimerButton', () => {
     const message = 'Sin horas disponibles en Bahía Web: pedí una ampliación.'
     vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
     vi.spyOn(timerApi, 'startTimer').mockRejectedValue(new ApiError(422, message, {}, 'no_hours_available'))
-    const request = vi.spyOn(hoursApi, 'requestExtension').mockResolvedValue({
-      id: 1,
-      status: 'pending',
-      message: null,
-      project: { id: 9, name: 'Bahía Web' },
-      requested_by: { id: 1, full_name: 'Ana García' },
-      created_at: null,
-    })
+    const request = mockExtensionRequest()
     renderButton()
 
     await userEvent.click(screen.getByRole('button', { name: 'Iniciar cronómetro en bhn-60' }))
@@ -82,6 +86,22 @@ describe('StartTimerButton', () => {
 
     expect(request).toHaveBeenCalledWith(9, undefined)
     expect(await within(dialog).findByText('Pedido de ampliación enviado.')).toBeInTheDocument()
+  })
+
+  it('on a project already out of hours says so before any click and asks for an extension (RF-05.05)', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
+    const start = vi.spyOn(timerApi, 'startTimer')
+    const request = mockExtensionRequest()
+    renderButton(true)
+
+    const play = screen.getByRole('button', { name: 'Iniciar cronómetro en bhn-60' })
+    expect(play).toBeDisabled()
+    expect(play).toHaveAccessibleDescription('Sin horas disponibles — pedir ampliación')
+    await userEvent.click(screen.getByRole('button', { name: 'Pedir ampliación' }))
+
+    expect(request).toHaveBeenCalledWith(9, undefined)
+    expect(await screen.findByText('Pedido de ampliación enviado.')).toBeInTheDocument()
+    expect(start).not.toHaveBeenCalled()
   })
 
   it('on the running task offers ■ and stops it with the comment', async () => {

@@ -108,7 +108,7 @@ export function buildTask(overrides: Partial<Task> = {}): Task {
     id: 60,
     code: 'bhn-60',
     title: 'Arreglar el login',
-    project: { id: 9, name: 'Bahía Web', code_prefix: 'bhn' },
+    project: { id: 9, name: 'Bahía Web', code_prefix: 'bhn', hours_exhausted: false },
     status: { id: 1, name: 'Pendiente', color: '#9aa3b2', kind: 'open' },
     priority: 'medium',
     starts_on: null,

@@ -1,4 +1,4 @@
-import { datesBetween, isoWeekdayOf, shiftWeek, weekLabel, weekOf } from './week'
+import { datesBetween, shiftWeek, weekLabel, weekOf } from './week'
 
 describe('week helpers', () => {
   it('maps a Sunday to the Monday that starts its week', () => {
@@ -21,9 +21,7 @@ describe('week helpers', () => {
 })
 
 describe('date ranges', () => {
-  it('lists every date of a range and its ISO weekday', () => {
+  it('lists every date of a range', () => {
     expect(datesBetween('2026-10-30', '2026-11-02')).toEqual(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02'])
-    expect(isoWeekdayOf('2026-11-02')).toBe(1)
-    expect(isoWeekdayOf('2026-11-08')).toBe(7)
   })
 })

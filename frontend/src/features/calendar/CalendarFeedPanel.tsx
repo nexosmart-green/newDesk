@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CopyableValue } from '@/components/ui/CopyButton'
 import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
-import { useIssueCalendarFeed, useRevokeCalendarFeed } from './useCalendar'
+import { useCalendarFeedStatus, useIssueCalendarFeed, useRevokeCalendarFeed } from './useCalendar'
 
 /**
  * RF-06.07 iCal feed. The URL only exists in the response that issued it: it is shown once and
  * dropped when hidden. Generating another one rotates the token (the old URL stops working).
  */
 export function CalendarFeedPanel() {
+  const status = useCalendarFeedStatus()
   const issue = useIssueCalendarFeed()
   const revoke = useRevokeCalendarFeed()
   const [confirmingRevoke, setConfirmingRevoke] = useState(false)
@@ -30,9 +31,11 @@ export function CalendarFeedPanel() {
         >
           {issue.isPending ? 'Generando…' : 'Suscribirme (iCal)'}
         </Button>
-        <Button variant="secondary" onClick={() => setConfirmingRevoke(true)}>
-          Revocar suscripción
-        </Button>
+        {status.data === true && (
+          <Button variant="secondary" onClick={() => setConfirmingRevoke(true)}>
+            Revocar suscripción
+          </Button>
+        )}
       </div>
       <ErrorAlert error={issue.error} showFieldErrors />
       {revoke.isSuccess && <SuccessNotice message="Suscripción revocada: la URL anterior ya no funciona." />}

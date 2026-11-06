@@ -61,6 +61,13 @@ export interface AssignShiftsInput {
   weekdays: number[]
 }
 
+/** `PUT /shifts/cells`: an arbitrary grid selection, all or nothing. */
+export interface ShiftCellsInput {
+  cells: { user_id: number; date: string }[]
+  /** null clears the days. */
+  shift_template_id: number | null
+}
+
 export const weekdayOptions: readonly { value: number; label: string }[] = [
   { value: 1, label: 'Lun' },
   { value: 2, label: 'Mar' },

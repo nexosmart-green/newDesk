@@ -25,7 +25,8 @@ const calendar: MyCalendar = {
   holidays: [{ id: 8, date: '2026-11-05', name: 'Día del equipo', scope: 'company' }],
 }
 
-function renderCalendar() {
+function renderCalendar(feedActive = false) {
+  vi.spyOn(calendarApi, 'fetchCalendarFeedStatus').mockResolvedValue(feedActive)
   const fetch = vi.spyOn(calendarApi, 'fetchMyCalendar').mockResolvedValue(calendar)
   renderRoutes([{ path: '/calendario', element: <MyCalendarPage /> }], '/calendario')
   return fetch
@@ -63,9 +64,15 @@ describe('MyCalendarPage', () => {
   })
 
   it('shows the iCal URL once and lets me revoke it (RF-06.07)', async () => {
-    vi.spyOn(calendarApi, 'issueCalendarFeed').mockResolvedValue('https://desk.test/calendar/abc123.ics')
-    const revoke = vi.spyOn(calendarApi, 'revokeCalendarFeed').mockResolvedValue()
     renderCalendar()
+    const status = vi.mocked(calendarApi.fetchCalendarFeedStatus)
+    vi.spyOn(calendarApi, 'issueCalendarFeed').mockImplementation(async () => {
+      status.mockResolvedValue(true)
+      return 'https://desk.test/calendar/abc123.ics'
+    })
+    const revoke = vi.spyOn(calendarApi, 'revokeCalendarFeed').mockImplementation(async () => {
+      status.mockResolvedValue(false)
+    })
 
     await userEvent.click(await screen.findByRole('button', { name: 'Suscribirme (iCal)' }))
     expect(await screen.findByText('https://desk.test/calendar/abc123.ics')).toBeInTheDocument()
@@ -73,10 +80,28 @@ describe('MyCalendarPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ocultar' }))
     expect(screen.queryByText('https://desk.test/calendar/abc123.ics')).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Revocar suscripción' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Revocar suscripción' }))
     expect(revoke).not.toHaveBeenCalled()
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revocar' }))
     expect(revoke).toHaveBeenCalled()
     expect(await screen.findByText(/Suscripción revocada/)).toBeInTheDocument()
+    await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Revocar suscripción' })).not.toBeInTheDocument())
+  })
+
+  it('only offers revoking when I have an active feed (RF-06.07)', async () => {
+    renderCalendar(false)
+
+    expect(await screen.findByRole('button', { name: 'Suscribirme (iCal)' })).toBeInTheDocument()
+    const status = vi.mocked(calendarApi.fetchCalendarFeedStatus)
+    await vi.waitFor(() => expect(status).toHaveBeenCalled())
+    await status.mock.results[0]?.value
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('button', { name: 'Revocar suscripción' })).not.toBeInTheDocument()
+  })
+
+  it('offers revoking an active feed without generating a new URL', async () => {
+    renderCalendar(true)
+
+    expect(await screen.findByRole('button', { name: 'Revocar suscripción' })).toBeInTheDocument()
   })
 })

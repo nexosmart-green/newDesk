@@ -54,7 +54,7 @@ export function ProjectTasksTab() {
       ) : view === 'list' ? (
         <TaskList tasks={tasks.data.data} userId={userId} />
       ) : (
-        <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} projectId={project.id} userId={userId} />
+        <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} userId={userId} />
       )}
       {tasks.data && tasks.data.meta.total > tasks.data.data.length && (
         <p className="text-xs text-muted">

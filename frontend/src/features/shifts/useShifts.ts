@@ -6,9 +6,10 @@ import {
   deleteShiftTemplate,
   fetchShiftGrid,
   fetchShiftTemplates,
+  setShiftCells,
   updateShiftTemplate,
 } from './shiftsApi'
-import type { AssignShiftsInput, ShiftTemplateInput } from './types'
+import type { AssignShiftsInput, ShiftCellsInput, ShiftTemplateInput } from './types'
 
 const shiftsKey = ['shifts'] as const
 const templatesKey = [...shiftsKey, 'templates'] as const
@@ -37,15 +38,12 @@ function useRefreshShifts() {
 
 export function useAssignShifts() {
   const refresh = useRefreshShifts()
-  return useMutation({
-    // A free grid selection may need several requests (one per weekday set, see `selectionToAssignments`).
-    mutationFn: async (inputs: AssignShiftsInput[]) => {
-      let cells = 0
-      for (const input of inputs) cells += await assignShifts(input)
-      return cells
-    },
-    onSettled: refresh,
-  })
+  return useMutation({ mutationFn: (input: AssignShiftsInput) => assignShifts(input), onSuccess: refresh })
+}
+
+export function useSetShiftCells() {
+  const refresh = useRefreshShifts()
+  return useMutation({ mutationFn: (input: ShiftCellsInput) => setShiftCells(input), onSuccess: refresh })
 }
 
 export function useCopyPreviousWeek() {

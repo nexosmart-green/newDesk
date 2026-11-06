@@ -61,8 +61,3 @@ export function datesBetween(from: string, to: string): string[] {
   for (const day = parseLocalDate(from); day <= end; day.setDate(day.getDate() + 1)) dates.push(toLocalDateString(day))
   return dates
 }
-
-/** ISO weekday: 1 = Monday … 7 = Sunday. */
-export function isoWeekdayOf(value: string): number {
-  return ((parseLocalDate(value).getDay() + 6) % 7) + 1
-}

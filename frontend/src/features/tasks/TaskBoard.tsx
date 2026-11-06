@@ -12,12 +12,11 @@ interface TaskBoardProps {
   tasks: Task[]
   statuses: TaskStatus[]
   filters: TaskFilters
-  projectId: number
   userId: number | undefined
 }
 
 /** RF-04.04 "Tablero": drag a card to another column, or use its status select (keyboard). */
-export function TaskBoard({ tasks, statuses, filters, projectId, userId }: TaskBoardProps) {
+export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) {
   const updateStatus = useUpdateTaskStatus()
   const [dropTarget, setDropTarget] = useState<number | null>(null)
 
@@ -79,7 +78,7 @@ export function TaskBoard({ tasks, statuses, filters, projectId, userId }: TaskB
                         disabled={updateStatus.isPending}
                         onChange={(statusId) => move(task.code, statusId)}
                       />
-                      {isAssignedTo(task, userId) && <StartTimerButton task={task} projectId={projectId} compact />}
+                      {isAssignedTo(task, userId) && <StartTimerButton task={task} compact />}
                     </div>
                   </li>
                 ))}

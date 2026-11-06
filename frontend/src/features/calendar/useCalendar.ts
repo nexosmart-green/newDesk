@@ -1,8 +1,17 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createHoliday, deleteHoliday, fetchMyCalendar, issueCalendarFeed, revokeCalendarFeed } from './calendarApi'
+import {
+  createHoliday,
+  deleteHoliday,
+  fetchCalendarFeedStatus,
+  fetchHolidays,
+  fetchMyCalendar,
+  issueCalendarFeed,
+  revokeCalendarFeed,
+} from './calendarApi'
 import type { HolidayInput } from './types'
 
 const calendarKey = ['calendar'] as const
+const feedKey = ['calendar-feed'] as const
 
 export function useMyCalendar(from: string, to: string) {
   return useQuery({
@@ -12,13 +21,32 @@ export function useMyCalendar(from: string, to: string) {
   })
 }
 
+export function useHolidays(year: number) {
+  return useQuery({
+    queryKey: [...calendarKey, 'holidays', year],
+    queryFn: () => fetchHolidays(year),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useCalendarFeedStatus() {
+  return useQuery({ queryKey: feedKey, queryFn: fetchCalendarFeedStatus })
+}
+
+function useRefreshFeedStatus() {
+  const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries({ queryKey: feedKey })
+}
+
 export function useIssueCalendarFeed() {
+  const refresh = useRefreshFeedStatus()
   // gcTime 0: the secret URL is shown once and must not linger in the mutation cache.
-  return useMutation({ mutationFn: issueCalendarFeed, gcTime: 0 })
+  return useMutation({ mutationFn: issueCalendarFeed, gcTime: 0, onSuccess: refresh })
 }
 
 export function useRevokeCalendarFeed() {
-  return useMutation({ mutationFn: revokeCalendarFeed })
+  const refresh = useRefreshFeedStatus()
+  return useMutation({ mutationFn: revokeCalendarFeed, onSuccess: refresh })
 }
 
 /** Holidays show in every calendar and in the team grid. */

@@ -8,10 +8,9 @@ import { WeekNav } from '@/features/timesheet/WeekNav'
 import { datesBetween, weekLabel } from '@/features/timesheet/week'
 import { AssignCellsDialog } from './AssignCellsDialog'
 import { BulkAssignDialog } from './BulkAssignDialog'
-import { cellKey, selectionToAssignments, type Cell } from './selection'
+import { cellKey, type Cell } from './selection'
 import { ShiftGridTable } from './ShiftGridTable'
-import type { AssignShiftsInput } from './types'
-import { useAssignShifts, useCopyPreviousWeek, useShiftGrid, useShiftTemplates } from './useShifts'
+import { useAssignShifts, useCopyPreviousWeek, useSetShiftCells, useShiftGrid, useShiftTemplates } from './useShifts'
 
 type OpenDialog = 'cells' | 'bulk' | 'copy' | null
 
@@ -23,6 +22,7 @@ export function ShiftWeekBoard() {
   const grid = useShiftGrid(week.from, week.to)
   const templates = useShiftTemplates()
   const assign = useAssignShifts()
+  const setCells = useSetShiftCells()
   const copy = useCopyPreviousWeek()
   const [selected, setSelected] = useState<Map<string, Cell>>(new Map())
   const [dialog, setDialog] = useState<OpenDialog>(null)
@@ -43,18 +43,20 @@ export function ShiftWeekBoard() {
 
   function closeDialog() {
     assign.reset()
+    setCells.reset()
     copy.reset()
     setDialog(null)
   }
 
-  function runAssign(inputs: AssignShiftsInput[]) {
-    assign.mutate(inputs, {
-      onSuccess: (cells) => {
-        setNotice(`Listo: ${daysLabel(cells)} actualizados.`)
-        setSelected(new Map())
-        closeDialog()
-      },
-    })
+  function finishAssign(cells: number) {
+    setNotice(`Listo: ${daysLabel(cells)} actualizados.`)
+    setSelected(new Map())
+    closeDialog()
+  }
+
+  function assignSelection(templateId: number | null) {
+    const cells = [...selected.values()].map((cell) => ({ user_id: cell.userId, date: cell.date }))
+    setCells.mutate({ cells, shift_template_id: templateId }, { onSuccess: finishAssign })
   }
 
   function confirmCopy() {
@@ -105,9 +107,9 @@ export function ShiftWeekBoard() {
         <AssignCellsDialog
           cellCount={selected.size}
           templates={templates.data}
-          pending={assign.isPending}
-          error={assign.error}
-          onSubmit={(templateId) => runAssign(selectionToAssignments([...selected.values()], week, templateId))}
+          pending={setCells.isPending}
+          error={setCells.error}
+          onSubmit={assignSelection}
           onClose={closeDialog}
         />
       )}
@@ -118,7 +120,7 @@ export function ShiftWeekBoard() {
           week={week}
           pending={assign.isPending}
           error={assign.error}
-          onSubmit={(input) => runAssign([input])}
+          onSubmit={(input) => assign.mutate(input, { onSuccess: finishAssign })}
           onClose={closeDialog}
         />
       )}
