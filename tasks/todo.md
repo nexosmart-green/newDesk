@@ -16,6 +16,8 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06).
 - [x] E13 MCP (RF-12) — 18 tools, tokens `nd_`, QA-01..03 vía MCP
 - [ ] E8 Puesta en marcha — guía lista (`docs/09-operacion/puesta-en-marcha.md`); falta servidor de staging, `.claude/bug-report.json`, backups (RNF-09)
 
+- [x] RF-04.12 Mover tareas entre proyectos con sus horas (pedido 2026-11-06) — confirmar defaults P-27
+
 ## Pendientes / mejoras chicas detectadas
 
 - [x] `GET /holidays` y estado del feed iCal

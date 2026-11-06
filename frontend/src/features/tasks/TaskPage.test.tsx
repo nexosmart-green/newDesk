@@ -73,4 +73,43 @@ describe('TaskPage', () => {
 
     await vi.waitFor(() => expect(update).toHaveBeenCalledWith('bhn-60', 2))
   })
+
+  it('moves the task to another project and opens it under its new code (RF-04.12)', async () => {
+    vi.spyOn(tasksApi, 'fetchTask')
+      .mockResolvedValueOnce(buildTask())
+      .mockResolvedValue(buildTask({ code: 'otr-3', project: { id: 12, name: 'Otro Cliente', code_prefix: 'otr', hours_exhausted: false } }))
+    vi.spyOn(projectsApi, 'fetchProjects').mockResolvedValue(
+      page([buildProject({ id: 9, name: 'Bahía Web', code_prefix: 'bhn' }), buildProject({ id: 12, name: 'Otro Cliente', code_prefix: 'otr' })]),
+    )
+    const move = vi.spyOn(tasksApi, 'moveTask').mockResolvedValue({
+      task: buildTask({ code: 'otr-3', project: { id: 12, name: 'Otro Cliente', code_prefix: 'otr', hours_exhausted: false } }),
+      seconds_moved: 3600,
+      unassigned: ['Juan Pérez'],
+    })
+    renderTask()
+
+    const select = await screen.findByLabelText('Proyecto destino')
+    await screen.findByRole('option', { name: /Otro Cliente/ })
+    expect(screen.queryByRole('option', { name: /Bahía Web/ })).not.toBeInTheDocument()
+    await userEvent.selectOptions(select, '12')
+    await userEvent.click(screen.getByRole('button', { name: 'Mover tarea' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Mover' }))
+
+    expect(move).toHaveBeenCalledWith('bhn-60', 12)
+    expect(await screen.findByText(/Ahora es otr-3. El código bhn-60 sigue funcionando. Se quitaron de la tarea: Juan Pérez./)).toBeInTheDocument()
+  })
+
+  it('shows why a move was refused (hours of another client need hours.allocate)', async () => {
+    vi.spyOn(tasksApi, 'fetchTask').mockResolvedValue(buildTask())
+    vi.spyOn(projectsApi, 'fetchProjects').mockResolvedValue(page([buildProject({ id: 12, name: 'Otro Cliente', code_prefix: 'otr' })]))
+    vi.spyOn(tasksApi, 'moveTask').mockRejectedValue(new ApiError(403, 'Esta tarea ya tiene horas registradas: moverla cambia qué cliente las paga.'))
+    renderTask()
+
+    await screen.findByRole('option', { name: /Otro Cliente/ })
+    await userEvent.selectOptions(screen.getByLabelText('Proyecto destino'), '12')
+    await userEvent.click(screen.getByRole('button', { name: 'Mover tarea' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Mover' }))
+
+    expect(await screen.findByText(/cambia qué cliente las paga/)).toBeInTheDocument()
+  })
 })

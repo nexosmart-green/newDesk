@@ -8,6 +8,7 @@ import {
   fetchTask,
   fetchTaskComments,
   fetchTaskStatuses,
+  moveTask,
   postTaskComment,
   updateTask,
   updateTaskAssignees,
@@ -102,5 +103,15 @@ export function usePostTaskComment(code: string) {
   return useMutation({
     mutationFn: (comment: NewComment) => postTaskComment(code, comment),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: commentsKey(code) }),
+  })
+}
+
+/** Moving changes both projects' hours, so lists, bags and timesheets refresh. */
+export function useMoveTask(code: string) {
+  const refresh = useRefreshTasks()
+  const timeChanged = useTimeDataChanged()
+  return useMutation({
+    mutationFn: (projectId: number) => moveTask(code, projectId),
+    onSuccess: (result) => Promise.all([refresh(result.task), timeChanged()]),
   })
 }

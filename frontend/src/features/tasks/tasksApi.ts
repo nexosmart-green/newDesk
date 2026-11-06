@@ -72,3 +72,15 @@ export async function fetchTaskComments(code: string): Promise<Paginated<TaskCom
 export async function postTaskComment(code: string, comment: NewComment): Promise<TaskComment> {
   return dataOf(api.post<ApiEnvelope<TaskComment>>(`${taskPath(code)}/comments`, comment))
 }
+
+export interface MoveTaskResult {
+  task: Task
+  seconds_moved: number
+  /** People removed from the task because they are not members of the destination (their hours stay). */
+  unassigned: string[]
+}
+
+/** RF-04.12: move to another project; its hours move with it and the old code keeps working. */
+export async function moveTask(code: string, projectId: number): Promise<MoveTaskResult> {
+  return dataOf(api.put<ApiEnvelope<MoveTaskResult>>(`${taskPath(code)}/project`, { project_id: projectId }))
+}

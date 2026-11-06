@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Link, useLocation, useParams } from 'react-router'
+import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import { useCan, useCurrentUser } from '@/features/auth/useAuth'
 import { useProject } from '@/features/projects/useProjects'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { ApiError } from '@/lib/api'
 import { ManualTimeForm } from './ManualTimeForm'
+import { MoveTaskPanel } from './MoveTaskPanel'
 import { TaskDue, TaskStatusLabel } from './TaskBits'
 import { TaskAssigneesEditor } from './TaskAssigneesEditor'
 import { TaskComments } from './TaskComments'
@@ -68,6 +69,7 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
   const project = useProject(projectId)
   const members = project.data?.members ?? []
   const mine = isAssignedTo(current, userId)
+  const notice = (useLocation().state as { notice?: string } | null)?.notice
 
   return (
     <section className="mx-auto max-w-3xl space-y-4">
@@ -76,6 +78,7 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
           ← {current.project.name}
         </Link>
       )}
+      <SuccessNotice message={notice} />
       <header className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           <p className="font-mono text-sm uppercase text-muted">{current.code}</p>
@@ -106,6 +109,9 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
         </Panel>
       )}
       <TaskComments code={current.code} members={members} />
+      <Panel title="Mover a otro proyecto">
+        <MoveTaskPanel key={current.id} task={current} />
+      </Panel>
     </section>
   )
 }
