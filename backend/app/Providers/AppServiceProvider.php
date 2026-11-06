@@ -5,16 +5,28 @@ namespace App\Providers;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Monitoring\Contracts\AgentGateway;
+use App\Domain\Monitoring\Contracts\DiscordGateway;
+use App\Domain\Monitoring\Discord\Notifier;
+use App\Domain\Monitoring\Events\AlertChanged;
+use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Shared\Activity\ActivityContext;
+use App\Domain\Support\Contracts\ClaudeRunner;
+use App\Domain\Support\Events\ReportSubmitted;
 use App\Http\Responses\ApiResponse;
 use App\Infrastructure\Agent\CurlAgentGateway;
+use App\Infrastructure\Claude\UnixSocketClaudeRunner;
+use App\Infrastructure\Discord\DiscordBotGateway;
+use App\Infrastructure\Discord\MutedDiscordGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,11 +34,21 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->scoped(ActivityContext::class);
         $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
+        $this->app->bind(DiscordGateway::class, fn () => filled($token = config('newdesk.monitoring.discord.bot_token'))
+            ? new DiscordBotGateway($token, (string) config('newdesk.monitoring.discord.guild_id'),
+                (string) config('newdesk.monitoring.discord.category_id'), config('newdesk.monitoring.discord.channel_categories'))
+            : new MutedDiscordGateway);
+        $this->app->singleton(ClaudeRunner::class, UnixSocketClaudeRunner::class);
     }
 
     public function boot(): void
     {
         Model::shouldBeStrict(! $this->app->isProduction());
+
+        // RF-13.09: the Discord notices. Queued listeners, apart from Reverb; none queued with notices off (CA-13.20).
+        Event::listen(AlertChanged::class, [Notifier::class, 'alert']);
+        Event::listen(VulnerabilitiesScanned::class, [Notifier::class, 'vulnerabilities']);
+        Event::listen(ReportSubmitted::class, [Notifier::class, 'report']);
 
         if ($this->app->isProduction()) {
             URL::forceHttps();
@@ -64,5 +86,15 @@ class AppServiceProvider extends ServiceProvider
             ->response(fn () => ApiResponse::error('Mandaste muchos mensajes seguidos. Probá de nuevo en un rato.', 429)));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
+
+        // Personal tokens open the MCP endpoints only (as monitoreo's `mon_`): the REST API stays session-only.
+        Sanctum::getAccessTokenFromRequestUsing(fn (Request $request) => $request->is('mcp', 'mcp/*') ? $request->bearerToken() : null);
+        // RF-12.07, monitoreo's limit: 120 calls a minute per token.
+        RateLimiter::for('mcp', function (Request $request) {
+            $token = $request->user()?->currentAccessToken();
+
+            return Limit::perMinute(120)->by('mcp:'.($token instanceof PersonalAccessToken ? $token->getKey() : $request->ip()))
+                ->response(fn () => ApiResponse::error('Demasiadas llamadas con este token. Probá en un minuto.', 429));
+        });
     }
 }

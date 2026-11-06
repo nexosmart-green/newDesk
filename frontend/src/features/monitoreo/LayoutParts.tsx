@@ -10,13 +10,15 @@ import type { Connection } from './realtime/useEvents'
 
 // Las piezas del layout de monitoreo: marca, menú, estado de la conexión y la barra del celular.
 
-// Configuración es solo para admin (monitoring.manage). Clientes se abre desde Proyectos, como en monitoreo.
-const nav: { to: string; label: string; icon: IconName; end?: boolean; admin?: boolean }[] = [
+// Configuración: Servidores para el admin (monitoring.manage) y los tokens del MCP para quien lo usa (mcp.use).
+// Clientes se abre desde Proyectos, como en monitoreo.
+type NavPermission = 'monitoring.manage' | 'mcp.use'
+const nav: { to: string; label: string; icon: IconName; end?: boolean; anyOf?: NavPermission[] }[] = [
   { to: '/monitoreo', label: 'Servidores', icon: 'servers', end: true },
   { to: '/monitoreo/alerts', label: 'Alertas', icon: 'bell' },
   { to: '/monitoreo/proyectos', label: 'Proyectos', icon: 'users' },
   { to: '/monitoreo/reportes', label: 'Reportes', icon: 'inbox' },
-  { to: '/monitoreo/settings', label: 'Configuración', icon: 'cog', admin: true },
+  { to: '/monitoreo/settings', label: 'Configuración', icon: 'cog', anyOf: ['monitoring.manage', 'mcp.use'] },
 ]
 
 const connectionText: Record<Connection, string> = { open: 'En vivo', connecting: 'Conectando', retrying: 'Reconectando' }
@@ -76,11 +78,11 @@ function ConnectionDot({ connection }: { connection: Connection }) {
 }
 
 export function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
-  const isAdmin = useCan('monitoring.manage')
+  const allowed: Record<NavPermission, boolean> = { 'monitoring.manage': useCan('monitoring.manage'), 'mcp.use': useCan('mcp.use') }
   return (
     <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-3" aria-label="Monitoreo">
       {nav
-        .filter((item) => isAdmin || !item.admin)
+        .filter((item) => !item.anyOf || item.anyOf.some((permission) => allowed[permission]))
         .map((item) => (
           <NavItem key={item.to} {...item} onNavigate={onNavigate} />
         ))}

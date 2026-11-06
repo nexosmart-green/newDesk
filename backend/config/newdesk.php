@@ -20,6 +20,26 @@ return [
 
         // Optional: without it PageSpeed Insights applies Google's shared quota (D-043). Sent in a header.
         'pagespeed_api_key' => env('PAGESPEED_API_KEY'),
+
+        // RF-13.09: the twice-daily alert digest (comma-separated; empty = alert_email) and the
+        // external heartbeat pinged every minute while the poller is healthy (D-009).
+        'digest_email_to' => env('DIGEST_EMAIL_TO'),
+        'healthchecks_url' => env('HEALTHCHECKS_URL'),
+
+        // The "Monitoreo" Discord bot (D-059..D-061). Without a token nothing is listed or posted.
+        'discord' => [
+            'bot_token' => env('DISCORD_BOT_TOKEN'),
+            'guild_id' => env('DISCORD_GUILD_ID'),
+            // Where new projects get their channel.
+            'category_id' => env('DISCORD_CATEGORY_ID'),
+            // #resumen: servers down and the digest. Empty: those are not posted.
+            'summary_channel_id' => env('DISCORD_SUMMARY_CHANNEL_ID'),
+            // The only channel groups the panel lists and posts to (comma-separated ids).
+            'channel_categories' => array_values(array_filter(array_map('trim', explode(',', (string) env('DISCORD_CHANNEL_CATEGORIES', ''))))),
+        ],
+
+        // "Generar reporte" (D-074): systemd's socket to root's `claude -p`. Without it the button says why.
+        'claude_socket' => env('MONITORING_CLAUDE_SOCKET', '/run/monitor-claude.sock'),
     ],
 
     'supervisor' => [

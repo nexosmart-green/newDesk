@@ -3,6 +3,7 @@
 namespace App\Domain\Support\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Support\Events\ReportChanged;
 use App\Domain\Support\Models\Report;
 use App\Domain\Support\Models\ReportMessage;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 final class PostReportMessage
 {
     public const MAX_IMAGES = 3;
+
+    public function __construct(private readonly RecordActivity $recordActivity) {}
 
     /** @param  list<ReportImage>  $images  already checked */
     public function __invoke(Report $report, User $author, string $body, array $images, bool $internal): ReportMessage
@@ -50,6 +53,9 @@ final class PostReportMessage
                 $internal => ['team_seen_at' => $now],
                 default => ['last_team_message_at' => $now, 'team_seen_at' => $now, 'updated_at' => $now],
             })->save();
+            // Who answered, and through which channel (web or MCP with its token, RF-12.06).
+            ($this->recordActivity)($internal ? 'report.note_added' : 'report.message_posted', $report, $author, null,
+                ['message_id' => $message->id], $report->project_id);
 
             return $message;
         });

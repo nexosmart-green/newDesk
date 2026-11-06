@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    // RF-12: `nd_` lets secret scanners spot a personal token committed by mistake.
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', 'nd_'),
 
     /*
     |--------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Monitoring\DailyReportController;
 use App\Http\Controllers\Api\V1\Monitoring\ReportController;
 use App\Http\Controllers\Api\V1\Monitoring\RoadmapController;
 use Illuminate\Support\Facades\Route;
@@ -19,4 +20,10 @@ Route::prefix('monitoring/portal-admin')->middleware('can:monitoring.view')->gro
     Route::post('roadmap', [RoadmapController::class, 'store']);
     Route::put('roadmap', [RoadmapController::class, 'reorder']);
     Route::delete('roadmap/{report}', [RoadmapController::class, 'destroy'])->whereNumber('report');
+});
+
+// "Generar reporte" (D-074), in Reportes and Mi roadmap: monitoreo's /api/daily-report.
+Route::prefix('monitoring/daily-report')->middleware('can:monitoring.view')->group(function () {
+    Route::get('status', [DailyReportController::class, 'status']);
+    Route::post('/', [DailyReportController::class, 'store']);
 });
