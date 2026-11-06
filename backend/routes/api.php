@@ -2,7 +2,11 @@
 
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\V1\Auth\InvitationController;
+use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\SessionController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Api\V1\MeController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,15 +15,29 @@ Route::get('/health', [HealthController::class, 'index']);
 Route::get('/errors', [ErrorLogController::class, 'index']);
 
 Route::prefix('v1')->group(function () {
-    Route::post('/auth/login', [SessionController::class, 'store'])->middleware('throttle:login');
+    // Guest auth flows.
+    Route::middleware('throttle:login')->group(function () {
+        Route::post('/auth/login', [SessionController::class, 'store']);
+        Route::post('/auth/two-factor-challenge', [TwoFactorChallengeController::class, 'store']);
+        Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot']);
+        Route::post('/auth/reset-password', [PasswordResetController::class, 'reset']);
+        Route::get('/invitations/{token}', [InvitationController::class, 'show']);
+        Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept']);
+    });
 
     Route::middleware(['auth:sanctum', 'active'])->group(function () {
+        // Reachable before an Admin has enabled the mandatory 2FA.
         Route::post('/auth/logout', [SessionController::class, 'destroy']);
         Route::get('/me', [MeController::class, 'show']);
+        Route::post('/me/two-factor', [TwoFactorSetupController::class, 'store']);
+        Route::post('/me/two-factor/confirm', [TwoFactorSetupController::class, 'confirm']);
+        Route::delete('/me/two-factor', [TwoFactorSetupController::class, 'destroy']);
 
-        // Module routes: one file per domain module, e.g. routes/api/projects.php.
-        foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
-            require $moduleRoutes;
-        }
+        Route::middleware('two-factor')->group(function () {
+            // One file per domain module: routes/api/<module>.php.
+            foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
+                require $moduleRoutes;
+            }
+        });
     });
 });

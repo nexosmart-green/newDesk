@@ -5,12 +5,14 @@ namespace App\Domain\Identity\Models;
 use App\Domain\Companies\Models\Company;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Enums\UserStatus;
+use App\Domain\Identity\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -26,6 +28,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property UserStatus $status
  * @property string $locale
  * @property string|null $timezone
+ * @property string|null $two_factor_secret
+ * @property list<string>|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
  */
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable
@@ -39,6 +44,17 @@ class User extends Authenticatable
         'status', 'locale', 'timezone',
     ];
 
+    /** Mirrors the column defaults so fresh instances behave like reloaded ones. */
+    protected $attributes = [
+        'locale' => 'es',
+        'timezone' => null,
+        'avatar_path' => null,
+        'two_factor_secret' => null,
+        'two_factor_recovery_codes' => null,
+        'two_factor_confirmed_at' => null,
+        'last_login_at' => null,
+    ];
+
     protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     protected function casts(): array
@@ -49,7 +65,25 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'status' => UserStatus::class,
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null;
+    }
+
+    /** RF-01.02: mandatory for Admin (the system role). */
+    public function requiresTwoFactor(): bool
+    {
+        return (bool) $this->role?->is_system;
     }
 
     /** @return BelongsTo<Company, $this> */

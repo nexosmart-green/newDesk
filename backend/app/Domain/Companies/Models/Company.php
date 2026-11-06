@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
+ * @property string|null $tax_id
+ * @property string|null $logo_path
  * @property string $currency
  * @property string $timezone
  * @property array<string, mixed>|null $settings

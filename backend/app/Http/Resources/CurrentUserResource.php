@@ -24,6 +24,10 @@ class CurrentUserResource extends JsonResource
             'timezone' => $this->effectiveTimezone(),
             'role' => ['id' => $this->role->id, 'name' => $this->role->name],
             'permissions' => $this->isActive() ? $this->role->permissionValues() : [],
+            'two_factor' => [
+                'enabled' => $this->hasTwoFactorEnabled(),
+                'required' => $this->requiresTwoFactor(),
+            ],
             'company' => [
                 'id' => $this->company->id,
                 'name' => $this->company->name,

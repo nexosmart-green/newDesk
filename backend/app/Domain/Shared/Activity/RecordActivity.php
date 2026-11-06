@@ -2,6 +2,7 @@
 
 namespace App\Domain\Shared\Activity;
 
+use App\Domain\Companies\Models\Company;
 use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,7 +27,7 @@ final class RecordActivity
         ?int $projectId = null,
     ): ActivityLog {
         return ActivityLog::query()->create([
-            'company_id' => $subject->getAttribute('company_id') ?? $actor?->company_id,
+            'company_id' => $this->companyIdOf($subject) ?? $actor?->company_id,
             'subject_type' => $subject->getMorphClass(),
             'subject_id' => $subject->getKey(),
             'project_id' => $projectId,
@@ -37,5 +38,14 @@ final class RecordActivity
             'before' => $before,
             'after' => $after,
         ]);
+    }
+
+    private function companyIdOf(Model $subject): ?int
+    {
+        if ($subject instanceof Company) {
+            return $subject->id;
+        }
+
+        return $subject->getAttributes()['company_id'] ?? null;
     }
 }

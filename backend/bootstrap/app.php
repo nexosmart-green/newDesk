@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
@@ -33,7 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->append(RemoveStackHeaders::class);
-        $middleware->alias(['active' => EnsureUserIsActive::class]);
+        $middleware->alias([
+            'active' => EnsureUserIsActive::class,
+            'two-factor' => EnsureTwoFactorWhenRequired::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($sensitiveInput, $traceShort): void {
         $exceptions->dontReport([BusinessRuleViolation::class]);
@@ -80,8 +84,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'file' => $e->getFile().':'.$e->getLine(),
                 'trace_short' => $traceShort($e),
             ]);
-
-            return false;
+            // No `return false`: the default report (laravel.log) must still happen.
         });
 
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*', 'mcp', 'mcp/*') || $request->expectsJson());
