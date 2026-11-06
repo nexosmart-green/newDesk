@@ -46,8 +46,10 @@ class TaskPolicy
     }
 
     /**
-     * RF-04.12 / CA-04.12d: participant in both projects; if the task already has hours, moving it changes
-     * which client pays them, so it also needs `hours.allocate`.
+     * RF-04.12 / CA-04.12d (P-27 answered by the PO): participant in both projects, and then
+     *  - no hours on the task → anyone;
+     *  - every hour on it was registered by this person → they can fix their own mistake;
+     *  - otherwise (someone else's hours) → `hours.allocate`, since it changes which client pays them.
      */
     public function move(User $user, Task $task, Project $destination): Response
     {
@@ -55,11 +57,12 @@ class TaskPolicy
             return Response::denyAsNotFound();
         }
 
-        $hasHours = TimeEntry::query()->forCompany($task->company_id)->where('task_id', $task->id)->exists();
+        $othersHours = TimeEntry::query()->forCompany($task->company_id)
+            ->where('task_id', $task->id)->where('user_id', '!=', $user->id)->exists();
 
-        return ! $hasHours || $user->hasPermission(Permission::HoursAllocate)
+        return ! $othersHours || $user->hasPermission(Permission::HoursAllocate)
             ? Response::allow()
-            : Response::deny('Esta tarea ya tiene horas registradas: moverla cambia qué cliente las paga. Pedíselo a quien gestiona las horas.');
+            : Response::deny('Esta tarea tiene horas registradas por otras personas: moverla cambia qué cliente las paga. Pedíselo a quien gestiona las horas.');
     }
 
     /** Members work on the project; `projects.manage` sees and acts on every project. */

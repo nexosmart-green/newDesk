@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Support\PolicyDenialMessage;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Mcp\Request;
@@ -29,7 +30,9 @@ abstract class NewDeskTool extends Tool
         } catch (BusinessRuleViolation $e) {
             return Response::error($e->getMessage());
         } catch (AuthorizationException $e) {
-            return Response::error($e->status() === 404 ? 'No encontrado.' : 'No tenés permiso para esta acción con tu rol actual.');
+            return Response::error($e->status() === 404
+                ? 'No encontrado.'
+                : (PolicyDenialMessage::of($e) ?? 'No tenés permiso para esta acción con tu rol actual.'));
         } catch (ModelNotFoundException) {
             return Response::error('No encontrado.');
         }

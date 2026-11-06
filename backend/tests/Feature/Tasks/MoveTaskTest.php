@@ -60,13 +60,25 @@ it('refuses with a running timer or into a closed project (CA-04.12c)', function
         ->assertUnprocessable()->assertJsonPath('data.code', 'project_closed');
 });
 
-it('needs hours.allocate to move a task with hours; without hours any member of both can (CA-04.12d)', function () {
+it('lets whoever registered all the hours move the task (CA-04.12d, P-27)', function () {
+    ['dev' => $dev, 'task' => $task, 'from' => $from, 'to' => $to] = twoProjectsWithLoggedHour(); // the hour is dev's
+
+    $this->actingAs($dev)->putJson("/api/v1/tasks/{$task->code}/project", ['project_id' => $to->id])->assertOk();
+    expect($from->fresh()->consumed_seconds)->toBe(0)->and($to->fresh()->consumed_seconds)->toBe(3600);
+});
+
+it('needs hours.allocate when the task has hours registered by someone else (CA-04.12d)', function () {
     ['admin' => $admin, 'dev' => $dev, 'task' => $task, 'from' => $from, 'to' => $to] = twoProjectsWithLoggedHour();
+    $colleague = userWithRole($admin);
+    foreach ([$from, $to] as $project) {
+        $this->actingAs($admin)->postJson("/api/v1/projects/{$project->id}/members", ['user_id' => $colleague->id]);
+    }
 
-    $this->actingAs($dev)->putJson("/api/v1/tasks/{$task->code}/project", ['project_id' => $to->id])->assertForbidden();
+    $this->actingAs($colleague)->putJson("/api/v1/tasks/{$task->code}/project", ['project_id' => $to->id])
+        ->assertForbidden()->assertJsonPath('message', fn ($message) => str_contains($message, 'otras personas'));
 
-    $fresh = $this->actingAs($dev)->postJson("/api/v1/projects/{$from->id}/tasks", ['title' => 'Sin horas'])->json('data.code');
-    $this->actingAs($dev)->putJson("/api/v1/tasks/{$fresh}/project", ['project_id' => $to->id])->assertOk();
+    $fresh = $this->actingAs($colleague)->postJson("/api/v1/projects/{$from->id}/tasks", ['title' => 'Sin horas'])->json('data.code');
+    $this->actingAs($colleague)->putJson("/api/v1/tasks/{$fresh}/project", ['project_id' => $to->id])->assertOk();
 
     $manager = userWithRole($admin, DefaultRoles::MANAGER);
     $this->actingAs($manager)->putJson("/api/v1/tasks/{$task->code}/project", ['project_id' => $to->id])->assertOk();

@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
+use App\Support\PolicyDenialMessage;
 use App\Support\SafeRequestUrl;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -106,7 +107,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),
                 // Policies may deny "as not found" (CA-03.03): never confirm a resource exists.
                 $e instanceof AuthorizationException && $e->status() === 404 => ApiResponse::error('No encontrado.', 404),
-                $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error('No tenés permiso para esta acción.', 403),
+                // A policy may explain the denial (Response::deny('…')); Laravel wraps it in AccessDeniedHttpException.
+                $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error(
+                    PolicyDenialMessage::of($e) ?? 'No tenés permiso para esta acción.',
+                    403,
+                ),
                 $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error('No encontrado.', 404),
                 $e instanceof HttpException => ApiResponse::error($e->getStatusCode() === 429 ? 'Demasiados intentos. Probá en un rato.' : ($e->getMessage() ?: 'Error'), $e->getStatusCode()),
                 default => ApiResponse::error(config('app.debug') ? $e->getMessage() : 'Error interno del servidor.', 500),

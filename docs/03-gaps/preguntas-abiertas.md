@@ -18,6 +18,7 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-17 | ¿Precio vendido por bolsa? | ✅ No (sin facturación). Queda campo "referencia" opcional en texto. |
 | P-18 / P-19 | Migración y acceso a la DB | ✅ **Después del proyecto.** R1 arranca con carga inicial limpia; migración pasa a épica post-R1. |
 | P-20 | Horas vendidas por proyecto | ✅ OK, el dueño las carga al dar de alta los proyectos. |
+| P-27 | Mover tareas con horas (RF-04.12) | ✅ (2026-11-06) "Correcto": si el destino no tiene horas, se rechaza. **Puede moverla quien registró las horas** (si todas son suyas) o quien tenga `hours.allocate`. |
 
 ## Pendientes
 
@@ -38,4 +39,3 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-24 | 🟡 | Cerradura: ¿la salida se abre girando la perilla de adentro? ¿Quién tiene la cuenta admin de Nexxt Home? ¿Confirmamos modelo con foto de la etiqueta? | — Ver G-25: la cerradura registra **aperturas desde afuera**, la salida suele no quedar registrada a nombre de nadie. |
 | P-25 | ⚪ | RF-01.05 pide fotos **HEIC**. GD (PHP) no decodifica HEIC; hace falta Imagick + libheif en el servidor de prod. ¿Instalamos Imagick en prod o alcanza con que iPhone suba JPG? | Hoy: JPG/PNG/WebP con mensaje claro para iPhone ("Cámara → Formatos → Más compatible"); Safari ya convierte HEIC→JPEG al subir en la mayoría de los casos. El procesador está detrás de la interfaz `AvatarProcessor`: agregar HEIC = un adaptador Imagick, sin tocar el dominio. |
 | P-26 | ⚪ | RF-06.06 "Feriados nacionales (AR) cargados": ¿de qué fuente oficial los tomamos? Los trasladables cambian cada año por decreto. | Hoy se cargan desde la app (Admin → feriados, alcance nacional/empresa). Propuesta: importar al inicio de cada año desde la API pública ArgentinaDatos o el calendario oficial de argentina.gob.ar, con revisión manual. |
-| P-27 | ⚪ | RF-04.12 mover tareas entre proyectos: ¿quién puede mover una tarea **que ya tiene horas** (cambia qué cliente paga) y qué pasa si el destino no tiene horas suficientes? | Default implementado: con horas, solo quien tenga `hours.allocate` (Admin/Gestor); sin horas, cualquier miembro de ambos proyectos. Si el destino es bolsa sin lugar, se rechaza entero (cargar ampliación primero). Asignados que no son miembros del destino se quitan de la tarea (sus horas se conservan). |
