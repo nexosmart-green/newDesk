@@ -1,0 +1,9 @@
+.claude/bug-report.json
+.env
+.env.*
+!.env.example
+node_modules/
+vendor/
+*.sql
+*.sql.gz
+dumps/

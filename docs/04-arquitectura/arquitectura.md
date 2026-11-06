@@ -1,0 +1,49 @@
+# Arquitectura
+
+## Stack (estándar NexoSmart — ver ADR-0001)
+
+| Capa | Tecnología |
+|---|---|
+| Backend | **Laravel 12** (API JSON `{ data, message, errors }`), PHP 8.3+ |
+| Frontend | **React 19 + Vite + TypeScript strict** (SPA: app interna, sin SSR) |
+| DB | MySQL 8 |
+| Cache / colas / locks | Redis |
+| Tiempo real | Laravel Reverb (WebSocket) — cronómetro y cortes en vivo |
+| Mail | Resend, vía cola, 1/s |
+| Procesos | Supervisord (`supervisor:sync`): queue worker, scheduler, Reverb, ingesta cerradura |
+| Auth | Laravel Sanctum (cookie SPA) + 2FA; tokens personales Sanctum para MCP |
+| MCP | `laravel/mcp` (Streamable HTTP en `/mcp`) |
+| Tests | PHPUnit/Pest (backend), Vitest + RTL, Playwright E2E |
+
+Un **monolito modular**, no microservicios: equipo chico, un solo dominio, consistencia transaccional crítica en la bolsa de horas.
+
+## Módulos (backend `app/Domain/*`)
+
+```
+Identity      usuarios, roles, perfil, catálogos (puestos, áreas, habilidades)
+Clients       clientes y contactos
+Projects      proyectos, miembros, actividad
+Tasks         tareas, estados, comentarios, adjuntos, secuencia de códigos
+TimeTracking  timers, registros, bolsa de horas (asignaciones), cortes   ⭐
+Scheduling    turnos, plantillas, feriados, feed iCal
+Attendance    marcas crudas, mapeo, jornadas           (R2)
+Leaves        licencias                                (R2)
+Notifications notificaciones in-app + email
+Mcp           servidor MCP (laravel/mcp): tools finas que llaman a los servicios de dominio; auth Sanctum token
+Integrations/AccessControl  adaptadores de cerradura   (R2)
+```
+
+## Puntos de diseño críticos
+
+1. **Timer en servidor.** `time_entries` con `ended_at NULL` = timer activo. Índice único parcial lógico: un usuario no puede tener dos `ended_at NULL` (se garantiza con lock por usuario en Redis + verificación en transacción, porque MySQL no tiene índices parciales: columna generada `active_user_id = IF(ended_at IS NULL, user_id, NULL)` con UNIQUE).
+2. **Bolsa por ledger.** `hour_allocations` solo inserta. Disponibles se calcula; se cachea en `projects.consumed_seconds` actualizado en la misma transacción que cierra un registro (y se reconcilia con un job nocturno que alerta si difiere).
+3. **Corte automático.** Job cada minuto: proyectos con timers activos donde `bolsa − consumido_cerrado − Σ(now − started_at activos) ≤ 0` → cerrar timers recortando el último tramo; evento por WebSocket.
+4. **Iniciar timer** = transacción con `SELECT … FOR UPDATE` sobre el proyecto (regla R-2).
+5. **Ingesta de cerradura** desacoplada: adaptador por proveedor → tabla `access_events_raw` (idempotente por `(device_id, external_id)` o hash) → normalizador → jornadas. La caída del proveedor nunca rompe el resto del sistema.
+
+6. **Una sola capa de reglas.** Controllers HTTP y tools MCP son adaptadores delgados sobre los mismos servicios/actions de dominio (`StartTimer`, `StopTimer`, `CreateTask`, `AllocateHours`…) + mismas policies. Prohibido poner reglas de negocio en un controller o en una tool.
+
+## Ver
+
+- `modelo-de-datos.md`
+- `adr/`
