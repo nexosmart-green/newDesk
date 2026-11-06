@@ -110,6 +110,19 @@ final class Poller
         $this->gateway->tick();
     }
 
+    /**
+     * One section of one server right away, outside the schedule (monitoreo Poller.PollNow): the
+     * live check of a report refreshes the agents its components read. Saved, broadcast and
+     * alerted like a regular poll; the promise settles once that is done (driven by the
+     * gateway's tick()).
+     */
+    public function pollNow(Server $server, string $section): PromiseInterface
+    {
+        return $server->enabled
+            ? $this->pollSection($server, $section)
+            : Create::rejectionFor(AgentError::other('el server está deshabilitado'));
+    }
+
     /** Waits for every dispatched task, including the ones still waiting for a slot. */
     public function drain(): void
     {

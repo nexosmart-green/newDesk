@@ -41,10 +41,8 @@ class StatusPageController extends Controller
         return ApiResponse::ok($times($this->project($request, $slug), PortalProjectController::range($request)));
     }
 
-    /** {slug} only inside the signed-in user's client, and only while shown: anything else does not exist. */
     private function project(Request $request, string $slug): Project
     {
-        return Project::query()->where('client_id', $request->user()->client_id)->where('slug', $slug)
-            ->where('portal_active', true)->firstOrFail();
+        return StatusPage::clientProject($request->user(), $slug);
     }
 }

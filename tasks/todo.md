@@ -44,7 +44,7 @@
 - [x] F3 Pantallas del equipo (piel monitoreo): dashboard, detalle con pestañas, uPlot, modo en vivo, alertas, ABM servers
 - [x] F4 Estado de proyectos (componentes, 10 min, períodos, uptime, incidentes, PageSpeed, RDAP, carpetas) + importador
 - [x] F5 Portal de clientes (login por código, páginas de estado, tiempo real)
-- [ ] F6 Reportes (alta, chat, notas internas, cupos, roadmap, ventanas flotantes, errorwatch) + importador con archivos
+- [x] F6 Reportes (alta, chat, notas internas, cupos, roadmap, ventanas flotantes, errorwatch) + importador con archivos
 - [ ] F7 Discord, resumen 9/18 h, avisos de dominio, heartbeat
 - [ ] F8 MCP `/mcp/monitoreo` + reporte diario
 - [ ] F9 Corte: importación completa, redirects, agentes, supervisor, `MONITORING_NOTIFY=true`

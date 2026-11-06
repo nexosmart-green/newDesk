@@ -50,9 +50,17 @@ final class CheckComponents
         return $component->fresh('server');
     }
 
-    /** @param  Collection<int, Component>  $components */
-    private function check(Collection $components): void
+    /**
+     * Probes or judges each component now and applies the result to its stored state. The raw,
+     * undebounced results come back by component id: the live check of a report shows them as they
+     * are (D-041).
+     *
+     * @param  Collection<int, Component>  $components
+     * @return array<int, Result>
+     */
+    public function check(Collection $components): array
     {
+        $results = [];
         $urls = $components->filter(fn (Component $component) => in_array($component->kind, [Component::HTTP, Component::HEALTH], true) && $component->url !== null)
             ->mapWithKeys(fn (Component $component) => [$component->id => $component->url])->all();
         $probes = $this->prober->probe($urls);
@@ -81,7 +89,10 @@ final class CheckComponents
                 $result = $this->evaluateAgent($component, $servers, $snapshots, $now);
             }
             $this->apply($component, $result, $now);
+            $results[$component->id] = $result;
         }
+
+        return $results;
     }
 
     /**

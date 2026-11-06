@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Log;
@@ -110,6 +111,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return match (true) {
+                // A response already built for this case (e.g. a rate limiter's own answer).
+                $e instanceof HttpResponseException => $e->getResponse(),
                 $e instanceof ValidationException => ApiResponse::error('Los datos enviados no son válidos.', 422, $e->errors()),
                 $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, null, ['code' => $e->ruleCode, ...$e->context]),
                 $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),

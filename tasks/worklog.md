@@ -31,3 +31,10 @@
 - F4 back: módulo `StatusPage` (componentes, regla de 10 min, períodos, uptime, incidentes y notas, tiempos de respuesta, carpetas, sugerencias, PageSpeed, RDAP, vulnerabilidades), endpoints `portal-admin/*` y del cliente, mails al cliente solo con `MONITORING_NOTIFY`, importador de clientes/proyectos/usuarios/historial con `import_mappings`.
 - Decisiones: slug único por empresa y `login` reservado; mails de usuarios cliente en minúsculas; devs secundarios = miembros (P-29).
 - Tests: back 213 ok (+1 Redis local), front 157 ok.
+
+## 2026-11-06 — Monitoreo F6 (reportes)
+
+- Módulo `Support`: reportes del cliente (multipart, chequeo en vivo dentro del presupuesto, foto de los servers D-050, cupos 5/h y 20/día en DB D-091, 200 MB de imágenes D-090, firma de bytes), chat con imágenes y notas internas (nunca al canal del cliente, CA-13.18), cola del equipo con contador, roadmap personal (409 si el orden quedó viejo), retención `support:retention` (imágenes 180 d, reportes 1 año, huérfanos), mail al equipo solo con `MONITORING_NOTIFY`, evento `ReportSubmitted` para Discord (F7), importador con `--storage-dir`.
+- Fix transversal: `HttpResponseException` (respuesta ya armada, p. ej. 429 de un limiter) ya no se vuelve 500.
+- Nota de deploy: timeouts de PHP-FPM/nginx ≥ 30 s (chequeo en vivo) y `upload_max_filesize`/`post_max_size` ≥ 16 MB.
+- Tests: back 228 ok (+1 Redis local).

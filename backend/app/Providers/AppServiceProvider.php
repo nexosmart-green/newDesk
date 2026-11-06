@@ -6,6 +6,7 @@ use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Shared\Activity\ActivityContext;
+use App\Http\Responses\ApiResponse;
 use App\Infrastructure\Agent\CurlAgentGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +55,13 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
         RateLimiter::for('portal-verify', fn (Request $request) => Limit::perHour(30)->by($request->ip()));
+
+        // "Reportar un problema" (D-041, D-049), per client: any report POST before its body is read
+        // (the 5/hour and 20/day of valid reports are counted on the rows, SubmitReport) and chat messages.
+        RateLimiter::for('portal-report-attempts', fn (Request $request) => Limit::perHour(30)->by('report-attempts:'.$request->user()?->client_id)
+            ->response(fn () => ApiResponse::error('Demasiados intentos. Esperá un rato o escribinos por mail.', 429)));
+        RateLimiter::for('portal-report-messages', fn (Request $request) => Limit::perHour(30)->by('report-messages:'.$request->user()?->client_id)
+            ->response(fn () => ApiResponse::error('Mandaste muchos mensajes seguidos. Probá de nuevo en un rato.', 429)));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
     }

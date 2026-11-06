@@ -2,6 +2,7 @@
 
 namespace App\Domain\StatusPage\Queries;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Monitoring\Alerts\AlertRules;
 use App\Domain\Monitoring\Models\Alert;
 use App\Domain\Projects\Models\Project;
@@ -70,6 +71,12 @@ final class StatusPage
         $view['pagespeed'] = self::pageSpeedSummaries($components, $now);
 
         return $view;
+    }
+
+    /** {slug} only inside the client user's client, and only while shown: anything else does not exist (404). */
+    public static function clientProject(User $user, string $slug): Project
+    {
+        return Project::query()->where('client_id', $user->client_id)->where('slug', $slug)->where('portal_active', true)->firstOrFail();
     }
 
     /** @return Collection<int, Component> */

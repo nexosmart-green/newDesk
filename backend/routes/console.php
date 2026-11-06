@@ -3,6 +3,7 @@
 use App\Domain\StatusPage\Actions\CheckComponents;
 use App\Domain\StatusPage\Actions\CheckDomains;
 use App\Domain\StatusPage\Actions\MeasurePageSpeed;
+use App\Domain\Support\Actions\PurgeReports;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -23,6 +24,14 @@ Artisan::command('status-page:domains', fn (CheckDomains $check) => $check())
 Artisan::command('status-page:pagespeed', fn (MeasurePageSpeed $measure) => $measure->due())
     ->purpose('Measure with PageSpeed Insights the web components due (weekly, at most 6 per pass)');
 
+// RF-13.08 retention (D-041, D-049, D-093): report images 180 days, reports 1 year, orphan files.
+Artisan::command('support:retention', function (PurgeReports $purge) {
+    foreach ($purge(now()) as $kind => $count) {
+        $this->line("{$kind}: {$count} borrados");
+    }
+})->purpose('Purge report images after 180 days, reports after a year and report files no row names');
+
 Schedule::command('status-page:check')->everyMinute()->withoutOverlapping()->runInBackground();
+Schedule::command('support:retention')->hourly()->withoutOverlapping();
 Schedule::command('status-page:domains')->hourly()->withoutOverlapping()->runInBackground();
 Schedule::command('status-page:pagespeed')->hourly()->withoutOverlapping()->runInBackground();
