@@ -17,7 +17,7 @@ class SupervisorSync extends Command
         {--dry-run : Print the config instead of writing it}
         {--no-reload : Do not call supervisorctl}';
 
-    protected $description = 'Generate the Supervisord config for queue, scheduler and Reverb, and reload';
+    protected $description = 'Generate the Supervisord config for queue, scheduler, Reverb and monitoring, and reload';
 
     /**
      * Add new background processes here (e.g. lock ingestion in R2).
@@ -32,6 +32,10 @@ class SupervisorSync extends Command
             // Runs the minute-level jobs: timer cuts (RF-05.06), forgotten timers, alerts.
             'scheduler' => ['command' => 'schedule:work'],
             'reverb' => ['command' => 'reverb:start --host=0.0.0.0 --port='.config('newdesk.supervisor.reverb_port')],
+            // RF-13.02. One process polls every agent; it restarts itself every hour. On stop it lets
+            // running agent calls (60 s at most) finish.
+            'monitoring-poller' => ['command' => 'monitoring:poll', 'stopwaitsecs' => 75],
+            'monitoring-worker' => ['command' => 'queue:work redis --queue=monitoring,discord --sleep=1 --tries=3 --max-time=3600', 'stopwaitsecs' => 120],
         ];
     }
 

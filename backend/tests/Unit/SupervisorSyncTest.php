@@ -9,5 +9,9 @@ it('renders one supervisord program per background process', function () {
         ->toContain('[program:newdesk-queue]')
         ->toContain('[program:newdesk-scheduler]')
         ->toContain('[program:newdesk-reverb]')
-        ->toContain('programs=newdesk-queue,newdesk-scheduler,newdesk-reverb');
+        ->toContain('[program:newdesk-monitoring-poller]')
+        ->toContain('artisan monitoring:poll')
+        ->toContain('[program:newdesk-monitoring-worker]')
+        ->toContain('queue:work redis --queue=monitoring,discord')
+        ->toContain('programs=newdesk-queue,newdesk-scheduler,newdesk-reverb,newdesk-monitoring-poller,newdesk-monitoring-worker');
 });

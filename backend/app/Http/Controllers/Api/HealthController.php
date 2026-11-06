@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Monitoring\Polling\PollerSignals;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +15,8 @@ use Throwable;
  */
 class HealthController extends Controller
 {
+    public function __construct(private readonly PollerSignals $pollerSignals) {}
+
     public function index(): JsonResponse
     {
         $services = [
@@ -26,6 +29,8 @@ class HealthController extends Controller
             }),
             // Redis backs queues, locks and the timer cuts: it is required, not optional.
             'redis' => config('database.redis.client') === null || $this->check(fn () => Redis::connection()->ping()),
+            // monitoring:poll leaves a tick every second (RF-13.02).
+            'poller' => $this->check(fn () => $this->pollerSignals->pollerAlive(now()->getTimestamp())),
         ];
 
         $healthy = ! in_array(false, $services, true);

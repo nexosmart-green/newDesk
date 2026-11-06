@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
+use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Shared\Activity\ActivityContext;
+use App\Infrastructure\Agent\CurlAgentGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
+        $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
     }
 
     public function boot(): void

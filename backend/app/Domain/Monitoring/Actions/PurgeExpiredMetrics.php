@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Domain\Monitoring\Actions;
+
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Retention as in monitoreo: raw samples 7 days, hourly rollups 1 year.
+ */
+final class PurgeExpiredMetrics
+{
+    /** @return array<string, int> deleted rows per table */
+    public function __invoke(CarbonInterface $now): array
+    {
+        $now = $now->toImmutable()->utc();
+        $jobs = [
+            'monitoring_metrics_raw' => ['ts', $now->subDays(7)],
+            'monitoring_metrics_hourly' => ['hour', $now->subYear()],
+        ];
+
+        $deleted = [];
+        foreach ($jobs as $table => [$column, $before]) {
+            $deleted[$table] = 0;
+            // Batched so a large backlog never holds long locks.
+            do {
+                $count = DB::table($table)->where($column, '<', $before)->limit(5000)->delete();
+                $deleted[$table] += $count;
+            } while ($count === 5000);
+        }
+
+        return $deleted;
+    }
+}
