@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Middleware\RejectMcpTokens;
 use Illuminate\Support\Facades\Route;
 
 // Observability (/bug-report contract) — outside auth.
@@ -25,7 +26,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept']);
     });
 
-    Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::middleware(['auth:sanctum', 'active', RejectMcpTokens::class])->group(function () {
         // Reachable before an Admin has enabled the mandatory 2FA.
         Route::post('/auth/logout', [SessionController::class, 'destroy']);
         Route::get('/me', [MeController::class, 'show']);

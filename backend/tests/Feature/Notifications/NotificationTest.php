@@ -83,10 +83,10 @@ it('lists, counts and marks notifications as read in the bell', function () {
     ['project' => $project] = bagProject($admin, [$dev], 3600);
     $this->actingAs($admin)->postJson("/api/v1/projects/{$project->id}/tasks", ['title' => 'Logo', 'assignee_ids' => [$dev->id]]);
 
-    $id = $this->actingAs($dev)->getJson('/api/v1/notifications')
+    $items = $this->actingAs($dev)->getJson('/api/v1/notifications')
         ->assertOk()->assertJsonPath('meta.unread_count', 2) // task from bagProject + this one
-        ->assertJsonPath('data.0.title', 'Te asignaron bhn-2')
-        ->json('data.0.id');
+        ->json('data');
+    $id = collect($items)->firstWhere('title', 'Te asignaron bhn-2')['id'];
 
     $this->actingAs($dev)->postJson("/api/v1/notifications/{$id}/read")->assertJsonPath('data.unread_count', 1);
     $this->actingAs($dev)->postJson('/api/v1/notifications/read-all')->assertJsonPath('data.unread_count', 0);

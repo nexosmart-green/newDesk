@@ -33,6 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // API-only backend: guests get a 401 JSON, never a redirect to a non-existent login route.
+        $middleware->redirectGuestsTo(fn () => null);
         $middleware->append(RemoveStackHeaders::class);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,

@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    // RF-12 security: identifiable prefix so secret scanners catch committed tokens.
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', 'nd_'),
 
     /*
     |--------------------------------------------------------------------------
