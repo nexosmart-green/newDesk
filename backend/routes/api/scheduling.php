@@ -14,7 +14,10 @@ Route::post('/shifts/assign', [ShiftController::class, 'assign']);
 Route::post('/shifts/copy-previous-week', [ShiftController::class, 'copyPreviousWeek']);
 
 Route::get('/me/calendar', [CalendarController::class, 'mine']);
+Route::get('/me/calendar-feed', [CalendarController::class, 'feedStatus']);
 Route::post('/me/calendar-feed', [CalendarController::class, 'issueFeed']);
+Route::get('/holidays', [CalendarController::class, 'holidays']);
+Route::put('/shifts/cells', [ShiftController::class, 'setCells']);
 Route::delete('/me/calendar-feed', [CalendarController::class, 'revokeFeed']);
 
 Route::post('/holidays', [CalendarController::class, 'storeHoliday']);

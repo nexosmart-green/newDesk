@@ -28,6 +28,20 @@ class CalendarController extends Controller
         return ApiResponse::ok($calendar->forPerson($request->user(), $range['from'], $range['to']));
     }
 
+    public function holidays(Request $request): JsonResponse
+    {
+        $request->validate(['year' => ['required', 'integer', 'between:2000,2100']]);
+        $year = $request->integer('year');
+
+        return ApiResponse::ok(Holiday::query()->whereBetween('date', ["{$year}-01-01", "{$year}-12-31"])->orderBy('date')->get()
+            ->map(fn (Holiday $holiday) => $holiday->only('id', 'name', 'scope') + ['date' => $holiday->date->toDateString()]));
+    }
+
+    public function feedStatus(Request $request, IssueCalendarFeed $feed): JsonResponse
+    {
+        return ApiResponse::ok(['active' => $feed->isActive($request->user())]);
+    }
+
     public function storeHoliday(Request $request): JsonResponse
     {
         Gate::authorize(Permission::CompanyManage->value);

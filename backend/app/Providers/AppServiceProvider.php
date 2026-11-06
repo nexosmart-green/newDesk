@@ -9,6 +9,7 @@ use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\TimeTracking\Listeners\StopTimersOnDomainEvents;
+use App\Domain\TimeTracking\Support\HourBagRegistry;
 use App\Infrastructure\Images\GdAvatarProcessor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
+        $this->app->scoped(HourBagRegistry::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
     }
 

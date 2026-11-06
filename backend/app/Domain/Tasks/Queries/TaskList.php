@@ -24,7 +24,7 @@ final class TaskList
     public function __invoke(User $viewer, ?Project $project, array $filters, int $perPage = 50): LengthAwarePaginator
     {
         $query = Task::query()
-            ->with(['status', 'assignees', 'project:id,name,code_prefix,status'])
+            ->with(['status', 'assignees', 'project:id,company_id,name,code_prefix,status,type,allocated_seconds,consumed_seconds'])
             ->when($project, fn (Builder $q) => $q->where('tasks.project_id', $project->id))
             ->when(! $project, fn (Builder $q) => $this->onlyVisibleProjects($q, $viewer))
             ->when($filters['project_id'] ?? null, fn (Builder $q, int $id) => $q->where('tasks.project_id', $id))

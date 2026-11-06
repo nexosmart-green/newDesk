@@ -6,6 +6,7 @@ use App\Domain\Identity\Enums\Permission;
 use App\Domain\Scheduling\Actions\AssignShifts;
 use App\Domain\Scheduling\Actions\CopyPreviousWeek;
 use App\Domain\Scheduling\Actions\SaveShiftTemplate;
+use App\Domain\Scheduling\Actions\SetShiftCells;
 use App\Domain\Scheduling\Enums\WorkMode;
 use App\Domain\Scheduling\Models\ShiftTemplate;
 use App\Domain\Scheduling\Queries\Calendar;
@@ -74,6 +75,21 @@ class ShiftController extends Controller
         $cells = $assignShifts($request->user(), array_map('intval', $input['user_ids']), $template, $input['from'], $input['to'], array_map('intval', $input['weekdays'] ?? []));
 
         return ApiResponse::ok(['cells' => $cells], $template ? 'Turnos asignados.' : 'Turnos quitados.');
+    }
+
+    /** Atomic free selection: `cells` = [{user_id, date}], same template (null clears). */
+    public function setCells(Request $request, SetShiftCells $setCells): JsonResponse
+    {
+        Gate::authorize(Permission::ShiftsManage->value);
+        $input = $request->validate([
+            'cells' => ['required', 'array', 'min:1'],
+            'cells.*.user_id' => ['required', 'integer'],
+            'cells.*.date' => ['required', 'date_format:Y-m-d'],
+            'shift_template_id' => ['nullable', 'integer'],
+        ]);
+        $template = isset($input['shift_template_id']) ? ShiftTemplate::query()->findOrFail($input['shift_template_id']) : null;
+
+        return ApiResponse::ok(['cells' => $setCells($request->user(), $input['cells'], $template)], $template ? 'Turnos asignados.' : 'Turnos quitados.');
     }
 
     public function copyPreviousWeek(Request $request, CopyPreviousWeek $copy): JsonResponse

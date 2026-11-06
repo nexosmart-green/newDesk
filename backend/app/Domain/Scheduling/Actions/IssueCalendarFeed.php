@@ -35,6 +35,11 @@ final class IssueCalendarFeed
         DB::table('calendar_feed_tokens')->where('user_id', $user->id)->whereNull('revoked_at')->update(['revoked_at' => now()]);
     }
 
+    public function isActive(User $user): bool
+    {
+        return DB::table('calendar_feed_tokens')->where('user_id', $user->id)->whereNull('revoked_at')->exists();
+    }
+
     public function userFor(string $token): ?User
     {
         $userId = DB::table('calendar_feed_tokens')
