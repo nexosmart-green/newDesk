@@ -2,18 +2,15 @@
 
 namespace App\Domain\Monitoring\Events;
 
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
-
 /**
  * An alert opened, turned critical, resolved, or a flood of openings summarized (monitoreo
  * Engine.OnChange). `alert` is monitoreo's store.Alert JSON; a summary's has no id.
  *
- * The browser gets what monitoreo's SSE `alert` carried: every alert opened or resolved, also the
- * summarized ones. Notices (Discord, RF-13.09) listen to this event: they post `summary` instead
- * of each `summarized` opening (D-107, CA-13.11).
+ * A domain event: the Discord notices (RF-13.09) listen here and post `summary` instead of each
+ * `summarized` opening (D-107, CA-13.11). The browsers hear AlertBroadcast, sent apart and best
+ * effort, so Reverb being down never stops a notice.
  */
-final class AlertChanged implements ShouldBroadcastNow
+final class AlertChanged
 {
     public const OPENED = 'opened';
 
@@ -32,25 +29,4 @@ final class AlertChanged implements ShouldBroadcastNow
         public readonly string $change,
         public readonly bool $summarized = false,
     ) {}
-
-    public function broadcastWhen(): bool
-    {
-        return $this->change === self::OPENED || $this->change === self::RESOLVED;
-    }
-
-    public function broadcastOn(): PrivateChannel
-    {
-        return new PrivateChannel('monitoring.'.$this->companyId);
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'alert';
-    }
-
-    /** @return array<string, mixed> */
-    public function broadcastWith(): array
-    {
-        return $this->alert;
-    }
 }

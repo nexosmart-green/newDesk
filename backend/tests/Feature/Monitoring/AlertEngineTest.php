@@ -5,6 +5,7 @@ use App\Domain\Monitoring\Alerts\AlertObservation;
 use App\Domain\Monitoring\Alerts\AlertResult;
 use App\Domain\Monitoring\Alerts\AlertRules;
 use App\Domain\Monitoring\Alerts\AlertState;
+use App\Domain\Monitoring\Events\AlertBroadcast;
 use App\Domain\Monitoring\Events\AlertChanged;
 use App\Domain\Monitoring\Models\Alert;
 use App\Domain\Monitoring\Models\Server;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Event;
  * database, its streaks in the cache. What monitoreo's OnChange heard is what AlertChanged carries.
  */
 beforeEach(function () {
-    Event::fake([AlertChanged::class]);
+    Event::fake([AlertChanged::class, AlertBroadcast::class]);
     $admin = provisionCompany();
     $this->server = tap((new Server)->forceFill([
         'company_id' => $admin->company_id, 'name' => 'reaquila', 'ip' => '203.0.113.10', 'agent_port' => 9100,
@@ -131,9 +132,10 @@ it('broadcasts the opened and resolved alert as monitoreo SSE `alert` did', func
     ($this->apply)([diskResult(97)], $this->start->addMinute());
     ($this->apply)([diskResult(10)], $this->start->addMinutes(2));
 
-    $events = Event::dispatched(AlertChanged::class)->map(fn (array $dispatch) => $dispatch[0])->values();
+    // Sent apart from AlertChanged: Reverb being down never stops a notice.
+    $events = Event::dispatched(AlertBroadcast::class)->map(fn (array $dispatch) => $dispatch[0])->values();
     $alert = Alert::query()->sole();
-    expect($events->map(fn (AlertChanged $event) => [$event->change, $event->broadcastWhen()])->all())
+    expect($events->map(fn (AlertBroadcast $event) => [$event->change->change, $event->broadcastWhen()])->all())
         ->toBe([['opened', true], ['resolved', true]])
         ->and($events[0]->broadcastAs())->toBe('alert')
         ->and($events[0]->broadcastOn()->name)->toBe("private-monitoring.{$this->server->company_id}")
@@ -170,8 +172,8 @@ it('summarizes a flood of openings on one server instead of one notice each (D-1
     $summary = $events->firstWhere('change', 'summary');
     expect(firingAlerts($this->server, AlertRules::PM2_STATUS))->toBe(30) // every alert is still stored
         ->and($opened)->toHaveCount(30)
-        ->and($opened->every(fn (AlertChanged $event) => $event->summarized && $event->broadcastWhen()))->toBeTrue()
-        ->and($summary->broadcastWhen())->toBeFalse()
+        ->and($opened->every(fn (AlertChanged $event) => $event->summarized && (new AlertBroadcast($event))->broadcastWhen()))->toBeTrue()
+        ->and((new AlertBroadcast($summary))->broadcastWhen())->toBeFalse()
         ->and($summary->alert['id'])->toBeNull()
         ->and($summary->alert['severity'])->toBe('critical')
         ->and($summary->alert['value'])->toBe('30')

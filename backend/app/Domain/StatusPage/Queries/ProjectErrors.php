@@ -40,6 +40,12 @@ final class ProjectErrors
         return ['error' => null, 'items' => array_slice($items, 0, self::KEEP)];
     }
 
+    /** today()'s answer when the endpoint turned the token down (its spec bans the IP after 10 an hour). */
+    public static function rejected(string $error): bool
+    {
+        return $error === 'HTTP 401' || $error === 'HTTP 403';
+    }
+
     /**
      * The day's entries, or why they could not be read.
      *

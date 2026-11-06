@@ -315,7 +315,8 @@ final class StatusPage
         return array_values(array_filter($summaries, fn (array $summary) => $summary['mobile'] !== null || $summary['desktop'] !== null));
     }
 
-    private static function bareHost(string $host): string
+    /** A site's host as alerts and components are matched: lower case, without "www.". */
+    public static function bareHost(string $host): string
     {
         $host = strtolower(trim($host));
 

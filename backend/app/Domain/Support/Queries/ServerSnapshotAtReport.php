@@ -34,7 +34,7 @@ final class ServerSnapshotAtReport
         }
         foreach ($components as $component) {
             if ($component->server_id !== null && $component->target !== null) {
-                $targets[$component->server_id][self::targetKey($component)] = true;
+                $targets[$component->server_id][$component->targetKey()] = true;
             }
         }
         $ids = $folders->pluck('server_id')->merge($components->pluck('server_id')->filter())->unique()->values()->all();
@@ -99,13 +99,5 @@ final class ServerSnapshotAtReport
         usort($out['servers'], fn (array $a, array $b) => strcmp($a['name'], $b['name']));
 
         return $out;
-    }
-
-    /** A PM2 app bound to a user only matches in that user's daemon (D-089). */
-    private static function targetKey(Component $component): string
-    {
-        return $component->kind === Component::PM2 && (string) $component->target_owner !== ''
-            ? "{$component->target}@{$component->target_owner}"
-            : $component->target;
     }
 }

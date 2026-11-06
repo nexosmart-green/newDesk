@@ -62,11 +62,18 @@ final class SaveProject
         });
     }
 
-    /** "Café Nueva Córdoba" → cafe-nueva-cordoba; a taken one gets a number up to -20 (monitoreo portal.Slugify). */
-    private function availableSlug(string $name, int $companyId): string
+    /** "Café Nueva Córdoba" → cafe-nueva-cordoba (monitoreo portal.Slugify). */
+    public static function slugify(string $name): string
     {
         $folded = strtr(mb_strtolower($name), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
-        $base = trim(substr(trim((string) preg_replace('/[^a-z0-9]+/u', '-', $folded), '-'), 0, 50), '-') ?: 'proyecto';
+
+        return trim(substr(trim((string) preg_replace('/[^a-z0-9]+/u', '-', $folded), '-'), 0, 50), '-') ?: 'proyecto';
+    }
+
+    /** The name's slug; a taken one gets a number up to -20. */
+    private function availableSlug(string $name, int $companyId): string
+    {
+        $base = self::slugify($name);
 
         foreach ([$base, ...array_map(fn (int $n) => "{$base}-{$n}", range(2, 20))] as $candidate) {
             if (! in_array($candidate, self::RESERVED_SLUGS, true)

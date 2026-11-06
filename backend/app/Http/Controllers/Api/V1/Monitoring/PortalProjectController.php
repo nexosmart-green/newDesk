@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Monitoring;
 
 use App\Domain\Clients\Models\Client;
+use App\Domain\Monitoring\Discord\DiscordError;
+use App\Domain\Monitoring\Discord\Notifier;
 use App\Domain\Projects\Actions\DeleteProject;
 use App\Domain\Projects\Actions\SaveProject;
 use App\Domain\Projects\Models\Project;
@@ -22,6 +24,7 @@ use App\Http\Responses\ApiResponse;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,7 +45,8 @@ class PortalProjectController extends Controller
         return ApiResponse::ok($admin->rows(Project::query()->with('client')->orderBy('name')->orderBy('id')->get()));
     }
 
-    public function store(PortalProjectRequest $request, Client $client, SaveProject $save, ProjectAdmin $admin): JsonResponse
+    /** An existing channel, or the bot creates one (D-059): a Discord failure is told, not fatal. */
+    public function store(PortalProjectRequest $request, Client $client, SaveProject $save, ProjectAdmin $admin, Notifier $notifier): JsonResponse
     {
         $project = $save([
             'client_id' => $client->id,
@@ -50,9 +54,20 @@ class PortalProjectController extends Controller
             'code_prefix' => $request->validated('code_prefix'),
             'slug' => $request->validated('slug'),
             'leader_user_id' => $request->validated('lead_user_id'),
+            'discord_channel_id' => $request->validated('discord_channel_id'),
         ], $request->user());
 
-        return ApiResponse::ok($admin->show($project), 'Proyecto creado.', 201);
+        $message = 'Proyecto creado.';
+        if ($request->boolean('create_discord_channel')) {
+            try {
+                $notifier->createChannel($project);
+            } catch (DiscordError $e) {
+                Log::warning('discord: create project channel', ['project' => $project->id, 'error' => $e->getMessage()]);
+                $message = "Proyecto creado, pero no se pudo crear el canal de Discord: {$e->getMessage()}.";
+            }
+        }
+
+        return ApiResponse::ok($admin->show($project), $message, 201);
     }
 
     public function show(Project $project, ProjectAdmin $admin): JsonResponse

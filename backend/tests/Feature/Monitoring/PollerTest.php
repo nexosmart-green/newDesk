@@ -6,6 +6,7 @@ use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Monitoring\Events\MetricsCollected;
 use App\Domain\Monitoring\Events\ServerStatusChanged;
 use App\Domain\Monitoring\Events\SnapshotSaved;
+use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Monitoring\Models\Alert;
 use App\Domain\Monitoring\Models\Server;
 use App\Domain\Monitoring\Models\ServerSnapshot;
@@ -294,4 +295,21 @@ it('runs as a command and leaves a tick for /health', function () {
 
     expect(Artisan::call('monitoring:poll', ['--max-time' => 1]))->toBe(0)
         ->and(app(PollerSignals::class)->pollerAlive(now()->getTimestamp()))->toBeTrue();
+});
+
+it('hands the saved scan and the new one to the notices, reading the saved one before replacing it (D-073)', function () {
+    Event::fake([VulnerabilitiesScanned::class]);
+    $scan = fn (string $at, array $findings) => ['scanned_at' => $at, 'items' => [['path' => '/var/www/a', 'manager' => 'npm', 'findings' => $findings]]];
+    $this->agent->sections['vulnerabilities'] = $scan('2026-10-14T08:05:00Z', []);
+    pollOnce($this->poller);
+    pollOnce($this->poller);
+    Event::assertNotDispatched(VulnerabilitiesScanned::class); // the first scan of a server is the baseline
+
+    $this->agent->sections['vulnerabilities'] = $scan('2026-10-15T08:05:00Z', [['package' => 'axios', 'severity' => 'high', 'title' => 'SSRF']]);
+    app(PollerSignals::class)->requestRefresh($this->server->id, 'vulnerabilities');
+    pollOnce($this->poller);
+
+    Event::assertDispatched(VulnerabilitiesScanned::class, fn (VulnerabilitiesScanned $event) => $event->serverId === $this->server->id
+        && $event->serverName === 'reaquila' && $event->previous['scanned_at'] === '2026-10-14T08:05:00Z'
+        && $event->next['items'][0]['findings'][0]['package'] === 'axios');
 });

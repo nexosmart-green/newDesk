@@ -35,7 +35,10 @@ class SupervisorSync extends Command
             // RF-13.02. One process polls every agent; it restarts itself every hour. On stop it lets
             // running agent calls (60 s at most) finish.
             'monitoring-poller' => ['command' => 'monitoring:poll', 'stopwaitsecs' => 75],
-            'monitoring-worker' => ['command' => 'queue:work redis --queue=monitoring,discord --sleep=1 --tries=3 --max-time=3600', 'stopwaitsecs' => 120],
+            'monitoring-worker' => ['command' => 'queue:work redis --queue=monitoring --sleep=1 --tries=3 --max-time=3600', 'numprocs' => 2, 'stopwaitsecs' => 120],
+            // RF-13.09: one process, so Discord messages go out one at a time and in order; server-wide
+            // notices first (D-107).
+            'monitoring-discord' => ['command' => 'queue:work redis --queue=discord-priority,discord --sleep=1 --max-time=3600', 'stopwaitsecs' => 60],
         ];
     }
 

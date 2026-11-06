@@ -15,6 +15,7 @@ use App\Domain\Monitoring\Contracts\AgentGateway;
 use App\Domain\Monitoring\Events\MetricsCollected;
 use App\Domain\Monitoring\Events\ServerStatusChanged;
 use App\Domain\Monitoring\Events\SnapshotSaved;
+use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Monitoring\Jobs\CheckServerSites;
 use App\Domain\Monitoring\Models\Server;
 use App\Domain\Monitoring\Models\ServerSnapshot;
@@ -37,6 +38,8 @@ final class Poller
     private const RELOAD_EVERY = 15;
 
     private const SSH_PROBE_TIMEOUT = 6;
+
+    private const VULNERABILITIES = 'vulnerabilities';
 
     private PollSchedule $schedule;
 
@@ -285,6 +288,10 @@ final class Poller
     private function saveSection(Server $server, string $section, AgentResponse $response): void
     {
         $collectedAt = $response->collectedAt ?? CarbonImmutable::now()->utc();
+        // The saved scan is about to be replaced: kept to tell what is new (D-073).
+        $previousScan = $section === self::VULNERABILITIES
+            ? ServerSnapshot::query()->where('server_id', $server->id)->where('section', $section)->value('data')
+            : null;
         ServerSnapshot::query()->upsert([[
             'server_id' => $server->id,
             'section' => $section,
@@ -305,6 +312,11 @@ final class Poller
             $this->saveIdentity($server, $response->data);
         }
         $this->applyAlerts($server, fn () => $this->rules->forSection($server->id, $section, $response->data, CarbonImmutable::now()));
+
+        $previous = json_decode((string) $previousScan, true);
+        if (is_array($previous)) {
+            event(new VulnerabilitiesScanned($server->company_id, $server->id, $server->name, $previous, json_decode($response->dataJson(), true) ?? []));
+        }
     }
 
     /**

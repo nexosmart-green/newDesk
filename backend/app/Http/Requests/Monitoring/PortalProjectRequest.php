@@ -4,6 +4,7 @@ namespace App\Http\Requests\Monitoring;
 
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
+use App\Domain\Monitoring\Contracts\DiscordGateway;
 use App\Domain\Projects\Actions\SaveProject;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,14 +13,16 @@ use Illuminate\Validation\Validator;
 
 /**
  * monitoreo's client project forms: POST portal-admin/clients/{id}/projects (create) and PUT
- * portal-admin/projects/{id} (the whole form), plus newDesk's code (CA-03.01). Discord is Phase 7:
- * until the bot exists no channel is "in the list", as monitoreo without a bot.
+ * portal-admin/projects/{id} (the whole form), plus newDesk's code (CA-03.01). A Discord channel is
+ * one the bot lists (D-060), or one the bot creates on create: not while notices are off (CA-13.20).
  */
 class PortalProjectRequest extends FormRequest
 {
     private const CHANNEL_NOT_LISTED = 'Elegí un canal de la lista.';
 
     private const NO_BOT = 'El bot de Discord no está configurado.';
+
+    private const NOTICES_OFF = 'Los avisos a Discord están apagados mientras convive con monitoreo: elegí un canal existente.';
 
     protected function prepareForValidation(): void
     {
@@ -100,11 +103,16 @@ class PortalProjectRequest extends FormRequest
             }
             $project = $this->route('project');
             $current = $project instanceof Project ? $project->discord_channel_id : null;
-            if (filled($this->input('discord_channel_id')) && $this->input('discord_channel_id') !== $current) {
+            $channel = $this->input('discord_channel_id');
+            $create = $this->boolean('create_discord_channel');
+            $discord = app(DiscordGateway::class);
+            if (filled($channel) && ($create || ($channel !== $current && ! $discord->allowed($channel)))) {
                 $validator->errors()->add('discord_channel_id', self::CHANNEL_NOT_LISTED);
             }
-            if ($this->boolean('create_discord_channel')) {
+            if ($create && ! $discord->configured()) {
                 $validator->errors()->add('discord_channel_id', self::NO_BOT);
+            } elseif ($create && ! config('newdesk.monitoring.notify')) {
+                $validator->errors()->add('discord_channel_id', self::NOTICES_OFF);
             }
             if ($this->filled('lead_user_id') && ! $this->teamUsers([$this->integer('lead_user_id')])) {
                 $validator->errors()->add('lead_user_id', 'Elegí un usuario activo del equipo.');

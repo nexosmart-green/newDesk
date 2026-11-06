@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Monitoring\Actions\SendAlertDigest;
+use App\Domain\Monitoring\Actions\SendHeartbeat;
+use App\Domain\Monitoring\Actions\WatchProjectErrors;
 use App\Domain\StatusPage\Actions\CheckComponents;
 use App\Domain\StatusPage\Actions\CheckDomains;
 use App\Domain\StatusPage\Actions\MeasurePageSpeed;
@@ -31,6 +34,17 @@ Artisan::command('support:retention', function (PurgeReports $purge) {
     }
 })->purpose('Purge report images after 180 days, reports after a year and report files no row names');
 
+// RF-13.09 notices, all silent while MONITORING_NOTIFY is off (CA-13.20).
+Artisan::command('monitoring:digest', fn (SendAlertDigest $digest) => $digest())
+    ->purpose('Mail and post to #resumen the alert digest since the previous 9/18 h cut');
+Artisan::command('monitoring:errors-watch', fn (WatchProjectErrors $watch) => $watch())
+    ->purpose('Post to each project channel the new ERROR entries of its /api/errors');
+Artisan::command('monitoring:heartbeat', fn (SendHeartbeat $heartbeat) => $heartbeat())
+    ->purpose('Ping HEALTHCHECKS_URL while the database and the poller are healthy');
+
+Schedule::command('monitoring:digest')->twiceDaily(...SendAlertDigest::HOURS)->timezone(SendAlertDigest::TIMEZONE);
+Schedule::command('monitoring:errors-watch')->everyFiveMinutes()->withoutOverlapping()->runInBackground();
+Schedule::command('monitoring:heartbeat')->everyMinute()->runInBackground();
 Schedule::command('status-page:check')->everyMinute()->withoutOverlapping()->runInBackground();
 Schedule::command('support:retention')->hourly()->withoutOverlapping();
 Schedule::command('status-page:domains')->hourly()->withoutOverlapping()->runInBackground();

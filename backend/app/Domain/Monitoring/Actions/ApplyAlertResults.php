@@ -5,6 +5,7 @@ namespace App\Domain\Monitoring\Actions;
 use App\Domain\Monitoring\Alerts\AlertResult;
 use App\Domain\Monitoring\Alerts\AlertRules;
 use App\Domain\Monitoring\Alerts\AlertState;
+use App\Domain\Monitoring\Events\AlertBroadcast;
 use App\Domain\Monitoring\Events\AlertChanged;
 use App\Domain\Monitoring\Models\Alert;
 use App\Domain\Monitoring\Models\Server;
@@ -173,11 +174,20 @@ final class ApplyAlertResults
         return new AlertChanged($server->company_id, $alert->toPayload(), $change, $summarized);
     }
 
-    /** Realtime is best effort: Reverb being down must not undo what was saved. */
+    /**
+     * The notices (Discord) and the browsers apart: Reverb being down must not stop a notice, and
+     * neither may undo what was saved.
+     */
     private function dispatch(AlertChanged $event): void
     {
         try {
             event($event);
+        } catch (Throwable $e) {
+            Log::error('monitoring alerts: notice failed', ['change' => $event->change, 'error' => $e->getMessage()]);
+            report($e);
+        }
+        try {
+            event(new AlertBroadcast($event));
         } catch (Throwable $e) {
             Log::warning('monitoring alerts: broadcast failed', ['change' => $event->change, 'error' => $e->getMessage()]);
         }

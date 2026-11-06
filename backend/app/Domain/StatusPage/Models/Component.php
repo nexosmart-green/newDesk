@@ -109,6 +109,12 @@ class Component extends Model
         return $this->belongsTo(Server::class);
     }
 
+    /** How it names its process: a PM2 app bound to a user only matches in that user's daemon (D-089). */
+    public function targetKey(): string
+    {
+        return $this->kind === self::PM2 && (string) $this->target_owner !== '' ? "{$this->target}@{$this->target_owner}" : (string) $this->target;
+    }
+
     /** Components the client sees (through their parts); the rest are the team's. */
     public function hasParts(): bool
     {

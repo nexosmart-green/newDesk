@@ -38,7 +38,7 @@ Route::prefix('monitoring')->group(function () {
         Route::get('portal-admin/projects/{project}/vulnerabilities', [PortalProjectController::class, 'vulnerabilities']);
         Route::get('portal-admin/folders', [InventoryController::class, 'folders']);
         Route::get('portal-admin/targets', [PortalComponentController::class, 'targets']);
-        Route::get('discord/channels', [DiscordController::class, 'unavailable']);
+        Route::get('discord/channels', [DiscordController::class, 'channels']);
     });
 
     Route::middleware('can:monitoring.manage')->group(function () {
@@ -48,7 +48,8 @@ Route::prefix('monitoring')->group(function () {
         Route::post('servers/{server}/test', [ServerAgentController::class, 'test']);
 
         Route::get('users', [TeamUserController::class, 'index']);
-        Route::get('discord/members', [DiscordController::class, 'unavailable']);
+        Route::put('users/{user}', [TeamUserController::class, 'update']);
+        Route::get('discord/members', [DiscordController::class, 'members']);
 
         Route::post('portal-admin/clients', [PortalClientController::class, 'store']);
         Route::put('portal-admin/clients/{client}', [PortalClientController::class, 'update']);
@@ -62,7 +63,7 @@ Route::prefix('monitoring')->group(function () {
         Route::put('portal-admin/projects/{project}/logo', [PortalProjectController::class, 'updateLogo']);
         Route::delete('portal-admin/projects/{project}/logo', [PortalProjectController::class, 'destroyLogo']);
         Route::put('portal-admin/projects/{project}/folders', [PortalProjectController::class, 'folders']);
-        Route::post('portal-admin/projects/{project}/discord-test', [DiscordController::class, 'unavailable']);
+        Route::post('portal-admin/projects/{project}/discord-test', [DiscordController::class, 'test']);
         Route::post('portal-admin/projects/{project}/components', [PortalComponentController::class, 'store']);
         Route::put('portal-admin/components/{component}', [PortalComponentController::class, 'update']);
         Route::delete('portal-admin/components/{component}', [PortalComponentController::class, 'destroy']);
