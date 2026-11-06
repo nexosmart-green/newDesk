@@ -8,8 +8,10 @@ use App\Domain\Notifications\Actions\Recipients;
 use App\Domain\Notifications\Notifications\ExtensionRequestedNotification;
 use App\Domain\Notifications\Notifications\HoursThresholdNotification;
 use App\Domain\Notifications\Notifications\MentionedNotification;
+use App\Domain\Notifications\Notifications\ShiftChangedNotification;
 use App\Domain\Notifications\Notifications\TaskAssignedNotification;
 use App\Domain\Notifications\Notifications\TimerCutNotification;
+use App\Domain\Scheduling\Events\ShiftsChanged;
 use App\Domain\Tasks\Events\CommentPosted;
 use App\Domain\Tasks\Events\TaskAssigned;
 use App\Domain\TimeTracking\Enums\StopReason;
@@ -73,10 +75,23 @@ final class SendDomainNotifications
         );
     }
 
+    /** RF-09.07: one message per person per bulk change, never to the person who made it. */
+    public function onShiftsChanged(ShiftsChanged $event): void
+    {
+        $people = User::query()->whereKey(array_keys($event->datesByUserId))->where('status', 'active')->get();
+
+        foreach ($people as $person) {
+            if (! $person->is($event->actor)) {
+                $person->notify(new ShiftChangedNotification($event->datesByUserId[$person->id], $event->actor->fullName()));
+            }
+        }
+    }
+
     /** @return array<class-string, string> */
     public function subscribe(Dispatcher $events): array
     {
         return [
+            ShiftsChanged::class => 'onShiftsChanged',
             TaskAssigned::class => 'onTaskAssigned',
             CommentPosted::class => 'onCommentPosted',
             HourThresholdReached::class => 'onHourThreshold',

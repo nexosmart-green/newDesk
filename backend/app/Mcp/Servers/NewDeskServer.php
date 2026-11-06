@@ -40,6 +40,7 @@ class NewDeskServer extends Server
         Tools\CompletePendingCommentTool::class,
         Tools\LogTime::class,
         Tools\MyTimesheet::class,
+        Tools\MyShifts::class,
         Tools\AllocateHoursTool::class,
         Tools\ProjectHoursReport::class,
     ];
