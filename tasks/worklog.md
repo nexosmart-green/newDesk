@@ -38,3 +38,11 @@
 - Fix transversal: `HttpResponseException` (respuesta ya armada, p. ej. 429 de un limiter) ya no se vuelve 500.
 - Nota de deploy: timeouts de PHP-FPM/nginx ≥ 30 s (chequeo en vivo) y `upload_max_filesize`/`post_max_size` ≥ 16 MB.
 - Tests: back 228 ok (+1 Redis local).
+
+## 2026-11-06 — Monitoreo F7, F8 y runbook de corte
+
+- F7: gateway de Discord (bot REST + mudo), cola `discord-priority`/`discord` con manejo de 429, notifier con el ruteo del Go (canal del proyecto vs `#resumen`, mención al principal, escape D-078), diff de vulnerabilidades por scan, avisos de reportes, vigilancia de `/api/errors`, resumen 9/18 h, heartbeat, endpoints de canales/miembros/prueba/creación y Discord ID de devs. `AlertChanged` pasó a evento de dominio y la transmisión a Reverb (`AlertBroadcast`) es aparte y best effort: los avisos no dependen de Reverb (test con Reverb fallando). Supervisor: `monitoring-worker` (2) y `monitoring-discord` (1).
+- F8: servidor MCP `/mcp/monitoreo` con las 12 tools del Go (mismas descripciones, esquemas, instrucciones y `<datos_del_cliente>`), tokens personales Sanctum solo para `/mcp/*` + pestaña Tokens, reporte diario por socket unix (sin probar en Linux todavía).
+- F9: runbook manual `docs/06-migracion/corte-monitoreo.md` (bloqueantes, variables, convivencia, día del corte, redirects nginx, verificación, vuelta atrás).
+- Tests finales: back 273 ok + 1 skip (socket unix en Windows) + 1 que falla solo por falta de Redis local; front 160 ok; typecheck, lint y build ok.
+- `/bug-report` no se pudo correr: newDesk no tiene URL de staging/prod todavía (no hay `.claude/bug-report.json`).

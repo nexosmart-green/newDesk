@@ -72,3 +72,8 @@ Origen: `requerimientos-inbox/procesados/2026-11-06-monitoreo.md`. Decisión té
 7. Los clientes piden código una vez después del corte (las sesiones no se migran).
 8. El modo en vivo se apaga hasta 30 s después de cerrar la pestaña.
 9. Ver monitoreo depende del permiso `monitoring.view`, no de ser miembro del proyecto (CA-03.03 aplica a las demás pestañas del proyecto).
+10. Un cliente con proyectos no se borra: se inactiva (CA-02.01). Inactivar un cliente saca a sus usuarios del portal.
+11. Los slugs de proyecto son únicos por empresa y `login` está reservado (`/portal/login`).
+12. Tokens MCP con formato de Sanctum (`<id>|nd_…`), vencimiento opcional y solo válidos en `/mcp/*`; sin `mcp.use` o `monitoring.view` → 403.
+13. Durante la convivencia (`MONITORING_NOTIFY=false`) funcionan las listas de Discord y el botón "Probar"; no se crean canales nuevos.
+14. Validaciones con 422 y errores por campo (el Go devolvía 400).

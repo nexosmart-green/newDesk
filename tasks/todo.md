@@ -2,7 +2,7 @@
 
 ## Next steps (monitoreo, rama `feat/monitoreo`)
 
-- Fase actual: ver checklist "Monitoreo (RF-13)" abajo. Plan completo: ADR-0002 + RF-13.
+- Port de monitoreo **completo en la rama** (F0–F8 + runbook de corte). Falta ejecutar el corte: ver `docs/06-migracion/corte-monitoreo.md` (bloqueantes en la sección 0).
 - Local: PHP 8.3 en `C:\tools\php83\php.exe` (el de XAMPP es 8.2), MariaDB de XAMPP en 3306 (`newdesk`, `newdesk_testing`). Sin Redis local: el test de `/health` falla por eso.
 
 ## Fase 0 — Descubrimiento
@@ -45,9 +45,12 @@
 - [x] F4 Estado de proyectos (componentes, 10 min, períodos, uptime, incidentes, PageSpeed, RDAP, carpetas) + importador
 - [x] F5 Portal de clientes (login por código, páginas de estado, tiempo real)
 - [x] F6 Reportes (alta, chat, notas internas, cupos, roadmap, ventanas flotantes, errorwatch) + importador con archivos
-- [ ] F7 Discord, resumen 9/18 h, avisos de dominio, heartbeat
-- [ ] F8 MCP `/mcp/monitoreo` + reporte diario
-- [ ] F9 Corte: importación completa, redirects, agentes, supervisor, `MONITORING_NOTIFY=true`
+- [x] F7 Discord, resumen 9/18 h, avisos de dominio, heartbeat
+- [x] F8 MCP `/mcp/monitoreo` + reporte diario
+- [x] F9 Runbook del corte: `docs/06-migracion/corte-monitoreo.md`
+- [ ] F9 Ejecutar el corte en producción (bloqueado: hosting P-25, deploy de newDesk, invitación de usuarios E0)
+- [ ] Probar en Linux el reporte diario por socket unix (en Windows no se puede)
+- [ ] Pantalla para editar el Discord ID de los devs (hoy: endpoint + importación; llega con la UI de usuarios RF-01)
 
 ## Siguientes: E1 → E2 → E3 → E4 ⭐ → E6/E5/E7 → E13 MCP → E8
 
