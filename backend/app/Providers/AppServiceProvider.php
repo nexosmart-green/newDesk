@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
+use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
+use App\Infrastructure\Images\GdAvatarProcessor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -21,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
+        $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
     }
 
     public function boot(): void

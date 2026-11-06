@@ -7,6 +7,7 @@ use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\People\Actions\SeedCompanyCatalogs;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class ProvisionCompany
 {
+    public function __construct(private readonly SeedCompanyCatalogs $seedCatalogs) {}
+
     /**
      * @param  array{name: string, currency?: string, timezone?: string}  $company
      * @param  array{first_name: string, last_name: string, email: string, password: string}  $admin
@@ -23,6 +26,7 @@ final class ProvisionCompany
     {
         return DB::transaction(function () use ($company, $admin) {
             $newCompany = Company::query()->create($company);
+            ($this->seedCatalogs)($newCompany);
 
             $adminRole = null;
             foreach (DefaultRoles::definitions() as $name => $permissions) {

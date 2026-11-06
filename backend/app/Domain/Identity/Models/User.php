@@ -6,10 +6,17 @@ use App\Domain\Companies\Models\Company;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Notifications\ResetPasswordNotification;
+use App\Domain\People\Models\EmployeeProfile;
+use App\Domain\People\Models\HourlyRate;
+use App\Domain\People\Models\Skill;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -97,6 +104,31 @@ class User extends Authenticatable
     {
         // Roles are resolved for this user's company explicitly, not via the auth-based scope.
         return $this->belongsTo(Role::class)->withoutGlobalScopes();
+    }
+
+    /** @return HasOne<EmployeeProfile, $this> */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(EmployeeProfile::class)->withoutGlobalScopes();
+    }
+
+    /** @return BelongsToMany<Skill, $this> */
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'user_skills')->withPivot('level')->withoutGlobalScopes();
+    }
+
+    /** @return HasMany<HourlyRate, $this> */
+    public function hourlyRates(): HasMany
+    {
+        return $this->hasMany(HourlyRate::class)->withoutGlobalScopes();
+    }
+
+    /** "Mi equipo" (RF-01.07): people whose profile reports to this user. */
+    public function directReports(): HasManyThrough
+    {
+        return $this->hasManyThrough(User::class, EmployeeProfile::class, 'reports_to_user_id', 'id', 'id', 'user_id')
+            ->withoutGlobalScopes();
     }
 
     public function fullName(): string
