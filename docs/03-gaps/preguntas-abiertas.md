@@ -40,3 +40,4 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-26 | ⚪ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. |
 | P-27 | ⚪ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. |
 | P-28 | ⚪ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. |
+| P-29 | ⚪ | Monitoreo: los devs secundarios de un proyecto son sus miembros (RF-03.03). Guardar devs desde Monitoreo reemplaza la lista de miembros. Cuando haya pantallas de proyectos con miembros que no son devs (diseño, PM), ¿se separan "desarrolladores" de "miembros"? | Por ahora iguales. Revisar en E2: si hace falta, columna `role` en `project_members` (lead/secondary/member). |

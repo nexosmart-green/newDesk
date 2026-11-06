@@ -23,3 +23,11 @@
 - Pendiente para F7: `AlertChanged` se transmite en el momento; si Reverb cae, los listeners de ese evento no corren. En F7 el aviso a Discord/mail se separa de la transmisión. También separar el worker de `discord` (1 proceso, orden) del de `monitoring` (más procesos).
 - Front (agente, revisado): Proyectos, Clientes, admin de proyecto, Reportes con chat, roadmap, ventanas flotantes y "Generar reporte", con código de proyecto agregado. Confirmación de borrar cliente corregida a "¿Borrar el cliente y sus usuarios?" (CA-02.01).
 - Tests: back 124 ok (+1 Redis local), front 127 ok.
+
+## 2026-11-06 — Monitoreo F4 y F5 (backend + front del portal)
+
+- F5 front: portal de clientes (login por código, inicio, estado con historial, reportar, lista y chat) fuera del layout de newDesk, piel monitoreo con su propio tema; guards entre equipo y portal.
+- F5 back: login por código para clientes (D-076/077/079/081/082/087/114), sesión 30 días (remember-me), grupo `/api/v1/portal` con middleware `client`, `/me` con `client`, canal `portal.client.{id}`, barrido de rutas (equipo vs cliente). El chequeo de activo ahora usa `canLogin()` (cliente inactivo = sus usuarios afuera) y corre antes del binding de modelos (no filtra existencia).
+- F4 back: módulo `StatusPage` (componentes, regla de 10 min, períodos, uptime, incidentes y notas, tiempos de respuesta, carpetas, sugerencias, PageSpeed, RDAP, vulnerabilidades), endpoints `portal-admin/*` y del cliente, mails al cliente solo con `MONITORING_NOTIFY`, importador de clientes/proyectos/usuarios/historial con `import_mappings`.
+- Decisiones: slug único por empresa y `login` reservado; mails de usuarios cliente en minúsculas; devs secundarios = miembros (P-29).
+- Tests: back 213 ok (+1 Redis local), front 157 ok.
