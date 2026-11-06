@@ -1,7 +1,8 @@
 /* Piel de monitoreo (ADR-0002 punto 8): los tokens y componentes de monitoreo/web/src/index.css, solo bajo
    [data-skin='monitoreo']. Las utilidades de Tailwind compilan a var(--color-…): acá se redefinen las que
    comparten nombre con newDesk (bg, surface, text, muted, accent); las propias de monitoreo (surface-2, line,
-   crit…) están registradas en src/index.css. El claro/oscuro sigue a la clase que pone useTheme en <html>. */
+   crit…) están registradas en src/index.css. El claro/oscuro sigue a la clase que pone useTheme en <html>; en el portal del
+   cliente, a su propio selector (data-portal-theme). */
 
 @layer base {
   [data-skin='monitoreo'] {
@@ -81,6 +82,17 @@
   }
   :root.light [data-skin='monitoreo'] {
     color-scheme: light;
+  }
+  /* El portal del cliente tiene su propio Automático/Claro/Oscuro (lib/theme.ts): misma especificidad que la regla de
+     arriba y después, así gana. Valores explícitos (no inherit): Lightning reescribe light-dark() según cada color-scheme. */
+  :root[data-portal-theme='auto'] [data-skin='monitoreo'] {
+    color-scheme: light dark;
+  }
+  :root[data-portal-theme='light'] [data-skin='monitoreo'] {
+    color-scheme: light;
+  }
+  :root[data-portal-theme='dark'] [data-skin='monitoreo'] {
+    color-scheme: dark;
   }
 }
 

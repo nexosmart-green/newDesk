@@ -5,7 +5,7 @@ import { mockReports } from '../test/reportsApi'
 import { renderWithProviders } from '../test/render'
 import { ReportPage } from './ReportPage'
 
-// Del lado del equipo; los casos del cliente en su portal van con el portal (F5).
+// Del lado del equipo; los casos del cliente están en portal/ReportPages.test.tsx.
 const png = (name = 'pantalla.png') => new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])], name, { type: 'image/png' })
 
 function render(route: string) {

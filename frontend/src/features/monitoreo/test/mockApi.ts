@@ -2,7 +2,7 @@ import { AxiosError, type AxiosResponse } from 'axios'
 import { api } from '@/lib/api'
 import type { PageMeta } from '../api/types'
 
-// Un back de mentira para la API de monitoreo (`/monitoring/<ruta>`), sobre la instancia axios de newDesk.
+// Un back de mentira para la API de monitoreo (`/monitoring/<ruta>`, `/portal/<ruta>`), sobre la instancia axios de newDesk.
 // Las claves son 'GET portal-admin/projects/:id' (sin método = GET); el valor es el dato o una función que lo arma
 // (o un reply() con otro estado). Lo que no está en `routes` falla, como un back que no tiene esa ruta.
 
@@ -35,7 +35,8 @@ function match(routes: Routes, method: Method, path: string): { value: unknown; 
 
 export function mockMonitoringApi(routes: Routes) {
   const handle = (method: Method) => (url: string, body?: unknown): Promise<AxiosResponse> => {
-    const [path = '', search = ''] = url.replace(/^\/monitoring\//, '').split('?')
+    // '/monitoring/servers' → 'servers'; las del portal y las de newDesk solo pierden la barra ('portal/projects', 'me').
+    const [path = '', search = ''] = url.replace(/^\/(monitoring\/)?/, '').split('?')
     const found = match(routes, method, path)
     if (!found) return Promise.reject(new Error(`${method} sin mock: ${url}`))
     const result = typeof found.value === 'function' ? found.value({ body, query: new URLSearchParams(search), params: found.params }) : found.value

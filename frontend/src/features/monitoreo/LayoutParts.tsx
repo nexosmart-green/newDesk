@@ -3,6 +3,7 @@ import { NavLink } from 'react-router'
 import { useCan } from '@/features/auth/useAuth'
 import { useServers } from './api/useMonitoring'
 import { useReportsAttention, useRoadmapPending } from './api/useReports'
+import { BrandMark } from './components/BrandMark'
 import { Icon, type IconName } from './components/Icon'
 import { Spinner } from './components/Panel'
 import type { Connection } from './realtime/useEvents'
@@ -19,14 +20,6 @@ const nav: { to: string; label: string; icon: IconName; end?: boolean; admin?: b
 ]
 
 const connectionText: Record<Connection, string> = { open: 'En vivo', connecting: 'Conectando', retrying: 'Reconectando' }
-
-function BrandMark({ className = '', iconSize = 18 }: { className?: string; iconSize?: number }) {
-  return (
-    <span className={`grid shrink-0 place-items-center bg-accent text-accent-ink ${className}`} aria-hidden="true">
-      <Icon name="bars" size={iconSize} className="stroke-[2.25]" />
-    </span>
-  )
-}
 
 export function Brand() {
   return (

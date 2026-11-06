@@ -16,4 +16,6 @@ export interface CurrentUser {
   role: { id: number; name: string }
   permissions: string[]
   company: Company
+  /** Set for a client's user (monitoring portal, RF-13.07): they only use /portal. Null for the team. */
+  client: { id: number; name: string } | null
 }

@@ -27,7 +27,12 @@ export const keys = {
   vulnerabilities: (id: number) => ['monitoring', 'portal-admin', 'projects', id, 'vulnerabilities'] as const,
   targets: ['monitoring', 'portal-admin', 'targets'] as const,
   folders: ['monitoring', 'portal-admin', 'folders'] as const,
-  // path = la base del proyecto (portal-admin/projects/<id> en la vista previa del equipo).
+  // El portal del cliente (usePortal): ['portal', slug] es prefijo de sus reportes, como en monitoreo.
+  portal: ['monitoring', 'portal'] as const,
+  portalProject: (slug: string) => ['monitoring', 'portal', slug] as const,
+  portalReports: (slug: string) => ['monitoring', 'portal', slug, 'reports'] as const,
+  portalReport: (slug: string, id: number) => ['monitoring', 'portal', slug, 'reports', id] as const,
+  // path = la base del proyecto (portal/projects/<slug> del cliente o portal-admin/projects/<id> en la vista previa del equipo).
   responseTimes: (path: string, range: ResponseRange) => ['monitoring', 'response-times', path, range] as const,
   allReports: ['monitoring', 'portal-admin', 'reports'] as const,
   reports: (status: ReportStatus | null, page: number) => ['monitoring', 'portal-admin', 'reports', status, page] as const,

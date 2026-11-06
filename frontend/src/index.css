@@ -65,3 +65,20 @@ body {
   color: var(--color-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* Monitoring's client portal keeps monitoreo's own Auto/Light/Dark (RF-13, difference 3). public/portal-theme.js sets
+   data-portal-theme before the first paint and features/monitoreo/lib/theme.ts keeps it while the portal is mounted, so
+   the page (scrollbars, the loading screen) already has the portal's scheme and colors. */
+:root[data-portal-theme='auto'] {
+  color-scheme: light dark;
+}
+:root[data-portal-theme='light'] {
+  color-scheme: light;
+}
+:root[data-portal-theme='dark'] {
+  color-scheme: dark;
+}
+:root[data-portal-theme] body {
+  background: light-dark(#f5f5f7, #000000);
+  color: light-dark(#1d1d1f, #f5f5f7);
+}

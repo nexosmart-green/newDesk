@@ -28,7 +28,7 @@ export function useProjectPreview(id: number) {
   return useQuery({ queryKey: keys.preview(id), queryFn: () => api.get<PortalStatus>(`portal-admin/projects/${id}/preview`) })
 }
 
-// Tiempos de respuesta del sitio y la API. `path` es la base del proyecto (la vista previa del equipo).
+// Tiempos de respuesta del sitio y la API. `path` es la base del proyecto: la del cliente o la del equipo (vista previa).
 export function useResponseTimes(path: string, range: ResponseRange) {
   return useQuery({
     queryKey: keys.responseTimes(path, range),

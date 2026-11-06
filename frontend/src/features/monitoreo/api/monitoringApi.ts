@@ -1,8 +1,10 @@
 import { api, ApiError, toApiError } from '@/lib/api'
 import type { Envelope } from './types'
 
-// API espejo del panel Go (ADR-0002 punto 10): `api/<ruta>` de monitoreo vive en `/api/v1/monitoring/<ruta>`,
-// con el mismo request y la misma respuesta. Los errores llegan como ApiError (422 con errores por campo).
+// API espejo del panel Go (ADR-0002 punto 10): `api/<ruta>` de monitoreo vive en `/api/v1/monitoring/<ruta>` y
+// `api/portal/<ruta>` (el portal del cliente) en `/api/v1/portal/<ruta>`, con el mismo request y la misma respuesta.
+// Las rutas van sin el `api/`: 'servers', 'portal-admin/projects', 'portal/projects'.
+// Los errores llegan como ApiError (422 con errores por campo).
 async function request<T>(send: Promise<{ data: Envelope<T> }>): Promise<Envelope<T>> {
   try {
     return (await send).data
@@ -11,7 +13,7 @@ async function request<T>(send: Promise<{ data: Envelope<T> }>): Promise<Envelop
   }
 }
 
-const url = (path: string) => `/monitoring/${path}`
+const url = (path: string) => (path.startsWith('portal/') ? `/${path}` : `/monitoring/${path}`)
 
 export const monitoringApi = {
   get: <T>(path: string) => request<T>(api.get(url(path))).then((envelope) => envelope.data),
