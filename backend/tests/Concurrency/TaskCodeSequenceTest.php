@@ -28,7 +28,7 @@ it('issues correlative task codes with no gaps nor duplicates under concurrency'
         }
     })->start()->wait();
 
-    foreach ($results as $result) {
+    foreach ($results->collect() as $result) {
         expect($result->successful())->toBeTrue($result->errorOutput());
     }
 

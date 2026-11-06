@@ -29,7 +29,9 @@ use Illuminate\Support\Carbon;
  * @property int|null $leader_user_id
  * @property Carbon|null $starts_on
  * @property Carbon|null $ends_on
- * @property int $consumed_seconds
+ * @property int $consumed_seconds closed time entries (cache)
+ * @property int $allocated_seconds Σ hour_allocations (cache)
+ * @property int $hour_alert_level last consumption alert sent (RF-05.07)
  * @property int $task_sequence
  */
 #[UseFactory(ProjectFactory::class)]
@@ -43,7 +45,7 @@ class Project extends Model
 
     protected $fillable = ['company_id', 'status', ...self::EDITABLE];
 
-    protected $attributes = ['status' => 'active', 'consumed_seconds' => 0, 'task_sequence' => 0];
+    protected $attributes = ['status' => 'active', 'consumed_seconds' => 0, 'allocated_seconds' => 0, 'hour_alert_level' => 0, 'task_sequence' => 0];
 
     protected function casts(): array
     {
@@ -53,6 +55,8 @@ class Project extends Model
             'starts_on' => 'date',
             'ends_on' => 'date',
             'consumed_seconds' => 'integer',
+            'allocated_seconds' => 'integer',
+            'hour_alert_level' => 'integer',
             'task_sequence' => 'integer',
         ];
     }

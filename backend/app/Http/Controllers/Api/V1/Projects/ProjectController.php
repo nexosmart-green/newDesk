@@ -29,8 +29,10 @@ class ProjectController extends Controller
             'client_id' => ['nullable', 'integer'],
             'status' => ['nullable', Rule::enum(ProjectStatus::class)],
             'search' => ['nullable', 'string', 'max:100'],
+            'running_out' => ['nullable', 'boolean'],
         ]);
         $filters['client_id'] = isset($filters['client_id']) ? (int) $filters['client_id'] : null;
+        $filters['running_out'] = $request->boolean('running_out');
 
         return ProjectSummaryResource::collection($projectList($request->user(), $filters))
             ->additional(['message' => null, 'errors' => null]);

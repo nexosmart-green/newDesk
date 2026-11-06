@@ -7,11 +7,13 @@ use App\Domain\Identity\Models\User;
 use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\TimeTracking\Listeners\StopTimersOnDomainEvents;
 use App\Infrastructure\Images\GdAvatarProcessor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
+
+        Event::subscribe(StopTimersOnDomainEvents::class);
 
         $this->registerAuthorization();
         $this->registerRouteBindings();
