@@ -14,18 +14,18 @@
 
 ## R1 — MVP (estimado 5–6 semanas)
 
-| Épica | Contenido | Sprint |
-|---|---|---|
-| E0 Fundaciones | Scaffolding Laravel 12 + React/Vite, CI, staging, Supervisord, `/health` `/errors` (`/bug-report setup`), auth + roles/permisos + policies, `companies` + RF-11 | S1 |
-| E1 Personas | RF-01 perfiles, foto, catálogos, habilidades | S1–S2 |
-| E2 Clientes y proyectos | RF-02, RF-03 (5 tabs, miembros, actividad) | S2 |
-| E3 Tareas | RF-04 lista + tablero, estados, comentarios/menciones, Mis tareas | S2–S3 |
-| E4 Horas ⭐ | RF-05 completo + reglas de concurrencia + suite QA-01..08 | S3–S4 |
-| E5 Turnos y calendario | RF-06 (sin cambio de turno) | S4 |
-| E6 Notificaciones | RF-09 R1 | S3–S4 |
-| E7 Reporte de horas | RF-10.01 | S4 |
-| E13 MCP Claude Code | RF-12: tokens personales, pantalla Conexiones de IA, tools R1, tests de paridad web/MCP | S4–S5 |
-| E8 Puesta en marcha | Carga inicial (usuarios, clientes, proyectos activos + horas), invitaciones, apagar Worksuite | S5 |
+| Épica | Contenido | Sprint | Estado (2026-11-06, rama dev_green) |
+|---|---|---|---|
+| E0 Fundaciones | Scaffolding Laravel 12 + React/Vite, CI, staging, Supervisord, `/health` `/errors` (`/bug-report setup`), auth + roles/permisos + policies, `companies` + RF-11 | S1 | ✅ back + front |
+| E1 Personas | RF-01 perfiles, foto, catálogos, habilidades | S1–S2 | ✅ back + front |
+| E2 Clientes y proyectos | RF-02, RF-03 (5 tabs, miembros, actividad) | S2 | ✅ back + front |
+| E3 Tareas | RF-04 lista + tablero, estados, comentarios/menciones, Mis tareas | S2–S3 | ✅ back + front (CA-04.01 con procesos reales) |
+| E4 Horas ⭐ | RF-05 completo + reglas de concurrencia + suite QA-01..08 | S3–S4 | ✅ back + front · QA-01..08 verdes |
+| E5 Turnos y calendario | RF-06 (sin cambio de turno) | S4 | ✅ back + front |
+| E6 Notificaciones | RF-09 R1 | S3–S4 | ✅ back + front |
+| E7 Reporte de horas | RF-10.01 | S4 | ✅ back + front |
+| E13 MCP Claude Code | RF-12: tokens personales, pantalla Conexiones de IA, tools R1, tests de paridad web/MCP | S4–S5 | ✅ back (18 tools, QA-01..03 vía MCP) + pantalla Conexiones de IA |
+| E8 Puesta en marcha | Carga inicial (usuarios, clientes, proyectos activos + horas), invitaciones, apagar Worksuite | S5 | 📄 docs/09-operacion/puesta-en-marcha.md · falta staging |
 
 ## Spike paralelo (no bloquea R1)
 

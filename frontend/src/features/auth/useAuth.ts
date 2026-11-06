@@ -10,6 +10,7 @@ import {
   submitTwoFactorChallenge,
   type LoginInput,
 } from './authApi'
+import { browserTimeZone } from '@/lib/timezone'
 import type { CurrentUser, NewPasswordInput, ResetPasswordInput, TwoFactorChallengeInput } from './types'
 
 export const currentUserKey = ['me'] as const
@@ -26,6 +27,12 @@ export function useCan(permission: string): boolean {
 export function useCanAny(permissions: readonly string[]): boolean {
   const { data } = useCurrentUser()
   return permissions.some((permission) => data?.permissions.includes(permission) ?? false)
+}
+
+/** The person's effective (profile, else company) timezone: the one the backend reads typed dates/times in. */
+export function useProfileTimeZone(): string {
+  const { data } = useCurrentUser()
+  return data?.timezone ?? browserTimeZone()
 }
 
 function useStoreCurrentUser() {

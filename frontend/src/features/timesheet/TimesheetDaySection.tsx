@@ -2,16 +2,26 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDuration } from '@/lib/duration'
+import { zonedPartsOf } from '@/lib/timezone'
 import type { TimesheetDay, TimesheetEntry } from './types'
-import { dayLabel, localTime } from './week'
+import { dayLabel } from './week'
 
 interface TimesheetDaySectionProps {
   day: TimesheetDay
+  /** The timesheet's (profile) timezone: days are grouped in it, so times are shown in it too. */
+  timeZone: string
   onComplete: (entry: TimesheetEntry) => void
 }
 
-function EntryRow({ entry, onComplete }: { entry: TimesheetEntry; onComplete: (entry: TimesheetEntry) => void }) {
-  const range = `${localTime(entry.started_at)} – ${entry.is_running || !entry.ended_at ? 'en curso' : localTime(entry.ended_at)}`
+interface EntryRowProps {
+  entry: TimesheetEntry
+  timeZone: string
+  onComplete: (entry: TimesheetEntry) => void
+}
+
+function EntryRow({ entry, timeZone, onComplete }: EntryRowProps) {
+  const timeOf = (iso: string) => zonedPartsOf(iso, timeZone).time
+  const range = `${timeOf(entry.started_at)} – ${entry.is_running || !entry.ended_at ? 'en curso' : timeOf(entry.ended_at)}`
 
   return (
     <li className="space-y-1 p-3">
@@ -41,7 +51,7 @@ function EntryRow({ entry, onComplete }: { entry: TimesheetEntry; onComplete: (e
 }
 
 /** One day of "Mi semana": its total and what was done (RF-05.12/18). */
-export function TimesheetDaySection({ day, onComplete }: TimesheetDaySectionProps) {
+export function TimesheetDaySection({ day, timeZone, onComplete }: TimesheetDaySectionProps) {
   const title = dayLabel(day.date)
   return (
     <section aria-label={title} className="rounded-lg border border-border bg-surface">
@@ -56,7 +66,7 @@ export function TimesheetDaySection({ day, onComplete }: TimesheetDaySectionProp
       ) : (
         <ul className="divide-y divide-border">
           {day.entries.map((entry) => (
-            <EntryRow key={entry.id} entry={entry} onComplete={onComplete} />
+            <EntryRow key={entry.id} entry={entry} timeZone={timeZone} onComplete={onComplete} />
           ))}
         </ul>
       )}

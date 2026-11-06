@@ -2,18 +2,13 @@ import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { TextField } from '@/components/ui/TextField'
+import { useProfileTimeZone } from '@/features/auth/useAuth'
 import { CommentField } from '@/features/timer/CommentField'
 import { TimerBlockedNotice } from '@/features/timer/TimerBlockedNotice'
 import { isValidComment } from '@/features/timer/types'
 import { useLogManualTime } from '@/features/timer/useTimer'
 import { ApiError, fieldErrorOf } from '@/lib/api'
-
-/** Today as `YYYY-MM-DD` in the browser's calendar (the backend reads it in the person's timezone). */
-function today(): string {
-  const now = new Date()
-  const pad = (value: number) => value.toString().padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
+import { todayIn } from '@/lib/timezone'
 
 interface ManualTimeFormProps {
   taskCode: string
@@ -23,7 +18,9 @@ interface ManualTimeFormProps {
 /** RF-05.09 "olvidé el timer": date, from–to and a mandatory comment. Window and bag are backend rules. */
 export function ManualTimeForm({ taskCode, projectId }: ManualTimeFormProps) {
   const log = useLogManualTime(taskCode)
-  const [date, setDate] = useState(today)
+  const timeZone = useProfileTimeZone()
+  // The backend reads date + from/to in the profile timezone, so "today" is today there.
+  const [date, setDate] = useState(() => todayIn(timeZone))
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [comment, setComment] = useState('')
@@ -38,6 +35,7 @@ export function ManualTimeForm({ taskCode, projectId }: ManualTimeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" aria-label="Cargar horas">
+      <p className="text-xs text-muted">Fecha y horas en tu zona horaria ({timeZone}).</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <TextField
           label="Fecha"

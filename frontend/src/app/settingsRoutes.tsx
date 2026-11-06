@@ -1,3 +1,5 @@
+import { CompanyTokensTab } from '@/features/aiConnections/CompanyTokensTab'
+import { HolidaysTab } from '@/features/calendar/HolidaysTab'
 import { CatalogsTab } from '@/features/catalogs/CatalogsTab'
 import { CompanyTab } from '@/features/company/CompanyTab'
 import { RolesTab } from '@/features/roles/RolesTab'
@@ -36,6 +38,22 @@ export function CatalogsSettings() {
   return (
     <SettingsTabGuard path="catalogos">
       <CatalogsTab />
+    </SettingsTabGuard>
+  )
+}
+
+export function HolidaysSettings() {
+  return (
+    <SettingsTabGuard path="feriados">
+      <HolidaysTab />
+    </SettingsTabGuard>
+  )
+}
+
+export function AiTokensSettings() {
+  return (
+    <SettingsTabGuard path="tokens-ia">
+      <CompanyTokensTab />
     </SettingsTabGuard>
   )
 }

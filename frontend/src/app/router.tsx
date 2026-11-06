@@ -83,6 +83,19 @@ export const router = createBrowserRouter([
             ],
           },
           {
+            path: '/calendario',
+            lazy: async () => ({ Component: (await import('@/features/calendar/MyCalendarPage')).MyCalendarPage }),
+          },
+          { path: '/turnos', lazy: async () => ({ Component: (await import('@/features/shifts/ShiftsPage')).ShiftsPage }) },
+          {
+            path: '/reportes/horas',
+            lazy: async () => ({ Component: (await import('@/features/reports/HoursReportPage')).HoursReportPage }),
+          },
+          {
+            path: '/reportes/horas/proyectos/:projectId',
+            lazy: async () => ({ Component: (await import('@/features/reports/ProjectHoursReportPage')).ProjectHoursReportPage }),
+          },
+          {
             path: '/configuracion',
             lazy: async () => ({ Component: (await import('./settingsRoutes')).SettingsLayout }),
             children: [
@@ -91,6 +104,8 @@ export const router = createBrowserRouter([
               { path: 'roles', lazy: async () => ({ Component: (await import('./settingsRoutes')).RolesSettings }) },
               { path: 'usuarios', lazy: async () => ({ Component: (await import('./settingsRoutes')).UsersSettings }) },
               { path: 'catalogos', lazy: async () => ({ Component: (await import('./settingsRoutes')).CatalogsSettings }) },
+              { path: 'feriados', lazy: async () => ({ Component: (await import('./settingsRoutes')).HolidaysSettings }) },
+              { path: 'tokens-ia', lazy: async () => ({ Component: (await import('./settingsRoutes')).AiTokensSettings }) },
             ],
           },
         ],

@@ -7,7 +7,8 @@ import { CommentField } from '@/features/timer/CommentField'
 import { isValidComment, type CorrectEntryInput, type TimeEntry } from '@/features/timer/types'
 import { useCorrectTimeEntry } from '@/features/timer/useTimer'
 import { fieldErrorOf } from '@/lib/api'
-import { localDateOf, localTimeOf } from './entryTimes'
+import { useProfileTimeZone } from '@/features/auth/useAuth'
+import { entryFormTimes } from './entryTimes'
 
 interface EditEntryDialogProps {
   entry: TimeEntry & { ended_at: string }
@@ -17,7 +18,9 @@ interface EditEntryDialogProps {
 /** RF-05.15: the window and who may are backend rules; its message is shown as is. */
 export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
   const correct = useCorrectTimeEntry()
-  const initial = { date: localDateOf(entry.started_at), from: localTimeOf(entry.started_at), to: localTimeOf(entry.ended_at) }
+  const timeZone = useProfileTimeZone()
+  // Prefill in the profile timezone: the backend reads the submitted date/from/to in that same zone.
+  const [initial] = useState(() => entryFormTimes(entry.started_at, entry.ended_at, timeZone))
   const [range, setRange] = useState(initial)
   const [comment, setComment] = useState(entry.comment ?? '')
   const timesChanged = range.date !== initial.date || range.from !== initial.from || range.to !== initial.to
@@ -38,6 +41,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
           type="date"
           required
           value={range.date}
+          hint={`Fecha y horas en tu zona horaria (${timeZone}).`}
           onChange={(event) => setRange({ ...range, date: event.target.value })}
           error={fieldErrorOf(correct.error, 'date')}
         />

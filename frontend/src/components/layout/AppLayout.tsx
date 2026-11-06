@@ -1,7 +1,9 @@
 import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { useCanAny, useCurrentUser } from '@/features/auth/useAuth'
+import { useCan, useCanAny, useCurrentUser } from '@/features/auth/useAuth'
 import { CLIENTS_READ_PERMISSIONS } from '@/features/clients/types'
+import { REPORTS_PERMISSION } from '@/features/reports/types'
+import { SHIFTS_PERMISSION } from '@/features/shifts/types'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { SETTINGS_PERMISSIONS } from '@/features/settings/settingsTabs'
 import { GlobalTimer } from '@/features/timer/GlobalTimer'
@@ -23,12 +25,17 @@ export function AppLayout() {
   const { theme, toggleTheme } = useTheme()
   const canSeeSettings = useCanAny(SETTINGS_PERMISSIONS)
   const canSeeClients = useCanAny(CLIENTS_READ_PERMISSIONS)
+  const canManageShifts = useCan(SHIFTS_PERMISSION)
+  const canSeeReports = useCan(REPORTS_PERMISSION)
 
   /** Feature modules register their top-level entries here. */
   const navigation: NavigationItem[] = [
     { to: '/', label: 'Mis tareas', visible: true },
     { to: '/proyectos', label: 'Proyectos', visible: true },
     { to: '/mi-semana', label: 'Mi semana', visible: true },
+    { to: '/calendario', label: 'Calendario', visible: true },
+    { to: '/turnos', label: 'Turnos', visible: canManageShifts },
+    { to: '/reportes/horas', label: 'Reportes', visible: canSeeReports },
     { to: '/clientes', label: 'Clientes', visible: canSeeClients },
     { to: '/personas', label: 'Personas', visible: true },
     { to: '/configuracion', label: 'Configuración', visible: canSeeSettings },

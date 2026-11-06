@@ -54,8 +54,15 @@ export function dayLabel(value: string): string {
   return `${date.toLocaleDateString('es-AR', { weekday: 'long' })} ${date.getDate()}/${date.getMonth() + 1}`
 }
 
-/** Local `HH:mm` of an ISO instant. */
-export function localTime(iso: string): string {
-  const date = new Date(iso)
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+/** Every calendar date from `from` to `to`, both included. */
+export function datesBetween(from: string, to: string): string[] {
+  const dates: string[] = []
+  const end = parseLocalDate(to)
+  for (const day = parseLocalDate(from); day <= end; day.setDate(day.getDate() + 1)) dates.push(toLocalDateString(day))
+  return dates
+}
+
+/** ISO weekday: 1 = Monday … 7 = Sunday. */
+export function isoWeekdayOf(value: string): number {
+  return ((parseLocalDate(value).getDay() + 6) % 7) + 1
 }

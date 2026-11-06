@@ -1,37 +1,30 @@
 # TODO — newDesk
 
-## Fase 0 — Descubrimiento
+Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06).
 
-- [x] Estructura, relevamiento, RF-01..RF-12 + RNF, gaps, arquitectura, QA, backlog, handoff
-- [ ] P-23 (una o varias empresas) — tiene default
-- [ ] SP-01 spike cerradura Nexxt/Tuya
-- [ ] Wireframes de pantallas clave
+## R1 — estado
 
-## Base de arquitectura (pedido 2026-11-06: "front y back + arquitectura base antes de módulos, pushear")
+- [x] Base de arquitectura (back + front + CI + convenciones clean code/SOLID/apto IA)
+- [x] E0 Fundaciones: auth SPA, invitación, reset, 2FA (obligatorio Admin), roles/permisos editables, RF-11
+- [x] E1 Personas (RF-01)
+- [x] E2 Clientes y proyectos (RF-02, RF-03)
+- [x] E3 Tareas (RF-04) — CA-04.01 con procesos reales en paralelo
+- [x] E4 Horas ⭐ (RF-05) — QA-01..08 verdes, QA-03 también con procesos reales; revisión independiente aplicada
+- [x] E6 Notificaciones (RF-09 R1)
+- [x] E5 Turnos y calendario (RF-06, sin cambio de turno)
+- [x] E7 Reporte de horas (RF-10.01)
+- [x] E13 MCP (RF-12) — 18 tools, tokens `nd_`, QA-01..03 vía MCP
+- [ ] E8 Puesta en marcha — guía lista (`docs/09-operacion/puesta-en-marcha.md`); falta servidor de staging, `.claude/bug-report.json`, backups (RNF-09)
 
-- [x] backend Laravel 12 + Pest + Sanctum + laravel/mcp + Reverb + predis + Resend
-- [x] Capas `app/Domain/<Modulo>` (Actions/Models/Policies/Enums) + `Shared` (BelongsToCompany, RecordActivity, BusinessRuleViolation)
-- [x] `companies` + `company_id`, roles editables con permisos granulares (enum `Permission` = Gate)
-- [x] Auth Sanctum SPA (login/logout/me, throttle, usuario inactivo → 401)
-- [x] Envelope `{ data, message, errors }` en todas las respuestas de error y éxito
-- [x] `/health`, `/errors` (ERRORS_TOKEN), canal `errors`, sin headers de stack, raíz `{"status":"ok"}`
-- [x] `supervisor:sync`, `newdesk:install`
-- [x] frontend React 19 + Vite + TS strict + Tailwind v4 + React Query + router, login + layout + tema oscuro/claro
-- [x] CI GitHub Actions (back: pint + pest con MySQL/Redis; front: lint, typecheck, vitest, build)
-- [x] `docs/04-arquitectura/convenciones-de-codigo.md` (clean code / SOLID / apto IA)
+## Pendientes / mejoras chicas detectadas
 
-## E0 Fundaciones (resto) — rama `feat/e0-foundations`
-
-- [ ] Invitación por email + definir contraseña (RF-01.01) + recuperar contraseña
-- [ ] 2FA (obligatorio Admin)
-- [ ] ABM de roles y permisos (API + UI), usuario con rol
-- [ ] RF-11 configuración de empresa (API + UI)
-- [ ] Test de policy 403/404
-- [ ] `.claude/bug-report.json` cuando exista URL de staging/prod
-
-## Siguientes: E1 → E2 → E3 → E4 ⭐ → E6/E5/E7 → E13 MCP → E8
+- [ ] `GET /holidays` y estado del feed iCal (hoy el front los deriva de `/me/calendar` / muestra "revocar" siempre)
+- [ ] Endpoint atómico "setear celdas" para selección libre en la grilla de turnos (hoy N requests secuenciales)
+- [ ] Mostrar "Sin horas disponibles" antes del clic en ▶ (hoy se ve al responder 422)
+- [ ] Tiempo real por WebSocket (Reverb) — hoy polling 30 s + BroadcastChannel entre pestañas (RNF-12 lo admite)
+- [ ] P-25 HEIC (Imagick), P-26 fuente de feriados AR, P-23 una/varias empresas
 
 ## Review
 
 - 2026-11-06: Fase 0 documentada; PO respondió las bloqueantes.
-- 2026-11-06: base de arquitectura lista. Back 14 tests verdes (MySQL `newdesk_testing`), front 4 tests + build + lint verdes. Smoke real con curl: `/` ok sin headers de stack, `/api/health` 200, CSRF → login 200 → `/me` 200.
+- 2026-11-06: R1 implementado en `dev_green`. Backend 141 tests (MySQL `newdesk_testing`, incluye suite Concurrency con procesos reales). Frontend 121 tests + typecheck + lint + build (chunk principal 353 kB). E2E Playwright contra backend real: login (desktop + mobile) y flujo del cronómetro. Smoke real del MCP con curl (initialize, tools/list, whoami, 401 sin token).

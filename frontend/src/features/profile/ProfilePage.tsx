@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
+import { AiConnectionsTab } from '@/features/aiConnections/AiConnectionsTab'
 import { NotificationPreferences } from '@/features/notifications/NotificationPreferences'
 import { AvatarUpload } from './AvatarUpload'
 import { MyTeamList } from './MyTeamList'
@@ -8,13 +9,14 @@ import { OwnProfileForm } from './OwnProfileForm'
 import { SkillsEditor } from './SkillsEditor'
 import { useMyProfile } from './useMyProfile'
 
-type ProfileTab = 'datos' | 'habilidades' | 'equipo' | 'notificaciones'
+type ProfileTab = 'datos' | 'habilidades' | 'equipo' | 'notificaciones' | 'ia'
 
 const tabs: readonly TabItem<ProfileTab>[] = [
   { id: 'datos', label: 'Mis datos' },
   { id: 'habilidades', label: 'Habilidades' },
   { id: 'equipo', label: 'Mi equipo' },
   { id: 'notificaciones', label: 'Notificaciones' },
+  { id: 'ia', label: 'Conexiones de IA' },
 ]
 
 /** "Mi perfil": what each person edits about themself (RF-01.05/06/07/09). */
@@ -42,6 +44,7 @@ export function ProfilePage() {
         {tab === 'habilidades' && <SkillsEditor skills={person.skills ?? []} />}
         {tab === 'equipo' && <MyTeamList />}
         {tab === 'notificaciones' && <NotificationPreferences />}
+        {tab === 'ia' && <AiConnectionsTab />}
       </Tabs>
     </section>
   )
