@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
+use App\Domain\Notifications\Listeners\SendDomainNotifications;
 use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Tasks\Models\Task;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
 
         Event::subscribe(StopTimersOnDomainEvents::class);
+        Event::subscribe(SendDomainNotifications::class);
 
         $this->registerAuthorization();
         $this->registerRouteBindings();
