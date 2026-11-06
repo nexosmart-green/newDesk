@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from 'react-router'
-import { useCanAny, useCurrentUser, useLogout } from '@/features/auth/useAuth'
+import { useCanAny, useCurrentUser } from '@/features/auth/useAuth'
+import { CLIENTS_READ_PERMISSIONS } from '@/features/clients/types'
 import { SETTINGS_PERMISSIONS } from '@/features/settings/settingsTabs'
+import { UserMenu } from './UserMenu'
 import { useTheme } from './useTheme'
 
 interface NavigationItem {
@@ -13,13 +15,16 @@ const linkClassName = ({ isActive }: { isActive: boolean }) => (isActive ? 'text
 
 export function AppLayout() {
   const { data: user } = useCurrentUser()
-  const logoutMutation = useLogout()
   const { theme, toggleTheme } = useTheme()
   const canSeeSettings = useCanAny(SETTINGS_PERMISSIONS)
+  const canSeeClients = useCanAny(CLIENTS_READ_PERMISSIONS)
 
   /** Feature modules register their top-level entries here. */
   const navigation: NavigationItem[] = [
     { to: '/', label: 'Mis tareas', visible: true },
+    { to: '/proyectos', label: 'Proyectos', visible: true },
+    { to: '/clientes', label: 'Clientes', visible: canSeeClients },
+    { to: '/personas', label: 'Personas', visible: true },
     { to: '/configuracion', label: 'Configuración', visible: canSeeSettings },
   ]
 
@@ -27,7 +32,7 @@ export function AppLayout() {
     <div className="min-h-screen">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-4 py-3">
         <span className="font-semibold">{user?.company.name}</span>
-        <nav aria-label="Principal" className="flex gap-3 text-sm">
+        <nav aria-label="Principal" className="order-last flex w-full gap-3 overflow-x-auto text-sm sm:order-none sm:w-auto">
           {navigation
             .filter((item) => item.visible)
             .map((item) => (
@@ -41,12 +46,7 @@ export function AppLayout() {
         <button type="button" onClick={toggleTheme} className="text-sm text-muted" aria-label="Cambiar tema">
           {theme === 'dark' ? 'Claro' : 'Oscuro'}
         </button>
-        <NavLink to="/seguridad" className={({ isActive }) => `text-sm ${linkClassName({ isActive })}`} title="Seguridad">
-          {user?.full_name}
-        </NavLink>
-        <button type="button" onClick={() => logoutMutation.mutate()} className="text-sm text-muted">
-          Salir
-        </button>
+        <UserMenu />
       </header>
       <main className="p-4">
         <Outlet />

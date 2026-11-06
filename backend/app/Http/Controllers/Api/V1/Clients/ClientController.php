@@ -36,7 +36,7 @@ class ClientController extends Controller
                 ->orWhere('trade_name', 'like', "%{$search}%")
                 ->orWhere('tax_id', 'like', "%{$search}%")))
             ->orderBy('legal_name')
-            ->paginate(50);
+            ->paginate(min(max($request->integer('per_page', 50), 1), 200));
 
         return ClientResource::collection($clients)->additional(['message' => null, 'errors' => null]);
     }

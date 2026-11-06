@@ -78,3 +78,26 @@ export async function dataOf<T>(request: Promise<{ data: ApiEnvelope<T> }>): Pro
 export function fieldErrorOf(error: unknown, field: string): string | undefined {
   return error instanceof ApiError ? error.fieldErrors[field]?.[0] : undefined
 }
+
+/** Awaits a paginated Laravel resource collection (`{ data, meta, links }`) and keeps `data` + `meta`. */
+export async function pageOf<T>(request: Promise<{ data: Paginated<T> }>): Promise<Paginated<T>> {
+  try {
+    const response = await request
+    return { data: response.data.data, meta: response.data.meta }
+  } catch (error) {
+    throw toApiError(error)
+  }
+}
+
+type QueryValue = string | number | boolean | null | undefined
+
+/** Drops empty filters so the query string only carries what the user chose. */
+export function queryParams(values: Record<string, QueryValue>): Record<string, string | number> {
+  const params: Record<string, string | number> = {}
+  for (const [key, value] of Object.entries(values)) {
+    if (value === null || value === undefined || value === false) continue
+    if (typeof value === 'string' && value.trim() === '') continue
+    params[key] = value === true ? 1 : typeof value === 'string' ? value.trim() : value
+  }
+  return params
+}

@@ -27,13 +27,14 @@ class PeopleController extends Controller
             'skill_id' => ['nullable', 'integer'],
             'min_level' => ['nullable', 'integer', 'between:0,100'],
             'include_inactive' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'between:1,200'],
         ]);
         $filters['include_inactive'] = $request->boolean('include_inactive') && $request->user()->can('viewAny', User::class);
         foreach (['area_id', 'skill_id', 'min_level'] as $integer) {
             $filters[$integer] = isset($filters[$integer]) ? (int) $filters[$integer] : null;
         }
 
-        return PersonResource::collection($directory($request->user()->company_id, $filters))
+        return PersonResource::collection($directory($request->user()->company_id, $filters, $request->integer('per_page', 50)))
             ->additional(['message' => null, 'errors' => null]);
     }
 

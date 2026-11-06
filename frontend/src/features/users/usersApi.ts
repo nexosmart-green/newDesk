@@ -1,18 +1,9 @@
-import { api, dataOf, envelopeOf, toApiError, type ApiEnvelope, type Paginated } from '@/lib/api'
+import { api, dataOf, envelopeOf, pageOf, queryParams, type ApiEnvelope, type Paginated } from '@/lib/api'
 import type { InviteUserInput, UserFilters, UserSummary } from './types'
 
 export async function fetchUsers(filters: UserFilters): Promise<Paginated<UserSummary>> {
-  const params = {
-    page: filters.page,
-    ...(filters.status && { status: filters.status }),
-    ...(filters.search.trim() && { search: filters.search.trim() }),
-  }
-  try {
-    const response = await api.get<Paginated<UserSummary>>('/users', { params })
-    return { data: response.data.data, meta: response.data.meta }
-  } catch (error) {
-    throw toApiError(error)
-  }
+  const params = queryParams({ page: filters.page, status: filters.status, search: filters.search })
+  return pageOf(api.get<Paginated<UserSummary>>('/users', { params }))
 }
 
 export async function inviteUser(input: InviteUserInput): Promise<UserSummary> {

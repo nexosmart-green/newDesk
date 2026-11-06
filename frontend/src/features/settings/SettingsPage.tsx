@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Navigate, NavLink, Outlet } from 'react-router'
+import { Navigate, Outlet } from 'react-router'
+import { TabNav } from '@/components/ui/TabNav'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { visibleSettingsTabs } from './settingsTabs'
 
@@ -18,19 +19,7 @@ export function SettingsPage() {
   return (
     <section className="mx-auto max-w-5xl space-y-4">
       <h1 className="text-lg font-semibold">Configuración</h1>
-      <nav aria-label="Secciones de configuración" className="flex gap-1 overflow-x-auto border-b border-border">
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.path}
-            to={tab.path}
-            className={({ isActive }) =>
-              `-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${isActive ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-text'}`
-            }
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
+      <TabNav label="Secciones de configuración" tabs={tabs} />
       <Outlet />
     </section>
   )

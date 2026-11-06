@@ -13,6 +13,7 @@ export const settingsTabs: readonly SettingsTab[] = [
   { path: 'empresa', label: 'Empresa', permissions: SETTINGS_PERMISSIONS },
   { path: 'roles', label: 'Roles', permissions: ['roles.manage', 'users.manage'] },
   { path: 'usuarios', label: 'Usuarios', permissions: ['users.manage'] },
+  { path: 'catalogos', label: 'Catálogos', permissions: ['users.manage'] },
 ]
 
 export function visibleSettingsTabs(userPermissions: readonly string[]): SettingsTab[] {

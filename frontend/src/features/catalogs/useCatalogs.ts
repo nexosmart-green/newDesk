@@ -1,0 +1,38 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createCatalogItem, deleteCatalogItem, fetchCatalog, renameCatalogItem } from './catalogsApi'
+import type { CatalogType } from './types'
+
+export const catalogKey = (type: CatalogType) => ['catalogs', type] as const
+
+export function useCatalog(type: CatalogType) {
+  return useQuery({ queryKey: catalogKey(type), queryFn: () => fetchCatalog(type), staleTime: 5 * 60_000 })
+}
+
+function useInvalidateCatalog(type: CatalogType) {
+  const queryClient = useQueryClient()
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: catalogKey(type) }),
+      // Profiles and directory cards embed catalog names.
+      queryClient.invalidateQueries({ queryKey: ['people'] }),
+      queryClient.invalidateQueries({ queryKey: ['profile'] }),
+    ])
+}
+
+export function useCreateCatalogItem(type: CatalogType) {
+  const invalidate = useInvalidateCatalog(type)
+  return useMutation({ mutationFn: (name: string) => createCatalogItem(type, name), onSuccess: invalidate })
+}
+
+export function useRenameCatalogItem(type: CatalogType) {
+  const invalidate = useInvalidateCatalog(type)
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => renameCatalogItem(type, id, name),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteCatalogItem(type: CatalogType) {
+  const invalidate = useInvalidateCatalog(type)
+  return useMutation({ mutationFn: (id: number) => deleteCatalogItem(type, id), onSuccess: invalidate })
+}
