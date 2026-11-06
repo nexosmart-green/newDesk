@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Http\Middleware\EnsureTeamUser;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
@@ -34,7 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->append(RemoveStackHeaders::class);
-        $middleware->alias(['active' => EnsureUserIsActive::class]);
+        $middleware->alias(['active' => EnsureUserIsActive::class, 'team' => EnsureTeamUser::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($sensitiveInput, $traceShort): void {
         $exceptions->dontReport([BusinessRuleViolation::class]);
@@ -98,7 +99,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, null, ['code' => $e->ruleCode, ...$e->context]),
                 $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),
                 $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error('No tenés permiso para esta acción.', 403),
-                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error('No encontrado.', 404),
+                // A policy's denyAsNotFound() arrives as a plain 404 HttpException (CA-03.03).
+                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException,
+                $e instanceof HttpException && $e->getStatusCode() === 404 => ApiResponse::error('No encontrado.', 404),
                 $e instanceof HttpException => ApiResponse::error($e->getStatusCode() === 429 ? 'Demasiados intentos. Probá en un rato.' : ($e->getMessage() ?: 'Error'), $e->getStatusCode()),
                 default => ApiResponse::error(config('app.debug') ? $e->getMessage() : 'Error interno del servidor.', 500),
             };

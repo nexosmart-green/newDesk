@@ -24,6 +24,10 @@ enum Permission: string
     case McpUse = 'mcp.use';
     /** See/revoke anyone's MCP tokens (RF-12.05). */
     case McpManageTokens = 'mcp.manage_tokens';
+    /** Servers, alerts, project status and client reports (RF-13). */
+    case MonitoringView = 'monitoring.view';
+    /** What monitoreo's admin did: servers, components, client portal users (RF-13). */
+    case MonitoringManage = 'monitoring.manage';
 
     public function label(): string
     {
@@ -42,6 +46,8 @@ enum Permission: string
             self::CompanyManage => 'Configurar la empresa',
             self::McpUse => 'Usar MCP (Claude Code)',
             self::McpManageTokens => 'Ver y revocar tokens MCP de todos',
+            self::MonitoringView => 'Ver monitoreo',
+            self::MonitoringManage => 'Administrar monitoreo',
         };
     }
 

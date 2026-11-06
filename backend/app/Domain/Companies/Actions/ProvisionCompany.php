@@ -29,7 +29,7 @@ final class ProvisionCompany
                 $role = Role::query()->create([
                     'company_id' => $newCompany->id,
                     'name' => $name,
-                    'is_system' => $name === DefaultRoles::ADMIN,
+                    'is_system' => in_array($name, DefaultRoles::SYSTEM, true),
                 ]);
                 $role->syncPermissions($permissions);
                 if ($name === DefaultRoles::ADMIN) {

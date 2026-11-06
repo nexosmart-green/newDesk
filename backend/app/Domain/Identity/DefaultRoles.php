@@ -15,6 +15,15 @@ final class DefaultRoles
 
     public const COLLABORATOR = 'Colaborador';
 
+    /** monitoreo's team (P-26). */
+    public const DEVELOPER = 'Desarrollador';
+
+    /** Client portal users (RF-13.07): no permission, routes gate them by `client_id`. */
+    public const CLIENT = 'Cliente';
+
+    /** Roles that cannot be deleted. */
+    public const SYSTEM = [self::ADMIN, self::CLIENT];
+
     /** @return array<string, list<Permission>> */
     public static function definitions(): array
     {
@@ -33,6 +42,13 @@ final class DefaultRoles
                 Permission::TimeTrack,
                 Permission::McpUse,
             ],
+            self::DEVELOPER => [
+                Permission::TasksAssign,
+                Permission::TimeTrack,
+                Permission::McpUse,
+                Permission::MonitoringView,
+            ],
+            self::CLIENT => [],
         ];
     }
 }

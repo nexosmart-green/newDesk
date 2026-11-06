@@ -18,8 +18,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/me', [MeController::class, 'show']);
 
         // Module routes: one file per domain module, e.g. routes/api/projects.php.
-        foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
-            require $moduleRoutes;
-        }
+        // Team only: client users live in the portal (CA-13.14).
+        Route::middleware('team')->group(function () {
+            foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
+                require $moduleRoutes;
+            }
+        });
     });
 });
