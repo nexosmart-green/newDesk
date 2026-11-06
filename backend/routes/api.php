@@ -17,16 +17,17 @@ Route::get('/errors', [ErrorLogController::class, 'index']);
 
 Route::prefix('v1')->group(function () {
     // Guest auth flows.
-    Route::middleware('throttle:login')->group(function () {
-        Route::post('/auth/login', [SessionController::class, 'store']);
-        Route::post('/auth/two-factor-challenge', [TwoFactorChallengeController::class, 'store']);
+    Route::post('/auth/login', [SessionController::class, 'store'])->middleware('throttle:login');
+    Route::post('/auth/two-factor-challenge', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:two-factor');
+
+    Route::middleware('throttle:guest')->group(function () {
         Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot']);
         Route::post('/auth/reset-password', [PasswordResetController::class, 'reset']);
         Route::get('/invitations/{token}', [InvitationController::class, 'show']);
         Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept']);
     });
 
-    Route::middleware(['auth:sanctum', 'active', RejectMcpTokens::class])->group(function () {
+    Route::middleware(['auth:sanctum', 'active', RejectMcpTokens::class, 'throttle:api'])->group(function () {
         // Reachable before an Admin has enabled the mandatory 2FA.
         Route::post('/auth/logout', [SessionController::class, 'destroy']);
         Route::get('/me', [MeController::class, 'show']);

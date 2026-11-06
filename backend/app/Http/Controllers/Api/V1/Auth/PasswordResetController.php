@@ -36,6 +36,8 @@ class PasswordResetController extends Controller
             function (User $user, string $password) {
                 $user->forceFill(['password' => $password])->setRememberToken(null);
                 $user->save();
+                // A reset after a compromise must also kill MCP tokens the attacker may have created.
+                $user->tokens()->delete();
             },
         );
 

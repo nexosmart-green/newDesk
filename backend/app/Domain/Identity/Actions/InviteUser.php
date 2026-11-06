@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Actions;
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Support\RoleGrantGuard;
 use App\Domain\Shared\Activity\RecordActivity;
 use Illuminate\Support\Facades\DB;
 
@@ -16,11 +17,14 @@ final class InviteUser
     public function __construct(
         private readonly IssueInvitation $issueInvitation,
         private readonly RecordActivity $recordActivity,
+        private readonly RoleGrantGuard $guard,
     ) {}
 
     /** @param  array{first_name: string, last_name: string, email: string}  $data */
     public function __invoke(User $actor, array $data, Role $role): User
     {
+        $this->guard->assertCanGrant($actor, $role);
+
         $invitee = DB::transaction(function () use ($actor, $data, $role) {
             $invitee = User::query()->create([
                 ...$data,

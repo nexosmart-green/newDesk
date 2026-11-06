@@ -4,6 +4,7 @@ namespace App\Domain\People\Actions;
 
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Support\RoleGrantGuard;
 use App\Domain\People\Events\UserDeactivated;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
@@ -15,13 +16,17 @@ use Illuminate\Support\Facades\DB;
  */
 final class DeactivateUser
 {
-    public function __construct(private readonly RecordActivity $recordActivity) {}
+    public function __construct(
+        private readonly RecordActivity $recordActivity,
+        private readonly RoleGrantGuard $guard,
+    ) {}
 
     public function __invoke(User $actor, User $user): User
     {
         if ($actor->is($user)) {
             throw new BusinessRuleViolation('No podés darte de baja a vos mismo.', 'cannot_deactivate_self');
         }
+        $this->guard->assertCanManage($actor, $user);
 
         if ($user->status === UserStatus::Inactive) {
             return $user;

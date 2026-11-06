@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
+use App\Support\SafeRequestUrl;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -18,7 +19,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-$sensitiveInput = ['password', 'password_confirmation', 'current_password', 'token', 'secret', 'code'];
+$sensitiveInput = ['password', 'password_confirmation', 'current_password', 'token', 'secret', 'code', 'recovery_code', 'previous_comment'];
 
 $traceShort = fn (Throwable $e) => collect(array_slice($e->getTrace(), 0, 5))
     ->map(fn ($frame) => ($frame['class'] ?? '').($frame['type'] ?? '').($frame['function'] ?? '')
@@ -35,6 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         // API-only backend: guests get a 401 JSON, never a redirect to a non-existent login route.
         $middleware->redirectGuestsTo(fn () => null);
+        // Nginx on the same host: trust it so $request->ip() (login, /errors and MCP limits) is the real client.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
         $middleware->append(RemoveStackHeaders::class);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
@@ -61,7 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $context = [
                 'action' => $route ? $route->getActionName() : 'unknown',
                 'method' => $request->method(),
-                'url' => $request->fullUrl(),
+                'url' => SafeRequestUrl::of($request), // no path tokens in /api/errors
                 'user_id' => $request->user()?->id,
                 'company_id' => $request->user()?->company_id,
                 'ip' => $request->ip(),

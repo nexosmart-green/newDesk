@@ -2,13 +2,24 @@
 
 namespace App\Http\Requests\Tasks;
 
+use App\Domain\Projects\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * RF-04.05 filters. Persistence of the chosen filters is per user, on the client.
  */
 class TaskListRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        if (($project = $this->route('project')) instanceof Project) {
+            Gate::authorize('view', $project); // 404 before 422 (CA-03.03)
+        }
+
+        return true;
+    }
+
     /** @return array<string, list<string>> */
     public function rules(): array
     {

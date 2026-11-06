@@ -81,6 +81,15 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(30)->by($request->ip()),
         ]);
 
+        // Keyed by the pending login (server-side identity), never by client-supplied input.
+        RateLimiter::for('two-factor', fn (Request $request) => [
+            Limit::perMinute(5)->by('2fa|'.(($request->hasSession() ? $request->session()->get('login.pending.user_id') : null) ?? $request->ip())),
+            Limit::perMinute(30)->by('2fa-ip|'.$request->ip()),
+        ]);
+
+        // Invitations and password reset: per IP, separate from the login buckets.
+        RateLimiter::for('guest', fn (Request $request) => Limit::perMinute(20)->by('guest|'.$request->ip()));
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
 
         // NexoSmart standard: at most one e-mail per second (Resend).

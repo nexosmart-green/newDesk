@@ -9,7 +9,8 @@ import { useTimerState, useTimerTabSync } from './useTimer'
 export function GlobalTimer() {
   useTimerTabSync()
   const timer = useTimerState()
-  const [stopping, setStopping] = useState(false)
+  // Bound to the entry id: once that entry stops, a later timer can never reopen this dialog.
+  const [stoppingId, setStoppingId] = useState<number | null>(null)
   const active = timer.data?.active ?? null
   const elapsed = useElapsedSeconds(active?.elapsed_seconds ?? null, timer.dataUpdatedAt)
 
@@ -33,13 +34,15 @@ export function GlobalTimer() {
       </span>
       <button
         type="button"
-        onClick={() => setStopping(true)}
+        onClick={() => setStoppingId(active.id)}
         aria-label={`Detener cronómetro de ${active.task.code}`}
         className="flex size-8 items-center justify-center rounded-full bg-danger text-white focus-visible:outline-2 focus-visible:outline-accent"
       >
         <span aria-hidden="true">■</span>
       </button>
-      {stopping && <StopTimerDialog entry={active} elapsedSeconds={elapsed} onClose={() => setStopping(false)} />}
+      {stoppingId === active.id && (
+        <StopTimerDialog entry={active} elapsedSeconds={elapsed} onClose={() => setStoppingId(null)} />
+      )}
     </div>
   )
 }

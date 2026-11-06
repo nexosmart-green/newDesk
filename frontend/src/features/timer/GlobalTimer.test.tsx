@@ -56,6 +56,27 @@ describe('GlobalTimer', () => {
 
     expect(stop).toHaveBeenCalledWith('Login arreglado')
   })
+
+  it('does not reopen the stop dialog by itself when a later timer starts', async () => {
+    // A fake server: whatever is "running" right now.
+    let server = buildTimerState({ active: buildTimeEntry({ id: 1 }) })
+    vi.spyOn(timerApi, 'fetchTimer').mockImplementation(async () => server)
+    vi.spyOn(timerApi, 'stopTimer').mockImplementation(async () => {
+      server = buildTimerState()
+      return buildTimeEntry({ id: 1, is_running: false })
+    })
+    const { client } = renderAt(<GlobalTimer />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Detener cronómetro de bhn-60' }))
+    await userEvent.type(screen.getByLabelText('¿Qué hiciste?'), 'Terminé el login')
+    await userEvent.click(screen.getByRole('button', { name: 'Detener' }))
+    await vi.waitFor(() => expect(screen.queryByRole('timer')).not.toBeInTheDocument())
+
+    server = buildTimerState({ active: buildTimeEntry({ id: 2 }) }) // another device starts a timer
+    await act(() => client.invalidateQueries({ queryKey: ['timer'] }))
+    expect(await screen.findByRole('timer')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
 })
 
 describe('elapsedSince', () => {

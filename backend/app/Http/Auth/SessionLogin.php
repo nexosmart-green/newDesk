@@ -16,6 +16,8 @@ final class SessionLogin
 
     private const PENDING_TTL_SECONDS = 300;
 
+    private const MAX_CODE_ATTEMPTS = 5;
+
     public function findActiveUserByCredentials(string $email, string $password): ?User
     {
         /** @var UserProvider $provider */
@@ -49,6 +51,26 @@ final class SessionLogin
         $user = User::query()->find($pending['user_id']);
 
         return $user !== null && $user->isActive() ? ['user' => $user, 'remember' => (bool) $pending['remember']] : null;
+    }
+
+    /**
+     * A wrong code burns one of MAX_CODE_ATTEMPTS for this pending login; after that the password step
+     * must be repeated (and the login limiter applies again). Returns false when the login was discarded.
+     */
+    public function registerFailedCode(Request $request): bool
+    {
+        $pending = $request->session()->get(self::PENDING_KEY);
+        $failures = (int) ($pending['failures'] ?? 0) + 1;
+
+        if ($failures >= self::MAX_CODE_ATTEMPTS) {
+            $request->session()->forget(self::PENDING_KEY);
+
+            return false;
+        }
+
+        $request->session()->put(self::PENDING_KEY.'.failures', $failures);
+
+        return true;
     }
 
     public function complete(Request $request, User $user, bool $remember): void

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Projects;
 use App\Domain\Projects\Enums\ProjectType;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -12,6 +13,15 @@ use Illuminate\Validation\Rule;
  */
 class SaveProjectRequest extends FormRequest
 {
+    /** Authorize BEFORE validating: a non-member gets 404 even with an invalid body (CA-03.03). */
+    public function authorize(): bool
+    {
+        $project = $this->route('project');
+        Gate::authorize(...$project instanceof Project ? ['update', $project] : ['create', Project::class]);
+
+        return true;
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {

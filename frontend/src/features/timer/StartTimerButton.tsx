@@ -28,7 +28,7 @@ export function StartTimerButton({ task, projectId, compact = false }: StartTime
   const start = useStartTimer()
   const [askingPrevious, setAskingPrevious] = useState(false)
   const [blocked, setBlocked] = useState<ApiError | null>(null)
-  const [stopping, setStopping] = useState(false)
+  const [stoppingId, setStoppingId] = useState<number | null>(null)
   const active = timer.data?.active ?? null
   const runningHere = active !== null && sameCode(active.task.code, task.code)
 
@@ -49,7 +49,7 @@ export function StartTimerButton({ task, projectId, compact = false }: StartTime
   }
 
   function handleClick() {
-    if (runningHere) return setStopping(true)
+    if (runningHere && active) return setStoppingId(active.id)
     start.reset()
     if (active) return setAskingPrevious(true)
     begin()
@@ -96,8 +96,8 @@ export function StartTimerButton({ task, projectId, compact = false }: StartTime
           </div>
         </Dialog>
       )}
-      {stopping && active && (
-        <StopTimerDialog entry={active} elapsedSeconds={null} onClose={() => setStopping(false)} />
+      {active && stoppingId === active.id && (
+        <StopTimerDialog entry={active} elapsedSeconds={null} onClose={() => setStoppingId(null)} />
       )}
     </>
   )

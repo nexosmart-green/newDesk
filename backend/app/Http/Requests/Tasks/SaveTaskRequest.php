@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Tasks;
 
+use App\Domain\Projects\Models\Project;
 use App\Domain\Tasks\Enums\TaskPriority;
 use App\Domain\Tasks\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 /**
@@ -12,6 +14,19 @@ use Illuminate\Validation\Rule;
  */
 class SaveTaskRequest extends FormRequest
 {
+    /** Authorize BEFORE validating: outsiders get 404 even with an invalid body (CA-03.03). */
+    public function authorize(): bool
+    {
+        $task = $this->route('task');
+        if ($task instanceof Task) {
+            Gate::authorize('update', $task);
+        } elseif (($project = $this->route('project')) instanceof Project) {
+            Gate::authorize('create', [Task::class, $project]);
+        }
+
+        return true;
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
