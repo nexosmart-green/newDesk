@@ -39,6 +39,27 @@
   --color-success: var(--color-success);
 }
 
+/* Utilities that only the monitoring skin uses (features/monitoreo/skin.css defines the values under
+   [data-skin='monitoreo']). They live here because Tailwind generates utilities from this root only. */
+@theme inline {
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-faint: var(--faint);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-crit: var(--crit);
+  --color-info: var(--info);
+  --color-idle: var(--idle);
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.125rem;
+  --text-headline: 0.9375rem;
+  --text-headline--line-height: 1.25rem;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);

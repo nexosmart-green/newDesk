@@ -1,0 +1,657 @@
+/* Piel de monitoreo (ADR-0002 punto 8): los tokens y componentes de monitoreo/web/src/index.css, solo bajo
+   [data-skin='monitoreo']. Las utilidades de Tailwind compilan a var(--color-…): acá se redefinen las que
+   comparten nombre con newDesk (bg, surface, text, muted, accent); las propias de monitoreo (surface-2, line,
+   crit…) están registradas en src/index.css. El claro/oscuro sigue a la clase que pone useTheme en <html>. */
+
+@layer base {
+  [data-skin='monitoreo'] {
+    color-scheme: dark;
+    --bg: light-dark(#f5f5f7, #000000);
+    --surface: light-dark(#ffffff, #1c1c1e);
+    --surface-2: light-dark(rgb(120 120 128 / 0.08), rgb(120 120 128 / 0.18));
+    --surface-3: light-dark(rgb(120 120 128 / 0.14), rgb(120 120 128 / 0.3));
+    --glass: light-dark(rgb(242 242 245 / 0.78), rgb(22 22 24 / 0.72));
+    --thumb: light-dark(#ffffff, #636366);
+    --line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.08));
+    --line-strong: light-dark(rgb(0 0 0 / 0.14), rgb(255 255 255 / 0.16));
+    --text: light-dark(#1d1d1f, #f5f5f7);
+    --muted: light-dark(#6e6e73, #98989d);
+    --faint: light-dark(#86868b, #6e6e73);
+    --accent: light-dark(#1d1d1f, #f5f5f7);
+    --accent-ink: light-dark(#ffffff, #000000);
+    --accent-soft: light-dark(rgb(0 0 0 / 0.06), rgb(255 255 255 / 0.1));
+    --ok: light-dark(#1f7f38, #30d158);
+    --warn: light-dark(#b25000, #ff9f0a);
+    --crit: light-dark(#d70015, #ff453a);
+    --info: light-dark(#0066cc, #0a84ff);
+    --idle: light-dark(#6e6e73, #8e8e93);
+    --chart-1: light-dark(#1d1d1f, #f5f5f7);
+    --chart-2: #8e8e93;
+    --shadow-ink: light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.5));
+    --shadow: 0 0 0 1px var(--line), 0 1px 2px var(--shadow-ink);
+    --shadow-pop: 0 0 0 1px var(--line), 0 2px 6px var(--shadow-ink), 0 12px 32px -8px var(--shadow-ink);
+    --shadow-thumb: 0 0 0 0.5px var(--line), 0 1px 3px var(--shadow-ink);
+    --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+    --dur-1: 120ms;
+    --dur-2: 200ms;
+    --dur-3: 360ms;
+    --dur-4: 600ms;
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+    /* Utilidades de newDesk con el mismo nombre que las de monitoreo. */
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-text: var(--text);
+    --color-muted: var(--muted);
+    --color-accent: var(--accent);
+
+    /* Lo que monitoreo ponía en html y body. */
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    accent-color: var(--accent);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    letter-spacing: -0.006em;
+
+    ::selection {
+      background: color-mix(in oklab, var(--info) 24%, transparent);
+    }
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    * {
+      scrollbar-color: var(--line-strong) transparent;
+      scrollbar-width: thin;
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+  }
+  :root.light [data-skin='monitoreo'] {
+    color-scheme: light;
+  }
+}
+
+@layer components {
+  [data-skin='monitoreo'] {
+    .title {
+      font-size: 1.75rem;
+      line-height: 2.125rem;
+      font-weight: 600;
+      letter-spacing: -0.022em;
+    }
+    .label {
+      font-size: 0.75rem;
+      line-height: 1rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .glass {
+      background: var(--glass);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 1.125rem;
+      padding: 0 0.375rem;
+      border-radius: 5px;
+      background: var(--surface-2);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      height: 2.25rem;
+      padding: 0 0.875rem;
+      border-radius: 0.5rem;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition:
+        background-color var(--dur-1),
+        color var(--dur-1),
+        scale var(--dur-1) var(--ease-out),
+        opacity var(--dur-2);
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--surface-3);
+    }
+    .btn:active:not(:disabled) {
+      scale: 0.97;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--accent) 86%, var(--bg));
+    }
+    .btn-danger {
+      background: color-mix(in oklab, var(--crit) 10%, transparent);
+      color: var(--crit);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--crit) 16%, transparent);
+    }
+    .btn-ghost {
+      background: transparent;
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--surface-2);
+    }
+    .btn-sm {
+      height: 1.75rem;
+      padding: 0 0.625rem;
+      border-radius: 7px;
+      font-size: 0.75rem;
+    }
+    .btn-lg {
+      height: 2.75rem;
+      padding: 0 1.25rem;
+      border-radius: 0.75rem;
+      font-size: 0.9375rem;
+    }
+    /* ConfirmButton armado: la línea se vacía en 4 s, el mismo tiempo que el timeout de JS. */
+    .btn[data-armed],
+    .btn[data-armed]:hover:not(:disabled) {
+      position: relative;
+      overflow: hidden;
+      background: var(--crit);
+      color: #fff;
+    }
+    .btn[data-armed]::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 2px;
+      background: rgb(255 255 255 / 0.6);
+      transform-origin: left;
+      animation: mon-drain 4s linear forwards;
+    }
+
+    .input {
+      width: 100%;
+      height: 2.5rem;
+      padding: 0 0.75rem;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      transition:
+        background-color var(--dur-2),
+        border-color var(--dur-2),
+        box-shadow var(--dur-2);
+    }
+    .input::placeholder {
+      color: var(--faint);
+    }
+    .input:focus {
+      outline: none;
+      background: var(--surface);
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .input:disabled {
+      opacity: 0.6;
+    }
+    .input[aria-invalid='true'] {
+      border-color: var(--crit);
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--crit) 14%, transparent);
+      animation: mon-shake 360ms var(--ease-out);
+    }
+    select.input {
+      appearance: none;
+      padding-right: 2rem;
+      cursor: pointer;
+    }
+
+    .link {
+      color: var(--text);
+      text-decoration: underline;
+      text-decoration-color: var(--line-strong);
+      text-underline-offset: 3px;
+      cursor: pointer;
+      transition: text-decoration-color var(--dur-1);
+    }
+    .link:hover {
+      text-decoration-color: currentColor;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+    .table th {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      transition: background-color var(--dur-1);
+    }
+    .table tr > :first-child {
+      padding-left: 1.25rem;
+    }
+    .table tr > :last-child {
+      padding-right: 1.25rem;
+    }
+    .table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+    .table tbody tr:hover td {
+      background: var(--surface-2);
+    }
+
+    /* Indicador de actividad estilo Apple: 8 rayos que se apagan en ronda. Tamaño y color heredados. */
+    .spinner {
+      position: relative;
+      display: inline-block;
+      flex: none;
+      width: 1em;
+      height: 1em;
+    }
+    .spinner > i {
+      position: absolute;
+      top: 0;
+      left: calc(50% - 0.05em);
+      width: 0.1em;
+      height: 0.28em;
+      border-radius: 1em;
+      background: currentColor;
+      opacity: 0.15;
+      transform-origin: 50% 0.5em;
+      rotate: calc(var(--i) * 45deg);
+      animation: mon-spoke 0.8s linear infinite;
+      animation-delay: calc(var(--i) * 0.1s - 0.8s);
+    }
+    .skeleton {
+      display: block;
+      border-radius: 0.375rem;
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%) 0 0 / 400% 100%;
+      animation: mon-shimmer 1.6s var(--ease-in-out) infinite;
+    }
+
+    /* Barra de los medidores: crece desde 0 al aparecer y se desliza con cada dato nuevo. */
+    .bar {
+      height: 100%;
+      width: var(--v, 0%);
+      border-radius: inherit;
+      transition:
+        width var(--dur-4) var(--ease-out),
+        background-color var(--dur-3);
+    }
+
+    /* Control segmentado (radios nativos): el fondo blanco se traslada al elegido. */
+    .segmented {
+      position: relative;
+      isolation: isolate;
+      display: inline-grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      min-width: 0;
+      margin: 0;
+      padding: 2px;
+      border: 0;
+      border-radius: 0.5rem;
+      background: var(--surface-3);
+    }
+    .segmented > label {
+      display: grid;
+      place-items: center;
+      height: 1.75rem;
+      padding: 0 0.625rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color var(--dur-2);
+    }
+    .segmented > label:hover,
+    .segmented > label:has(:checked) {
+      color: var(--text);
+    }
+    .segmented > label:has(:focus-visible) {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .segmented::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 2px auto 2px 2px;
+      width: calc((100% - 4px) / var(--n));
+      border-radius: 0.375rem;
+      background: var(--thumb);
+      box-shadow: var(--shadow-thumb);
+      translate: calc(var(--i) * 100%) 0;
+      transition: translate var(--dur-3) var(--ease-spring);
+    }
+
+    /* Pestañas: pastilla estática; donde hay anchor positioning, se desliza sin JS. */
+    .tabs {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs > [role='tab'] {
+      position: relative;
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      gap: 0.375rem;
+      height: 2rem;
+      padding: 0 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+      transition: color var(--dur-2);
+    }
+    .tabs > [role='tab']:hover,
+    .tabs > [aria-selected='true'] {
+      color: var(--text);
+    }
+    .tabs > [aria-selected='true'] {
+      background: var(--thumb);
+      box-shadow: var(--shadow-thumb);
+    }
+    @supports (anchor-name: --tab) and (anchor-scope: all) {
+      .tabs {
+        anchor-scope: --tab;
+      }
+      .tabs > [aria-selected='true'] {
+        anchor-name: --tab;
+        background: none;
+        box-shadow: none;
+      }
+      .tabs::after {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        position-anchor: --tab;
+        top: anchor(top);
+        bottom: anchor(bottom);
+        left: anchor(left);
+        right: anchor(right);
+        border-radius: 0.5rem;
+        background: var(--thumb);
+        box-shadow: var(--shadow-thumb);
+        transition:
+          left var(--dur-3) var(--ease-spring),
+          right var(--dur-3) var(--ease-spring);
+      }
+    }
+
+    /* Íconos que se intercambian (copiar → check) con escala elástica. */
+    .swap {
+      display: inline-grid;
+    }
+    .swap > * {
+      grid-area: 1 / 1;
+      transition:
+        opacity var(--dur-2),
+        scale var(--dur-2) var(--ease-spring);
+    }
+    .swap > :last-child,
+    .swap[data-on] > :first-child {
+      opacity: 0;
+      scale: 0.5;
+    }
+    .swap[data-on] > :last-child {
+      opacity: 1;
+      scale: 1;
+    }
+
+    /* Sidebar: fija en escritorio, cajón deslizable en celular. */
+    .drawer {
+      position: fixed;
+      inset-block: 0;
+      left: 0;
+      z-index: 40;
+      width: min(18rem, 85vw);
+      translate: -100% 0;
+      visibility: hidden;
+      transition:
+        translate var(--dur-3) var(--ease-out),
+        box-shadow var(--dur-3),
+        visibility 0s var(--dur-3);
+    }
+    .drawer[data-open] {
+      translate: 0 0;
+      visibility: visible;
+      box-shadow: var(--shadow-pop);
+      transition-delay: 0s;
+    }
+    .scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgb(0 0 0 / 0.32);
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity var(--dur-3) var(--ease-out),
+        visibility 0s var(--dur-3);
+    }
+    .scrim[data-open] {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+    @media (min-width: 64rem) {
+      .drawer {
+        position: sticky;
+        top: 0;
+        width: auto;
+        height: 100dvh;
+        translate: none;
+        visibility: visible;
+        box-shadow: none;
+        transition: none;
+      }
+      .scrim {
+        display: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 63.99rem) {
+  html:has([data-skin='monitoreo'] .drawer[data-open]) {
+    overflow: hidden;
+  }
+}
+
+@starting-style {
+  [data-skin='monitoreo'] .bar {
+    width: 0;
+  }
+}
+
+/* Nombres con prefijo: los keyframes son globales y no deben pisar los de newDesk. */
+@keyframes mon-rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@keyframes mon-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes mon-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@keyframes mon-spoke {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+@keyframes mon-halo {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+@keyframes mon-shake {
+  20%,
+  60% {
+    translate: -6px 0;
+  }
+  40%,
+  80% {
+    translate: 6px 0;
+  }
+}
+@keyframes mon-drain {
+  to {
+    scale: 0 1;
+  }
+}
+
+/* Entrada de páginas, cards y formularios; fundido de pestañas y avisos; aparición diferida de
+   loaders (250 ms) para que una carga rápida no muestre nada. */
+[data-skin='monitoreo'] {
+  .rise {
+    animation: mon-rise var(--dur-3) var(--ease-out) both;
+  }
+  .fade-in {
+    animation: mon-fade-in var(--dur-2) var(--ease-out) both;
+  }
+  .delay-in {
+    animation: mon-fade-in var(--dur-2) var(--ease-out) 250ms both;
+  }
+  .live-dot {
+    animation: mon-halo 2s var(--ease-out) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-skin='monitoreo'] {
+    interpolate-size: allow-keywords;
+  }
+  [data-skin='monitoreo'] details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size var(--dur-3) var(--ease-out),
+      content-visibility var(--dur-3) allow-discrete;
+  }
+  [data-skin='monitoreo'] details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/* Reducir movimiento: todo instantáneo. El spinner solo cambia opacidad y sigue andando. */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin='monitoreo'] *:not(.spinner > i),
+  [data-skin='monitoreo'] ::before,
+  [data-skin='monitoreo'] ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  [data-skin='monitoreo'] .skeleton {
+    animation: none !important;
+    background: var(--surface-3);
+  }
+}
+
+/* uPlot */
+[data-skin='monitoreo'] {
+  .uplot {
+    font-family: var(--font-sans);
+  }
+  .uplot .u-legend {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .uplot .u-legend .u-series {
+    padding: 0 0.75rem 0 0;
+  }
+  .uplot .u-legend .u-series:first-child .u-marker {
+    display: none;
+  }
+  .uplot .u-legend .u-marker {
+    border-radius: 999px;
+  }
+  .uplot .u-legend .u-value {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .uplot .u-cursor-x,
+  .uplot .u-cursor-y {
+    border-color: var(--line-strong) !important;
+    border-style: solid !important;
+  }
+  .uplot .u-select {
+    background: var(--surface-2);
+  }
+}
