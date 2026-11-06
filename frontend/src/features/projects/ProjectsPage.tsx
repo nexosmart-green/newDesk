@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { useCan } from '@/features/auth/useAuth'
+import { HoursBar } from '@/features/hours/HoursBar'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { ProjectsFilters } from './ProjectsFilters'
@@ -11,7 +12,7 @@ import { ProjectStatusBadge } from './ProjectStatusBadge'
 import type { ProjectFilters } from './types'
 import { useProjects } from './useProjects'
 
-const initialFilters: ProjectFilters = { client_id: null, status: '', search: '', page: 1 }
+const initialFilters: ProjectFilters = { client_id: null, status: '', search: '', running_out: false, page: 1 }
 
 /** RF-03.07. Collaborators only get their projects (backend scope). */
 export function ProjectsPage() {
@@ -38,7 +39,10 @@ export function ProjectsPage() {
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Proyectos">
           {projects.data.data.map((project) => (
             <li key={project.id}>
-              <Link to={`/proyectos/${project.id}`} className="grid gap-1 p-3 hover:bg-bg sm:grid-cols-[6rem_1fr_auto] sm:items-center sm:gap-3">
+              <Link
+                to={`/proyectos/${project.id}`}
+                className="grid gap-2 p-3 hover:bg-bg sm:grid-cols-[6rem_1fr_7rem_auto] sm:items-center sm:gap-3"
+              >
                 <span className="font-mono text-xs uppercase text-muted">{project.code_prefix}</span>
                 <span>
                   <span className="block font-medium">{project.name}</span>
@@ -48,6 +52,7 @@ export function ProjectsPage() {
                       .join(' · ')}
                   </span>
                 </span>
+                <HoursBar bag={project.hours} compact />
                 <ProjectStatusBadge status={project.status} />
               </Link>
             </li>

@@ -1,69 +1,96 @@
 import { createBrowserRouter } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
-import { InvitationPage } from '@/features/auth/InvitationPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth, SECURITY_PATH } from '@/features/auth/RequireAuth'
-import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
-import { CatalogsTab } from '@/features/catalogs/CatalogsTab'
-import { ClientPage } from '@/features/clients/ClientPage'
-import { ClientsPage } from '@/features/clients/ClientsPage'
-import { CompanyTab } from '@/features/company/CompanyTab'
-import { PeopleDirectoryPage } from '@/features/people/PeopleDirectoryPage'
-import { PersonPage } from '@/features/people/PersonPage'
-import { ProfilePage } from '@/features/profile/ProfilePage'
-import { ComingSoonTab } from '@/features/projects/ComingSoonTab'
-import { ProjectActivityTab } from '@/features/projects/ProjectActivityTab'
-import { ProjectMembersTab } from '@/features/projects/ProjectMembersTab'
-import { ProjectPage } from '@/features/projects/ProjectPage'
-import { ProjectsPage } from '@/features/projects/ProjectsPage'
-import { ProjectSummaryTab } from '@/features/projects/ProjectSummaryTab'
-import { RolesTab } from '@/features/roles/RolesTab'
-import { SecurityPage } from '@/features/security/SecurityPage'
-import { SettingsIndexRedirect, SettingsPage, SettingsTabGuard } from '@/features/settings/SettingsPage'
-import { UsersTab } from '@/features/users/UsersTab'
-import { HomePage } from './HomePage'
+import { MyTasksPage } from '@/features/tasks/MyTasksPage'
 
-/** Each feature module adds its routes as children of the authenticated layout. */
+/**
+ * Each feature module adds its routes as children of the authenticated layout. Everything except
+ * the login and "Mis tareas" (the page people open every morning) is lazy so the main chunk stays small.
+ */
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
-  { path: '/recuperar-contrasena', element: <ForgotPasswordPage /> },
-  { path: '/restablecer-contrasena', element: <ResetPasswordPage /> },
-  { path: '/invitacion/:token', element: <InvitationPage /> },
+  {
+    path: '/recuperar-contrasena',
+    lazy: async () => ({ Component: (await import('@/features/auth/ForgotPasswordPage')).ForgotPasswordPage }),
+  },
+  {
+    path: '/restablecer-contrasena',
+    lazy: async () => ({ Component: (await import('@/features/auth/ResetPasswordPage')).ResetPasswordPage }),
+  },
+  {
+    path: '/invitacion/:token',
+    lazy: async () => ({ Component: (await import('@/features/auth/InvitationPage')).InvitationPage }),
+  },
   {
     element: <RequireAuth />,
     children: [
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <HomePage /> },
-          { path: SECURITY_PATH, element: <SecurityPage /> },
-          { path: '/perfil', element: <ProfilePage /> },
-          { path: '/personas', element: <PeopleDirectoryPage /> },
-          { path: '/personas/:personId', element: <PersonPage /> },
-          { path: '/clientes', element: <ClientsPage /> },
-          { path: '/clientes/:clientId', element: <ClientPage /> },
-          { path: '/proyectos', element: <ProjectsPage /> },
+          { index: true, element: <MyTasksPage /> },
+          {
+            path: SECURITY_PATH,
+            lazy: async () => ({ Component: (await import('@/features/security/SecurityPage')).SecurityPage }),
+          },
+          { path: '/perfil', lazy: async () => ({ Component: (await import('@/features/profile/ProfilePage')).ProfilePage }) },
+          {
+            path: '/mi-semana',
+            lazy: async () => ({ Component: (await import('@/features/timesheet/MyWeekPage')).MyWeekPage }),
+          },
+          { path: '/tareas/:code', lazy: async () => ({ Component: (await import('@/features/tasks/TaskPage')).TaskPage }) },
+          {
+            path: '/personas',
+            lazy: async () => ({ Component: (await import('@/features/people/PeopleDirectoryPage')).PeopleDirectoryPage }),
+          },
+          {
+            path: '/personas/:personId',
+            lazy: async () => ({ Component: (await import('@/features/people/PersonPage')).PersonPage }),
+          },
+          { path: '/clientes', lazy: async () => ({ Component: (await import('@/features/clients/ClientsPage')).ClientsPage }) },
+          {
+            path: '/clientes/:clientId',
+            lazy: async () => ({ Component: (await import('@/features/clients/ClientPage')).ClientPage }),
+          },
+          {
+            path: '/proyectos',
+            lazy: async () => ({ Component: (await import('@/features/projects/ProjectsPage')).ProjectsPage }),
+          },
           {
             path: '/proyectos/:projectId',
-            element: <ProjectPage />,
+            lazy: async () => ({ Component: (await import('@/features/projects/ProjectPage')).ProjectPage }),
             children: [
-              { index: true, element: <ProjectSummaryTab /> },
-              { path: 'tareas', element: <ComingSoonTab title="Tareas" /> },
-              { path: 'horas', element: <ComingSoonTab title="Horas" /> },
-              { path: 'miembros', element: <ProjectMembersTab /> },
-              { path: 'actividad', element: <ProjectActivityTab /> },
+              {
+                index: true,
+                lazy: async () => ({ Component: (await import('@/features/projects/ProjectSummaryTab')).ProjectSummaryTab }),
+              },
+              {
+                path: 'tareas',
+                lazy: async () => ({ Component: (await import('@/features/tasks/ProjectTasksTab')).ProjectTasksTab }),
+              },
+              {
+                path: 'horas',
+                lazy: async () => ({ Component: (await import('@/features/hours/ProjectHoursTab')).ProjectHoursTab }),
+              },
+              {
+                path: 'miembros',
+                lazy: async () => ({ Component: (await import('@/features/projects/ProjectMembersTab')).ProjectMembersTab }),
+              },
+              {
+                path: 'actividad',
+                lazy: async () => ({ Component: (await import('@/features/projects/ProjectActivityTab')).ProjectActivityTab }),
+              },
             ],
           },
           {
             path: '/configuracion',
-            element: <SettingsPage />,
+            lazy: async () => ({ Component: (await import('./settingsRoutes')).SettingsLayout }),
             children: [
-              { index: true, element: <SettingsIndexRedirect /> },
-              { path: 'empresa', element: <SettingsTabGuard path="empresa"><CompanyTab /></SettingsTabGuard> },
-              { path: 'roles', element: <SettingsTabGuard path="roles"><RolesTab /></SettingsTabGuard> },
-              { path: 'usuarios', element: <SettingsTabGuard path="usuarios"><UsersTab /></SettingsTabGuard> },
-              { path: 'catalogos', element: <SettingsTabGuard path="catalogos"><CatalogsTab /></SettingsTabGuard> },
+              { index: true, lazy: async () => ({ Component: (await import('./settingsRoutes')).SettingsIndex }) },
+              { path: 'empresa', lazy: async () => ({ Component: (await import('./settingsRoutes')).CompanySettings }) },
+              { path: 'roles', lazy: async () => ({ Component: (await import('./settingsRoutes')).RolesSettings }) },
+              { path: 'usuarios', lazy: async () => ({ Component: (await import('./settingsRoutes')).UsersSettings }) },
+              { path: 'catalogos', lazy: async () => ({ Component: (await import('./settingsRoutes')).CatalogsSettings }) },
             ],
           },
         ],

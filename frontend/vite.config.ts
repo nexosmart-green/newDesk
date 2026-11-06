@@ -25,6 +25,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
+    // Typing-heavy RTL tests exceed 5 s when the whole suite runs jsdom files in parallel.
+    testTimeout: 20_000,
     include: ['src/**/*.test.{ts,tsx}'],
   },
 })

@@ -16,7 +16,8 @@ export function ProjectsFilters({ filters, onChange }: ProjectsFiltersProps) {
   const clients = useClients({ status: '', search: '', page: 1 }, canReadClients)
 
   return (
-    <div className={`grid gap-3 ${canReadClients ? 'sm:grid-cols-[1fr_12rem_12rem]' : 'sm:grid-cols-[1fr_12rem]'}`}>
+    <div className="space-y-2">
+      <div className={`grid gap-3 ${canReadClients ? 'sm:grid-cols-[1fr_12rem_12rem]' : 'sm:grid-cols-[1fr_12rem]'}`}>
       <TextField
         label="Buscar"
         type="search"
@@ -50,6 +51,15 @@ export function ProjectsFilters({ filters, onChange }: ProjectsFiltersProps) {
           </option>
         ))}
       </SelectField>
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={filters.running_out}
+          onChange={(event) => onChange({ running_out: event.target.checked })}
+        />
+        Con horas por agotarse
+      </label>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { HourBag } from '@/features/hours/types'
 import type { PersonSummary } from '@/features/people/types'
 
 export type ProjectStatus = 'active' | 'paused' | 'finished' | 'cancelled'
@@ -38,6 +39,8 @@ export interface ProjectSummary {
   client?: { id: number; name: string } | null
   leader?: { id: number; full_name: string } | null
   members_count?: number
+  /** RF-03.05/07: the bag, always computed by the server. */
+  hours: HourBag
   starts_on: string | null
   ends_on: string | null
 }
@@ -54,6 +57,8 @@ export interface ProjectFilters {
   client_id: number | null
   status: ProjectStatus | ''
   search: string
+  /** "Con horas por agotarse" (RF-03.07). */
+  running_out: boolean
   page: number
 }
 

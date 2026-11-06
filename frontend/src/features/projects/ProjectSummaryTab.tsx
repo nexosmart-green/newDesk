@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/Button'
+import { HoursBar } from '@/features/hours/HoursBar'
 import { formatDate } from '@/lib/dates'
 import { EditProjectDialog } from './EditProjectDialog'
 import { useProjectFromOutlet } from './projectContext'
@@ -16,13 +17,19 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-/** RF-03.05 Resumen. The hours bar and task counters join with E3/E4. */
+/** RF-03.05 Resumen: hours bar on top, then the project's data. */
 export function ProjectSummaryTab() {
   const project = useProjectFromOutlet()
   const [editing, setEditing] = useState(false)
 
   return (
     <div className="space-y-6">
+      <section className="space-y-2 rounded-lg border border-border bg-surface p-4" aria-labelledby="summary-hours">
+        <h2 id="summary-hours" className="font-semibold">
+          Horas
+        </h2>
+        <HoursBar bag={project.hours} />
+      </section>
       <dl className="grid gap-4 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Cliente">
           {project.client && <Link to={`/clientes/${project.client.id}`} className="text-accent">{project.client.name}</Link>}

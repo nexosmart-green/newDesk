@@ -1,0 +1,63 @@
+/** RF-05.16: the backend refuses shorter comments; the UI mirrors it so the button never lies. */
+export const MIN_COMMENT_LENGTH = 10
+
+export function isValidComment(comment: string): boolean {
+  return comment.trim().length >= MIN_COMMENT_LENGTH
+}
+
+export type EntrySource = 'timer' | 'manual' | 'migration'
+
+/** A worked stretch or the running timer (`TimeEntryResource`). Times are UTC ISO-8601. */
+export interface TimeEntry {
+  id: number
+  is_running: boolean
+  started_at: string
+  ended_at: string | null
+  /** Computed by the server at `server_time` (RF-05.03): never derive it from the browser clock. */
+  elapsed_seconds: number
+  server_time: string
+  source: EntrySource
+  channel: string
+  comment: string | null
+  comment_pending: boolean
+  stop_reason: string | null
+  stop_reason_label: string | null
+  task: { id: number; code: string; title: string }
+  project: { id: number; name: string }
+  user: { id: number; full_name: string }
+}
+
+export interface TimerState {
+  active: TimeEntry | null
+  pending_comments: TimeEntry[]
+  server_time: string
+}
+
+/** Stable `data.code` values the timer endpoints answer with (TimerRules + actions). */
+export const timerRule = {
+  noHoursAvailable: 'no_hours_available',
+  previousCommentRequired: 'previous_comment_required',
+  commentRequired: 'comment_required',
+  commentPending: 'comment_pending',
+  taskNotAssigned: 'task_not_assigned',
+  projectClosed: 'project_closed',
+  taskClosed: 'task_closed',
+  manualExceedsBag: 'manual_exceeds_bag',
+  outsideManualWindow: 'outside_manual_window',
+  timerBusy: 'timer_busy',
+} as const
+
+export interface ManualEntryInput {
+  /** `YYYY-MM-DD` and `HH:mm` in the person's timezone; the backend converts to UTC. */
+  date: string
+  from: string
+  to: string
+  comment: string
+}
+
+export interface CorrectEntryInput {
+  date?: string
+  from?: string
+  to?: string
+  comment: string
+}
