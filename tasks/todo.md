@@ -2,21 +2,36 @@
 
 ## Fase 0 — Descubrimiento
 
-- [x] Crear estructura de carpetas del proyecto
-- [x] Registrar pedido original en `requerimientos-inbox/procesados/`
-- [x] Relevamiento as-is (Worksuite confirmado por fingerprint de assets)
-- [x] RF-01..RF-10 + RNF con criterios de aceptación
-- [x] Gap analysis (G-01..G-24) y preguntas abiertas (P-01..P-22)
-- [x] Arquitectura, modelo de datos v0, ADR-0001
-- [x] Estrategia QA, plan de migración, backlog por releases
-- [x] Respuestas del PO absorbidas (P-01, 04, 05, 06, 10, 13, 17, 18, 19, 20) → RF-11 nuevo, G-25..G-28, P-23/P-24
-- [x] P-02 roles confirmado · RF-12 MCP + comentario obligatorio (RF-05.16-18) absorbidos · handoff en docs/08-handoff
+- [x] Estructura, relevamiento, RF-01..RF-12 + RNF, gaps, arquitectura, QA, backlog, handoff
 - [ ] P-23 (una o varias empresas) — tiene default
-- [ ] SP-01 spike cerradura Nexxt/Tuya (foto de etiqueta + cuenta admin de Nexxt Home)
+- [ ] SP-01 spike cerradura Nexxt/Tuya
 - [ ] Wireframes de pantallas clave
-- [ ] Iniciar R1 / E0 Fundaciones (incluye `/bug-report setup`)
+
+## Base de arquitectura (pedido 2026-11-06: "front y back + arquitectura base antes de módulos, pushear")
+
+- [x] backend Laravel 12 + Pest + Sanctum + laravel/mcp + Reverb + predis + Resend
+- [x] Capas `app/Domain/<Modulo>` (Actions/Models/Policies/Enums) + `Shared` (BelongsToCompany, RecordActivity, BusinessRuleViolation)
+- [x] `companies` + `company_id`, roles editables con permisos granulares (enum `Permission` = Gate)
+- [x] Auth Sanctum SPA (login/logout/me, throttle, usuario inactivo → 401)
+- [x] Envelope `{ data, message, errors }` en todas las respuestas de error y éxito
+- [x] `/health`, `/errors` (ERRORS_TOKEN), canal `errors`, sin headers de stack, raíz `{"status":"ok"}`
+- [x] `supervisor:sync`, `newdesk:install`
+- [x] frontend React 19 + Vite + TS strict + Tailwind v4 + React Query + router, login + layout + tema oscuro/claro
+- [x] CI GitHub Actions (back: pint + pest con MySQL/Redis; front: lint, typecheck, vitest, build)
+- [x] `docs/04-arquitectura/convenciones-de-codigo.md` (clean code / SOLID / apto IA)
+
+## E0 Fundaciones (resto) — rama `feat/e0-foundations`
+
+- [ ] Invitación por email + definir contraseña (RF-01.01) + recuperar contraseña
+- [ ] 2FA (obligatorio Admin)
+- [ ] ABM de roles y permisos (API + UI), usuario con rol
+- [ ] RF-11 configuración de empresa (API + UI)
+- [ ] Test de policy 403/404
+- [ ] `.claude/bug-report.json` cuando exista URL de staging/prod
+
+## Siguientes: E1 → E2 → E3 → E4 ⭐ → E6/E5/E7 → E13 MCP → E8
 
 ## Review
 
-- 2026-11-06: Fase 0 documentada.
-- 2026-11-06: PO respondió las bloqueantes. Sin bloqueos para arrancar R1. Migración pasa a R2 (E12). Bolsa de horas simplificada: sin facturación ni abono mensual. Cerradura: entrada por cerradura, salida por app/timer (deadbolt no identifica la salida).
+- 2026-11-06: Fase 0 documentada; PO respondió las bloqueantes.
+- 2026-11-06: base de arquitectura lista. Back 14 tests verdes (MySQL `newdesk_testing`), front 4 tests + build + lint verdes. Smoke real con curl: `/` ok sin headers de stack, `/api/health` 200, CSRF → login 200 → `/me` 200.

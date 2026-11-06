@@ -12,3 +12,26 @@ Reemplazo de desk.nexosmart.es (Froiden Worksuite). Ver `README.md`.
 - Stack: Laravel 12 (`backend/`) + React/Vite/TS (`frontend/`), MySQL, Redis, Reverb, Resend, Supervisord.
 - `/health` y `/errors` (`/bug-report`) se arman en E0; `.claude/bug-report.json` va en `.gitignore`.
 - La DB de Worksuite nunca se modifica: solo lectura/dump.
+
+## Código
+
+**Clean code, SOLID, patrones de diseño, apto para IA.** Antes de escribir código leé
+`docs/04-arquitectura/convenciones-de-codigo.md` (capas, dónde va cada cosa, esqueleto de módulo).
+Resumen: controllers y tools MCP delgados → **una Action de dominio** por caso de uso → `BusinessRuleViolation`
+para reglas rechazadas → Resources con envelope `{ data, message, errors }`.
+
+## Comandos
+
+```bash
+# backend
+cd backend && composer install && cp .env.example .env && php artisan key:generate
+php artisan migrate:fresh --seed     # DB `newdesk` (dev). Usuarios: admin@ / gestor@ / colaborador@nexosmart.com — password
+php artisan test                     # siempre contra `newdesk_testing` (forzado en phpunit.xml)
+vendor/bin/pint                      # formato
+php artisan supervisor:sync --dry-run
+
+# frontend
+cd frontend && npm install
+npm run dev                          # proxy /api y /sanctum → http://localhost:8000
+npm test && npm run typecheck && npm run lint && npm run build
+```
