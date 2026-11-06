@@ -26,22 +26,55 @@ export async function ensureCsrfCookie(): Promise<void> {
 export class ApiError extends Error {
   readonly status: number
   readonly fieldErrors: Record<string, string[]>
+  /** Stable business-rule identifier sent by the backend in `data.code` (e.g. `last_admin`). */
+  readonly code: string | null
 
-  constructor(status: number, message: string, fieldErrors: Record<string, string[]> = {}) {
+  constructor(status: number, message: string, fieldErrors: Record<string, string[]> = {}, code: string | null = null) {
     super(message)
     this.status = status
     this.fieldErrors = fieldErrors
+    this.code = code
+  }
+
+  hasFieldErrors(): boolean {
+    return Object.keys(this.fieldErrors).length > 0
   }
 }
 
+function businessCodeOf(data: unknown): string | null {
+  if (typeof data !== 'object' || data === null || !('code' in data)) return null
+  return typeof data.code === 'string' ? data.code : null
+}
+
 export function toApiError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error
   if (error instanceof AxiosError && error.response) {
     const body = error.response.data as Partial<ApiEnvelope<unknown>> | undefined
     return new ApiError(
       error.response.status,
       body?.message ?? 'Error inesperado',
       body?.errors ?? {},
+      businessCodeOf(body?.data),
     )
   }
   return new ApiError(0, 'No se pudo conectar con el servidor')
+}
+
+/** Awaits a request and returns the whole envelope, normalizing failures to `ApiError`. */
+export async function envelopeOf<T>(request: Promise<{ data: ApiEnvelope<T> }>): Promise<ApiEnvelope<T>> {
+  try {
+    const response = await request
+    return response.data
+  } catch (error) {
+    throw toApiError(error)
+  }
+}
+
+/** Awaits a request and returns the envelope's `data`. */
+export async function dataOf<T>(request: Promise<{ data: ApiEnvelope<T> }>): Promise<T> {
+  return (await envelopeOf(request)).data
+}
+
+export function fieldErrorOf(error: unknown, field: string): string | undefined {
+  return error instanceof ApiError ? error.fieldErrors[field]?.[0] : undefined
 }
