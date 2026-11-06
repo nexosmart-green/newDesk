@@ -10,7 +10,7 @@
 | Cache / colas / locks | Redis |
 | Tiempo real | Laravel Reverb (WebSocket) — cronómetro y cortes en vivo |
 | Mail | Resend, vía cola, 1/s |
-| Procesos | Supervisord (`supervisor:sync`): queue worker, scheduler, Reverb, ingesta cerradura |
+| Procesos | Supervisord (`supervisor:sync`): queue worker, scheduler, Reverb, ingesta cerradura, `monitoring-poller` y `monitoring-worker` (RF-13) |
 | Auth | Laravel Sanctum (cookie SPA) + 2FA; tokens personales Sanctum para MCP |
 | MCP | `laravel/mcp` (Streamable HTTP en `/mcp`) |
 | Tests | PHPUnit/Pest (backend), Vitest + RTL, Playwright E2E |
@@ -31,6 +31,9 @@ Leaves        licencias                                (R2)
 Notifications notificaciones in-app + email
 Mcp           servidor MCP (laravel/mcp): tools finas que llaman a los servicios de dominio; auth Sanctum token
 Integrations/AccessControl  adaptadores de cerradura   (R2)
+Monitoring    servidores, poller de agentes, alertas, Discord, reporte diario   (RF-13, ADR-0002)
+StatusPage    componentes, uptime, incidentes, PageSpeed, portal de clientes    (RF-13)
+Support       reportes de clientes, chat, roadmap                              (RF-13)
 ```
 
 ## Puntos de diseño críticos

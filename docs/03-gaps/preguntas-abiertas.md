@@ -18,12 +18,12 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-17 | ¿Precio vendido por bolsa? | ✅ No (sin facturación). Queda campo "referencia" opcional en texto. |
 | P-18 / P-19 | Migración y acceso a la DB | ✅ **Después del proyecto.** R1 arranca con carga inicial limpia; migración pasa a épica post-R1. |
 | P-20 | Horas vendidas por proyecto | ✅ OK, el dueño las carga al dar de alta los proyectos. |
+| P-03 | ¿Los clientes entran al sistema? | ✅ **Sí, solo al portal de monitoreo** (estado de sus proyectos y reportes), con código por mail (RF-13.07). Ver avance y horas sigue en C. |
 
 ## Pendientes
 
 | ID | | Pregunta | Recomendación / default |
 |---|---|---|---|
-| P-03 | ⚪ | ¿Los clientes entran al sistema? | No en R1. |
 | P-07 | ⚪ | Timer olvidado: ¿cuándo cortar? | Fin del turno + 1 h; sin turno, a las 10 h. |
 | P-08 | ⚪ | Áreas | Dev, Diseño, Marketing, CM, Administración. |
 | P-09 | ⚪ | Slack / WhatsApp | Quitar Slack; WhatsApp en R3. |
@@ -36,3 +36,7 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-22 | ⚪ | Dominio | `desk.nexosmart.es` al salir; staging aparte. |
 | P-23 | 🟡 | **"Configurable por empresa"**: ¿newDesk lo va a usar **más de una empresa** (multi-empresa / SaaS) o solo NexoSmart con su configuración? | Solo NexoSmart, pero con tabla `companies` y `company_id` desde el día 1 para no cerrar la puerta. |
 | P-24 | 🟡 | Cerradura: ¿la salida se abre girando la perilla de adentro? ¿Quién tiene la cuenta admin de Nexxt Home? ¿Confirmamos modelo con foto de la etiqueta? | — Ver G-25: la cerradura registra **aperturas desde afuera**, la salida suele no quedar registrada a nombre de nadie. |
+| P-25 | 🟡 | **Monitoreo:** ¿en qué servidor corre newDesk en producción? | Servidor 5 (51.222.205.245): los agentes ya aceptan esa IP y el socket de Claude del reporte diario ya está ahí. Si es otro, hay que sumar su IP en `allowed_ips` + ufw de los 6 agentes y crear su propio socket de Claude. |
+| P-26 | ⚪ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. |
+| P-27 | ⚪ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. |
+| P-28 | ⚪ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. |

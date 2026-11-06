@@ -1,5 +1,10 @@
 # TODO — newDesk
 
+## Next steps (monitoreo, rama `feat/monitoreo`)
+
+- Fase actual: ver checklist "Monitoreo (RF-13)" abajo. Plan completo: ADR-0002 + RF-13.
+- Local: PHP 8.3 en `C:\tools\php83\php.exe` (el de XAMPP es 8.2), MariaDB de XAMPP en 3306 (`newdesk`, `newdesk_testing`). Sin Redis local: el test de `/health` falla por eso.
+
 ## Fase 0 — Descubrimiento
 
 - [x] Estructura, relevamiento, RF-01..RF-12 + RNF, gaps, arquitectura, QA, backlog, handoff
@@ -28,6 +33,21 @@
 - [ ] RF-11 configuración de empresa (API + UI)
 - [ ] Test de policy 403/404
 - [ ] `.claude/bug-report.json` cuando exista URL de staging/prod
+
+## Monitoreo (RF-13) — rama `feat/monitoreo`
+
+- [x] F0 Papeles: inbox, RF-13 con CA, ADR-0002, P-03 ✅, P-25..P-28, arquitectura, permisos
+- [ ] F0 `install:broadcasting --reverb`
+- [ ] F1 Clientes y proyectos básicos (RF-02.01, RF-03.01, RF-03.03), rol Cliente, `users.client_id`, grupos de rutas equipo/cliente
+- [ ] F2a Servidores: ABM + probar conexión, gateway con pin, `monitoring:poll`, snapshots, métricas, `/health`, eventos Reverb, importador de servers
+- [ ] F2b Reglas de alerta + motor, API de alertas, chequeo de sitios/SSL, inventario, vulnerabilidades, retención
+- [ ] F3 Pantallas del equipo (piel monitoreo): dashboard, detalle con pestañas, uPlot, modo en vivo, alertas, ABM servers
+- [ ] F4 Estado de proyectos (componentes, 10 min, períodos, uptime, incidentes, PageSpeed, RDAP, carpetas) + importador
+- [ ] F5 Portal de clientes (login por código, páginas de estado, tiempo real)
+- [ ] F6 Reportes (alta, chat, notas internas, cupos, roadmap, ventanas flotantes, errorwatch) + importador con archivos
+- [ ] F7 Discord, resumen 9/18 h, avisos de dominio, heartbeat
+- [ ] F8 MCP `/mcp/monitoreo` + reporte diario
+- [ ] F9 Corte: importación completa, redirects, agentes, supervisor, `MONITORING_NOTIFY=true`
 
 ## Siguientes: E1 → E2 → E3 → E4 ⭐ → E6/E5/E7 → E13 MCP → E8
 
