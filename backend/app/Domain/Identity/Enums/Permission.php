@@ -10,6 +10,8 @@ enum Permission: string
 {
     case ClientsManage = 'clients.manage';
     case ProjectsManage = 'projects.manage';
+    /** RF-03.08: reopening a finished/cancelled project is an Admin decision. */
+    case ProjectsReopen = 'projects.reopen';
     case MembersManage = 'members.manage';
     case HoursAllocate = 'hours.allocate';
     case TasksAssign = 'tasks.assign';
@@ -30,6 +32,7 @@ enum Permission: string
         return match ($this) {
             self::ClientsManage => 'Gestionar clientes',
             self::ProjectsManage => 'Gestionar proyectos',
+            self::ProjectsReopen => 'Reabrir proyectos finalizados o cancelados',
             self::MembersManage => 'Asignar miembros a proyectos',
             self::HoursAllocate => 'Cargar / ampliar horas',
             self::TasksAssign => 'Asignar tareas',

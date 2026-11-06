@@ -99,6 +99,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof ValidationException => ApiResponse::error('Los datos enviados no son válidos.', 422, $e->errors()),
                 $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, null, ['code' => $e->ruleCode, ...$e->context]),
                 $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),
+                // Policies may deny "as not found" (CA-03.03): never confirm a resource exists.
+                $e instanceof AuthorizationException && $e->status() === 404 => ApiResponse::error('No encontrado.', 404),
                 $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error('No tenés permiso para esta acción.', 403),
                 $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error('No encontrado.', 404),
                 $e instanceof HttpException => ApiResponse::error($e->getStatusCode() === 429 ? 'Demasiados intentos. Probá en un rato.' : ($e->getMessage() ?: 'Error'), $e->getStatusCode()),
