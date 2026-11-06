@@ -39,6 +39,8 @@ final class CorrectTimeEntry
         if ($endedAt->lessThanOrEqualTo($startedAt) || $endedAt->isFuture()) {
             throw new BusinessRuleViolation('El rango horario no es válido.', 'invalid_range');
         }
+        // Both the original and the new start must be inside the window: old entries cannot be moved into it.
+        $this->window->assertAllows($actor, $entry->started_at);
         $this->window->assertAllows($actor, $startedAt);
 
         return DB::transaction(function () use ($actor, $entry, $startedAt, $endedAt, $comment) {

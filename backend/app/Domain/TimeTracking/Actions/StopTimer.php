@@ -31,7 +31,9 @@ final class StopTimer
                 ?? throw new BusinessRuleViolation('No tenés un cronómetro corriendo.', 'no_active_timer', 404);
 
             $project = Project::query()->forCompany($user->company_id)->lockForUpdate()->findOrFail($active->project_id);
-            $active = TimeEntry::query()->forCompany($user->company_id)->lockForUpdate()->findOrFail($active->id);
+            // Re-read under the lock: an automatic cut may have closed it while we waited.
+            $active = TimeEntry::query()->forCompany($user->company_id)->running()->lockForUpdate()->find($active->id)
+                ?? throw new BusinessRuleViolation('El cronómetro ya se detuvo (corte automático). Completá su comentario pendiente.', 'no_active_timer', 404);
 
             return ($this->closeEntry)($active, $project, now(), StopReason::User, $comment);
         }));

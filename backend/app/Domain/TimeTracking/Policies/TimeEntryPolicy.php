@@ -22,8 +22,13 @@ class TimeEntryPolicy
         return Response::denyAsNotFound();
     }
 
+    /** RF-05.15: deleting is Admin-only (`time.manage`); people only correct their own. */
     public function delete(User $user, TimeEntry $entry): Response
     {
-        return $this->update($user, $entry);
+        if ($user->hasPermission(Permission::TimeManage)) {
+            return Response::allow();
+        }
+
+        return $entry->user_id === $user->id ? Response::deny('Solo un administrador puede borrar registros de horas.') : Response::denyAsNotFound();
     }
 }

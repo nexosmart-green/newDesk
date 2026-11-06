@@ -88,6 +88,11 @@ final class AutoStopTimers
         $stopped = DB::transaction(function () use ($companyId, $projectId, $reason, $constrain, $endAt) {
             $project = Project::query()->forCompany($companyId)->lockForUpdate()->findOrFail($projectId);
 
+            // The exhaustion check outside the lock may be stale (an extension may have landed): re-check (R-3).
+            if ($reason === StopReason::BudgetExhausted && ! HourBag::of($project, $endAt ?? now())->isExhausted()) {
+                return [];
+            }
+
             $entries = TimeEntry::query()->forCompany($companyId)
                 ->where('project_id', $projectId)->running()
                 ->when($constrain, $constrain)

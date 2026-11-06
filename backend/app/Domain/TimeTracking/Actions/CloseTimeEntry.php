@@ -25,8 +25,15 @@ final class CloseTimeEntry
 
     public function __invoke(TimeEntry $entry, Project $project, Carbon $endAt, StopReason $reason, ?string $comment = null): TimeEntry
     {
+        // Trust the row, not the (possibly stale) model: already closed → never count it twice (invariant 3).
+        $entry->refresh();
+        if ($entry->ended_at !== null) {
+            return $entry;
+        }
+
         $entry->loadMissing(['task', 'user']);
-        $elapsed = max(0, (int) $entry->started_at->diffInSeconds($endAt, true));
+        // Signed difference: an end before the start (stale cut time) counts as 0, never as |diff|.
+        $elapsed = max(0, (int) $entry->started_at->diffInSeconds($endAt, false));
         $seconds = $project->type->hasHourCap()
             ? min($elapsed, max(0, $project->allocated_seconds - $project->consumed_seconds))
             : $elapsed;
