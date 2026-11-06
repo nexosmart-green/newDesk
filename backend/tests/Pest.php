@@ -4,6 +4,7 @@ use App\Domain\Companies\Actions\ProvisionCompany;
 use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -13,6 +14,11 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 pest()->extend(TestCase::class)->in('Unit');
+
+// Real parallel processes cannot see uncommitted test transactions: truncate instead.
+pest()->extend(TestCase::class)
+    ->use(DatabaseTruncation::class)
+    ->in('Concurrency');
 
 const TEST_TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 
