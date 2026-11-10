@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Scheduling\Queries\Calendar;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class MyShifts extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleCalendar;
+    }
+
     public function __construct(private readonly Calendar $calendar) {}
 
     protected function run(Request $request, User $user): Response

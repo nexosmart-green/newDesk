@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\StopTimer;
 use App\Mcp\Support\McpPresenter;
@@ -15,6 +16,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Detiene mi cronómetro activo. "comment" es OBLIGATORIO: qué hice (mínimo 10 caracteres). Sin comentario válido el cronómetro sigue corriendo.')]
 class StopTimerTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     public function __construct(private readonly StopTimer $stopTimer) {}
 
     protected function run(Request $request, User $user): Response

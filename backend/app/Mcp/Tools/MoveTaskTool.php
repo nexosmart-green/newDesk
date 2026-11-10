@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\MoveTask;
 use App\Mcp\Support\McpLookup;
@@ -17,6 +18,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Mueve una tarea a otro proyecto (si se cargó en el equivocado). Sus horas, comentarios y asignados que sean miembros del destino viajan con ella; toma un código nuevo y el viejo sigue funcionando. Si ya tiene horas requiere permiso hours.allocate y que el destino tenga horas disponibles.')]
 class MoveTaskTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly MoveTask $moveTask) {}
 
     protected function run(Request $request, User $user): Response

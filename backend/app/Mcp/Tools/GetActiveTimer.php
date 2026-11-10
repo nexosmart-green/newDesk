@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Mcp\Support\McpPresenter;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class GetActiveTimer extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     protected function run(Request $request, User $user): Response
     {
         $active = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->first();

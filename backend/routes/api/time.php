@@ -7,22 +7,22 @@ use App\Http\Controllers\Api\V1\TimeTracking\TimeEntryController;
 use App\Http\Controllers\Api\V1\TimeTracking\TimerController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/me/timer', [TimerController::class, 'show']);
-Route::post('/me/timer/stop', [TimerController::class, 'stop']);
-Route::post('/tasks/{task}/timer', [TimerController::class, 'start']);
-Route::post('/projects/{project}/tasks/start', CreateAndStartController::class);
-
-Route::get('/me/timesheet', [TimeEntryController::class, 'timesheet']);
-Route::post('/tasks/{task}/time-entries', [TimeEntryController::class, 'store']);
-Route::put('/time-entries/{timeEntry}', [TimeEntryController::class, 'update']);
-Route::delete('/time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);
-Route::put('/time-entries/{timeEntry}/comment', [TimeEntryController::class, 'completeComment']);
-
-Route::get('/projects/{project}/hours', [ProjectHoursController::class, 'summary']);
-Route::get('/projects/{project}/time-entries', [ProjectHoursController::class, 'entries']);
-Route::post('/projects/{project}/allocations', [ProjectHoursController::class, 'allocate']);
-
-Route::get('/extension-requests', [HourExtensionController::class, 'index']);
-Route::post('/projects/{project}/extension-requests', [HourExtensionController::class, 'store']);
-Route::post('/extension-requests/{extensionRequest}/approve', [HourExtensionController::class, 'approve']);
-Route::post('/extension-requests/{extensionRequest}/reject', [HourExtensionController::class, 'reject']);
+// Module switch per role (Configuración → Roles); the Admin always has every module.
+Route::middleware('module:time')->group(function () {
+    Route::get('/me/timer', [TimerController::class, 'show']);
+    Route::post('/me/timer/stop', [TimerController::class, 'stop']);
+    Route::post('/tasks/{task}/timer', [TimerController::class, 'start']);
+    Route::post('/projects/{project}/tasks/start', CreateAndStartController::class);
+    Route::get('/me/timesheet', [TimeEntryController::class, 'timesheet']);
+    Route::post('/tasks/{task}/time-entries', [TimeEntryController::class, 'store']);
+    Route::put('/time-entries/{timeEntry}', [TimeEntryController::class, 'update']);
+    Route::delete('/time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);
+    Route::put('/time-entries/{timeEntry}/comment', [TimeEntryController::class, 'completeComment']);
+    Route::get('/projects/{project}/hours', [ProjectHoursController::class, 'summary']);
+    Route::get('/projects/{project}/time-entries', [ProjectHoursController::class, 'entries']);
+    Route::post('/projects/{project}/allocations', [ProjectHoursController::class, 'allocate']);
+    Route::get('/extension-requests', [HourExtensionController::class, 'index']);
+    Route::post('/projects/{project}/extension-requests', [HourExtensionController::class, 'store']);
+    Route::post('/extension-requests/{extensionRequest}/approve', [HourExtensionController::class, 'approve']);
+    Route::post('/extension-requests/{extensionRequest}/reject', [HourExtensionController::class, 'reject']);
+});

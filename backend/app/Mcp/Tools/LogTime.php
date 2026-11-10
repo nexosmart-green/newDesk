@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\LogManualTime;
 use App\Mcp\Support\McpLookup;
@@ -17,6 +18,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Carga horas a mano en una tarea asignada a mí (me olvidé el cronómetro). Fecha y horas en MI zona horaria. Solo dentro de la ventana permitida por la empresa; si superan la bolsa se rechazan enteras.')]
 class LogTime extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly LogManualTime $logManualTime) {}
 
     protected function run(Request $request, User $user): Response

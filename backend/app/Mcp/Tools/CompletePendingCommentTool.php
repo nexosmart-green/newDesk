@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\CompletePendingComment;
 use App\Domain\TimeTracking\Models\TimeEntry;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Completa el comentario de un registro que el sistema cortó automáticamente (sin horas, olvidado, tarea cerrada…). Mientras haya alguno pendiente no se puede iniciar otro cronómetro. Los ids salen de whoami.')]
 class CompletePendingCommentTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     public function __construct(private readonly CompletePendingComment $complete) {}
 
     protected function run(Request $request, User $user): Response

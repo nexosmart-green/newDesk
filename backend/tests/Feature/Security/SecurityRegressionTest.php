@@ -29,7 +29,11 @@ it('does not let a delegated users.manage holder escalate to Admin', function ()
     $admin = adminUser();
     $hr = Role::query()->create(['company_id' => $admin->company_id, 'name' => 'RRHH']);
     // RRHH = a collaborator who also manages users: can handle collaborators, never Admins.
-    $hr->syncPermissions([Permission::UsersManage, Permission::TasksAssign, Permission::TimeTrack, Permission::McpUse]);
+    $collaboratorPermissions = array_map(
+        fn (string $value) => Permission::from($value),
+        roleNamed($admin, DefaultRoles::COLLABORATOR)->permissionValues(),
+    );
+    $hr->syncPermissions([...$collaboratorPermissions, Permission::UsersManage]);
     $hrUser = User::factory()->forRole($hr)->create();
     $collaborator = userWithRole($admin);
     $adminRole = roleNamed($admin, DefaultRoles::ADMIN);

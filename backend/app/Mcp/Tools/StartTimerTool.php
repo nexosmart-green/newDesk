@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\StartTimer;
 use App\Mcp\Support\McpLookup;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Inicia mi cronómetro en una tarea asignada a mí. Si ya tengo otro corriendo, "comment" es OBLIGATORIO: describe qué hice en el anterior (mínimo 10 caracteres) y se cierra en el mismo paso.')]
 class StartTimerTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly StartTimer $startTimer) {}
 
     protected function run(Request $request, User $user): Response

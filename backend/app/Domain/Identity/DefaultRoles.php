@@ -21,6 +21,7 @@ final class DefaultRoles
         return [
             self::ADMIN => Permission::cases(),
             self::MANAGER => [
+                ...Permission::modules(),
                 Permission::ProjectsManage,
                 Permission::MembersManage,
                 Permission::HoursAllocate,
@@ -29,6 +30,10 @@ final class DefaultRoles
                 Permission::McpUse,
             ],
             self::COLLABORATOR => [
+                Permission::ModuleProjects,
+                Permission::ModuleTime,
+                Permission::ModulePeople,
+                Permission::ModuleCalendar,
                 Permission::TasksAssign,
                 Permission::TimeTrack,
                 Permission::McpUse,

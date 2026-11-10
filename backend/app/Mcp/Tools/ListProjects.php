@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Mcp\Support\McpPresenter;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class ListProjects extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     protected function run(Request $request, User $user): Response
     {
         $projects = Project::query()->forCompany($user->company_id)

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\RemoveStackHeaders;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'two-factor' => EnsureTwoFactorWhenRequired::class,
+            'module' => EnsureModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) use ($sensitiveInput, $traceShort): void {

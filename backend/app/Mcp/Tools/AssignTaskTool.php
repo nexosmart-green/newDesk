@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\AssignTask;
 use App\Mcp\Support\McpLookup;
@@ -17,6 +18,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Define la lista completa de asignados de una tarea (emails o ids de miembros del proyecto). Requiere permiso tasks.assign.')]
 class AssignTaskTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly AssignTask $assignTask) {}
 
     protected function run(Request $request, User $user): Response

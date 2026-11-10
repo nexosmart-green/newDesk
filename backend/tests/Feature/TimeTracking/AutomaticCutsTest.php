@@ -132,3 +132,18 @@ it('reconciles caches with the ledgers', function () {
     $this->artisan('hours:reconcile')->assertFailed();
     expect($project->fresh()->consumed_seconds)->toBe(0);
 });
+
+it('after a scheduler outage, a forgotten timer is cut at its deadline, not charged the whole bag', function () {
+    $admin = adminUser();
+    $dev = userWithRole($admin);
+    ['task' => $task, 'project' => $project] = bagProject($admin, [$dev], 40 * 3600);
+    startTimer($dev, $task);
+
+    $this->travel(88)->hours(); // nobody ran timers:cut in the meantime
+    $this->artisan('timers:cut')->assertSuccessful();
+
+    $entry = TimeEntry::query()->firstOrFail();
+    expect($entry->stop_reason->value)->toBe('forgotten')
+        ->and($entry->seconds)->toBe(10 * 3600)
+        ->and($project->fresh()->consumed_seconds)->toBe(10 * 3600);
+});

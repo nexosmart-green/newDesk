@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\CreateTask;
 use App\Domain\Tasks\Models\Task;
@@ -19,6 +20,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Crea una tarea en un proyecto donde soy miembro. Con start_timer=true la asigna a mí y arranca mi cronómetro ("Crear e iniciar"); si ya tengo uno corriendo hay que mandar previous_comment (qué hice, mínimo 10 caracteres).')]
 class CreateTaskTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     public function __construct(
         private readonly McpLookup $lookup,
         private readonly CreateTask $createTask,

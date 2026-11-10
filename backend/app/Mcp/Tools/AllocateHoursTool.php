@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\AllocateHours;
 use App\Mcp\Support\McpLookup;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Carga o amplía horas de la bolsa de un proyecto (minutos; negativos corrigen). Motivo obligatorio. Requiere permiso hours.allocate.')]
 class AllocateHoursTool extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleTime;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly AllocateHours $allocateHours) {}
 
     protected function run(Request $request, User $user): Response

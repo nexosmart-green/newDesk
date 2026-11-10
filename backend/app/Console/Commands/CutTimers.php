@@ -20,8 +20,10 @@ class CutTimers extends Command
         $context->useSystem();
         $now = now();
 
-        $budget = $autoStop->exhaustedBudgets($now);
+        // Forgotten first: it cuts at its own (earlier) deadline. After a scheduler outage, evaluating the
+        // budget first would charge the whole elapsed time (up to the full bag) to a forgotten timer.
         $forgotten = $autoStop->forgotten($now);
+        $budget = $autoStop->exhaustedBudgets($now);
 
         if ($budget + $forgotten > 0) {
             $this->info("Cortados: {$budget} sin horas, {$forgotten} olvidados.");

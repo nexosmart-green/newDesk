@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\CommentOnTask;
 use App\Mcp\Support\McpLookup;
@@ -16,6 +17,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Comenta una tarea. Para @mencionar (y notificar) pasá los emails de miembros del proyecto en "mentions".')]
 class CommentTask extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly CommentOnTask $commentOnTask) {}
 
     protected function run(Request $request, User $user): Response

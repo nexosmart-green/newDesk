@@ -21,6 +21,11 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class ProjectHoursReport extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleReports;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly HoursReport $report) {}
 
     protected function run(Request $request, User $user): Response

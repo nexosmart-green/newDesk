@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\ChangeTaskStatus;
 use App\Mcp\Support\McpLookup;
@@ -17,6 +18,11 @@ use Laravel\Mcp\Server\Attributes\Name;
 #[Description('Cambia el estado de una tarea por nombre (ej. "En curso", "Completada"). Pasarla a un estado cerrado detiene los cronómetros que corren sobre ella.')]
 class UpdateTaskStatus extends NewDeskTool
 {
+    protected function module(): ?Permission
+    {
+        return Permission::ModuleProjects;
+    }
+
     public function __construct(private readonly McpLookup $lookup, private readonly ChangeTaskStatus $changeStatus) {}
 
     protected function run(Request $request, User $user): Response

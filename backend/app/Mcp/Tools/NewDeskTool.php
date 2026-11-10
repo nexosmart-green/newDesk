@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Support\PolicyDenialMessage;
@@ -20,10 +21,21 @@ abstract class NewDeskTool extends Tool
 {
     abstract protected function run(Request $request, User $user): Response;
 
+    /** The module this tool belongs to (same switch as the web routes), or null if always available. */
+    protected function module(): ?Permission
+    {
+        return null;
+    }
+
     public function handle(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
+
+        $module = $this->module();
+        if ($module !== null && ! $user->hasPermission($module)) {
+            return Response::error("Tu rol no tiene acceso a: {$module->label()}.");
+        }
 
         try {
             return $this->run($request, $user);
