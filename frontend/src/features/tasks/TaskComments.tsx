@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import { formatDateTime } from '@/lib/dates'
 import { mentionedIdsIn, type Mentionable } from './mentions'
@@ -40,7 +40,7 @@ export function TaskComments({ code, members }: TaskCommentsProps) {
         Comentarios
       </h2>
       {!comments.data ? (
-        <PageState isPending={comments.isPending} error={comments.error} />
+        <PageState isPending={comments.isPending} error={comments.error} shape="list" onRetry={() => void comments.refetch()} />
       ) : comments.data.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay comentarios.</p>
       ) : (
@@ -64,10 +64,10 @@ export function TaskComments({ code, members }: TaskCommentsProps) {
           onChange={setBody}
           onMention={(member) => setPicked((current) => [...current, member])}
         />
-        <ErrorAlert error={post.error} showFieldErrors />
+        <FieldErrorsAlert error={post.error} />
         <div className="flex justify-end">
-          <Button type="submit" disabled={post.isPending || !body.trim()}>
-            {post.isPending ? 'Publicando…' : 'Comentar'}
+          <Button type="submit" disabled={!body.trim()} loading={post.isPending}>
+            Comentar
           </Button>
         </div>
       </form>

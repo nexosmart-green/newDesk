@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { changeClientStatus, createClient, deleteClient, fetchClient, fetchClients, updateClient } from './clientsApi'
+import { toast } from '@/components/ui/toast/toastStore'
 import type { ClientFilters, ClientStatus, SaveClientInput } from './types'
 
 export const clientsKey = ['clients'] as const
@@ -38,19 +39,27 @@ export function useSaveClient(clientId: number | null) {
   return useMutation({
     mutationFn: (input: SaveClientInput) => (clientId === null ? createClient(input) : updateClient(clientId, input)),
     onSuccess: invalidate,
+    meta: { successMessage: clientId === null ? 'Cliente creado.' : 'Cliente actualizado.' },
   })
 }
 
 export function useChangeClientStatus(clientId: number) {
   const invalidate = useInvalidateClients()
-  return useMutation({ mutationFn: (status: ClientStatus) => changeClientStatus(clientId, status), onSuccess: invalidate })
+  return useMutation({
+    mutationFn: (status: ClientStatus) => changeClientStatus(clientId, status),
+    onSuccess: (client) => {
+      toast.success(client.status === 'active' ? 'Cliente activado.' : 'Cliente inactivado.')
+      return invalidate()
+    },
+  })
 }
 
 export function useDeleteClient(clientId: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => deleteClient(clientId),
-    onSuccess: () => {
+    onSuccess: (message) => {
+      toast.success(message ?? 'Cliente borrado.')
       queryClient.removeQueries({ queryKey: clientKey(clientId) })
       return queryClient.invalidateQueries({ queryKey: [...clientsKey, 'list'] })
     },

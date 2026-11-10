@@ -25,5 +25,9 @@ export function useCreateAiToken() {
 
 export function useRevokeAiToken() {
   const refresh = useRefreshTokens()
-  return useMutation({ mutationFn: (id: number) => revokeAiToken(id), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (id: number) => revokeAiToken(id),
+    onSuccess: refresh,
+    meta: { successMessage: 'Token revocado.' },
+  })
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { SelectField } from '@/components/ui/SelectField'
 import { useCatalog } from '@/features/catalogs/useCatalogs'
 import type { SkillLevel } from '@/features/people/types'
@@ -75,13 +75,9 @@ export function SkillsEditor({ skills: initialSkills }: { skills: SkillLevel[] }
           Agregar
         </Button>
       </div>
-      <SuccessNotice message={mutation.isSuccess ? 'Habilidades guardadas.' : null} />
-      <ErrorAlert error={mutation.error} showFieldErrors />
-      <Button
-        disabled={mutation.isPending}
-        onClick={() => mutation.mutate(skills.map(({ id, level }) => ({ id, level })))}
-      >
-        {mutation.isPending ? 'Guardando…' : 'Guardar habilidades'}
+      <FieldErrorsAlert error={mutation.error} />
+      <Button loading={mutation.isPending} onClick={() => mutation.mutate(skills.map(({ id, level }) => ({ id, level })))}>
+        Guardar habilidades
       </Button>
     </div>
   )

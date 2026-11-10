@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { CopyableValue } from '@/components/ui/CopyButton'
-import { Dialog } from '@/components/ui/Dialog'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import type { IssuedToken } from './types'
 
 /**
@@ -9,7 +9,7 @@ import type { IssuedToken } from './types'
  */
 export function IssuedTokenDialog({ issued, onClose }: { issued: IssuedToken; onClose: () => void }) {
   return (
-    <Dialog title={`Token «${issued.token.name}» generado`} onClose={onClose}>
+    <Dialog title={`Token «${issued.token.name}» generado`} size="lg" onClose={onClose}>
       <div className="space-y-4 text-sm">
         <p role="alert" className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-warning">
           Copialo ahora: no se vuelve a mostrar. Nunca commitees el token.
@@ -38,10 +38,10 @@ export function IssuedTokenDialog({ issued, onClose }: { issued: IssuedToken; on
           </p>
           <CopyableValue value={JSON.stringify(issued.project_mcp_json, null, 2)} label="Copiar .mcp.json" />
         </div>
-        <div className="flex justify-end">
-          <Button onClick={onClose}>Ya lo guardé</Button>
-        </div>
       </div>
+      <DialogFooter>
+        <Button onClick={onClose}>Ya lo guardé</Button>
+      </DialogFooter>
     </Dialog>
   )
 }

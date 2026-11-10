@@ -39,12 +39,18 @@ function useRefreshBags() {
 
 export function useAllocateHours(projectId: number) {
   const refresh = useRefreshBags()
-  return useMutation({ mutationFn: (input: AllocationInput) => allocateHours(projectId, input), onSuccess: refresh })
+  return useMutation({
+    meta: { successMessage: 'Horas cargadas en la bolsa.' },
+    mutationFn: (input: AllocationInput) => allocateHours(projectId, input),
+    onSuccess: refresh,
+  })
 }
 
 export function useRequestExtension() {
   const queryClient = useQueryClient()
   return useMutation({
+    // Shown where it was asked (the timer block): the button turns into the confirmation.
+    meta: { silentError: true },
     mutationFn: ({ projectId, message }: { projectId: number; message?: string }) => requestExtension(projectId, message),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: extensionRequestsKey }),
   })
@@ -57,6 +63,7 @@ export function useExtensionRequests(enabled: boolean) {
 export function useApproveExtension() {
   const refresh = useRefreshBags()
   return useMutation({
+    meta: { successMessage: 'Ampliación aprobada.' },
     mutationFn: ({ requestId, input }: { requestId: number; input: AllocationInput }) => approveExtension(requestId, input),
     onSuccess: refresh,
   })
@@ -65,6 +72,7 @@ export function useApproveExtension() {
 export function useRejectExtension() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Pedido rechazado.' },
     mutationFn: (requestId: number) => rejectExtension(requestId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: extensionRequestsKey }),
   })

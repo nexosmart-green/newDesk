@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
@@ -61,7 +60,7 @@ export function ClientFormDialog({ client, onClose, onSaved }: ClientFormDialogP
   }
 
   return (
-    <Dialog title={client ? `Editar ${client.display_name}` : 'Nuevo cliente'} onClose={onClose}>
+    <Dialog title={client ? `Editar ${client.display_name}` : 'Nuevo cliente'} size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           {textFields.map((field) => (
@@ -83,15 +82,14 @@ export function ClientFormDialog({ client, onClose, onSaved }: ClientFormDialogP
           error={fieldErrorOf(mutation.error, 'notes')}
           onChange={(event) => setForm({ ...form, notes: event.target.value })}
         />
-        <ErrorAlert error={mutation.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Guardando…' : client ? 'Guardar cambios' : 'Crear cliente'}
+          <Button type="submit" loading={mutation.isPending}>
+            {client ? 'Guardar cambios' : 'Crear cliente'}
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import { PeriodNav } from '@/components/ui/PeriodNav'
 import { SelectField } from '@/components/ui/SelectField'
@@ -43,12 +42,9 @@ export function HolidaysTab() {
           <option value="company">{holidayScopeLabels.company}</option>
           <option value="national">{holidayScopeLabels.national}</option>
         </SelectField>
-        <Button type="submit" disabled={create.isPending || !form.date || !form.name.trim()}>
+        <Button type="submit" loading={create.isPending} disabled={!form.date || !form.name.trim()}>
           Agregar
         </Button>
-        <div className="sm:col-span-4">
-          <ErrorAlert error={create.error} />
-        </div>
       </form>
       <PeriodNav
         label="Elegir año"
@@ -62,7 +58,7 @@ export function HolidaysTab() {
         onNext={() => setYear(year + 1)}
       />
       {!holidays.data ? (
-        <PageState isPending={holidays.isPending} error={holidays.error} />
+        <PageState isPending={holidays.isPending} error={holidays.error} onRetry={() => void holidays.refetch()} />
       ) : holidays.data.length === 0 ? (
         <p className="text-sm text-muted">No hay feriados cargados en {year}.</p>
       ) : (

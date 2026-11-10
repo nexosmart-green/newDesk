@@ -6,7 +6,7 @@ import { useMyTeam } from './useMyProfile'
 export function MyTeamList() {
   const team = useMyTeam()
 
-  if (!team.data) return <PageState isPending={team.isPending} error={team.error} />
+  if (!team.data) return <PageState isPending={team.isPending} error={team.error} shape="cards" onRetry={() => void team.refetch()} />
   if (team.data.length === 0) return <p className="text-sm text-muted">Nadie te reporta directamente.</p>
 
   return (

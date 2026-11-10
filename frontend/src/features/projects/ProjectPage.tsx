@@ -22,7 +22,7 @@ export function ProjectPage() {
       </section>
     )
   }
-  if (!project.data) return <PageState isPending={project.isPending} error={project.error} />
+  if (!project.data) return <PageState isPending={project.isPending} error={project.error} shape="detail" onRetry={() => void project.refetch()} />
 
   const base = `/proyectos/${project.data.id}`
   const tabs = [

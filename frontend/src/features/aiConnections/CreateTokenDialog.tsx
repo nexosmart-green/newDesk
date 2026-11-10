@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
@@ -32,7 +31,7 @@ export function CreateTokenDialog({ onIssued, onClose }: CreateTokenDialogProps)
   }
 
   return (
-    <Dialog title="Generar token" onClose={onClose}>
+    <Dialog title="Generar token" description="Para usar newDesk desde Claude Code con los permisos de tu rol." onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
           label="Nombre"
@@ -50,15 +49,14 @@ export function CreateTokenDialog({ onIssued, onClose }: CreateTokenDialogProps)
             </option>
           ))}
         </SelectField>
-        <ErrorAlert error={create.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={create.isPending || !name.trim()}>
-            {create.isPending ? 'Generando…' : 'Generar'}
+          <Button type="submit" loading={create.isPending} disabled={!name.trim()}>
+            Generar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

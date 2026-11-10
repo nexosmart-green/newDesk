@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { TextField } from '@/components/ui/TextField'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
 import { CommentField } from '@/features/timer/CommentField'
@@ -55,10 +55,9 @@ export function ManualTimeForm({ taskCode, projectId }: ManualTimeFormProps) {
       ) : (
         <ErrorAlert error={log.error} />
       )}
-      {log.isSuccess && <SuccessNotice message="Horas cargadas." />}
       <div className="flex justify-end">
-        <Button type="submit" disabled={log.isPending || !ready}>
-          {log.isPending ? 'Cargando…' : 'Cargar horas'}
+        <Button type="submit" loading={log.isPending} disabled={!ready}>
+          Cargar horas
         </Button>
       </div>
     </form>

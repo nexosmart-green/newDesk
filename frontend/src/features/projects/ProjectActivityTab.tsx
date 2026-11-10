@@ -12,7 +12,7 @@ export function ProjectActivityTab() {
   const [page, setPage] = useState(1)
   const activity = useProjectActivity(project.id, page)
 
-  if (!activity.data) return <PageState isPending={activity.isPending} error={activity.error} />
+  if (!activity.data) return <PageState isPending={activity.isPending} error={activity.error} shape="list" onRetry={() => void activity.refetch()} />
   if (activity.data.data.length === 0) return <p className="text-sm text-muted">Todavía no hay actividad.</p>
 
   return (

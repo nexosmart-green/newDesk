@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { inputClassName } from '@/components/ui/TextField'
 import type { CatalogItem, CatalogType } from './types'
 import { useDeleteCatalogItem, useRenameCatalogItem } from './useCatalogs'
@@ -29,7 +29,7 @@ export function CatalogItemRow({ type, item }: { type: CatalogType; item: Catalo
               variant="link"
               className="text-danger"
               aria-label={`Borrar ${item.name}`}
-              disabled={remove.isPending}
+              loading={remove.isPending}
               onClick={() => remove.mutate(item.id)}
             >
               Borrar
@@ -49,12 +49,12 @@ export function CatalogItemRow({ type, item }: { type: CatalogType; item: Catalo
             }}
             className={inputClassName}
           />
-          <Button type="submit" disabled={rename.isPending}>
+          <Button type="submit" loading={rename.isPending}>
             Guardar
           </Button>
         </form>
       )}
-      <ErrorAlert error={rename.error ?? remove.error} showFieldErrors />
+      <FieldErrorsAlert error={rename.error ?? remove.error} />
     </li>
   )
 }

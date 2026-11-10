@@ -35,6 +35,9 @@ export function useProfileTimeZone(): string {
   return data?.timezone ?? browserTimeZone()
 }
 
+// Auth forms explain their errors inline (no toast).
+const silentError = { silentError: true } as const
+
 function useStoreCurrentUser() {
   const queryClient = useQueryClient()
   return (user: CurrentUser) => queryClient.setQueryData(currentUserKey, user)
@@ -43,6 +46,7 @@ function useStoreCurrentUser() {
 export function useLogin() {
   const storeCurrentUser = useStoreCurrentUser()
   return useMutation({
+    meta: silentError,
     mutationFn: (input: LoginInput) => login(input),
     onSuccess: (result) => {
       if (result.status === 'authenticated') storeCurrentUser(result.user)
@@ -53,6 +57,7 @@ export function useLogin() {
 export function useTwoFactorChallenge() {
   const storeCurrentUser = useStoreCurrentUser()
   return useMutation({
+    meta: silentError,
     mutationFn: (input: TwoFactorChallengeInput) => submitTwoFactorChallenge(input),
     onSuccess: storeCurrentUser,
   })
@@ -61,6 +66,7 @@ export function useTwoFactorChallenge() {
 export function useLogout() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: silentError,
     mutationFn: logout,
     onSettled: () => {
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== currentUserKey[0] })
@@ -70,11 +76,11 @@ export function useLogout() {
 }
 
 export function useRequestPasswordReset() {
-  return useMutation({ mutationFn: (email: string) => requestPasswordReset(email) })
+  return useMutation({ meta: silentError, mutationFn: (email: string) => requestPasswordReset(email) })
 }
 
 export function useResetPassword() {
-  return useMutation({ mutationFn: (input: ResetPasswordInput) => resetPassword(input) })
+  return useMutation({ meta: silentError, mutationFn: (input: ResetPasswordInput) => resetPassword(input) })
 }
 
 export function useInvitation(token: string) {
@@ -82,5 +88,5 @@ export function useInvitation(token: string) {
 }
 
 export function useAcceptInvitation(token: string) {
-  return useMutation({ mutationFn: (input: NewPasswordInput) => acceptInvitation(token, input) })
+  return useMutation({ meta: silentError, mutationFn: (input: NewPasswordInput) => acceptInvitation(token, input) })
 }

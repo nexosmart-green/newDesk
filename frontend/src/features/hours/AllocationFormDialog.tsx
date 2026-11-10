@@ -1,12 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
-import { SelectField } from '@/components/ui/SelectField'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
-import { DurationInputs } from './DurationInputs'
-import { emptyDuration, toSeconds } from './durationInput'
+import { hoursToSeconds } from './durationInput'
+import { HoursInput } from './HoursInput'
 import type { AllocationInput } from './types'
 
 interface AllocationFormDialogProps {
@@ -21,45 +19,40 @@ interface AllocationFormDialogProps {
   onClose: () => void
 }
 
-/** RF-05.04: hours + mandatory reason + optional reference, sent as integer seconds (R-5). */
+function hoursProblem(seconds: number | null, typed: string, allowSubtract: boolean): string | undefined {
+  if (typed.trim() === '') return undefined
+  if (seconds === null) return 'Escribí un número de horas, por ejemplo 2,5.'
+  if (seconds === 0) return 'Tiene que ser distinto de cero.'
+  if (seconds < 0 && !allowSubtract) return 'Acá solo se suman horas: usá un número positivo.'
+  return undefined
+}
+
+/** RF-05.04: hours (decimals) + mandatory reason + optional reference, sent as integer seconds (R-5). */
 export function AllocationFormDialog(props: AllocationFormDialogProps) {
   const { title, submitLabel, allowSubtract = false, pending, error, children, onSubmit, onClose } = props
-  const [duration, setDuration] = useState(emptyDuration)
-  const [direction, setDirection] = useState<'add' | 'subtract'>('add')
+  const [hours, setHours] = useState('')
   const [reason, setReason] = useState('')
   const [reference, setReference] = useState('')
-  const seconds = toSeconds(duration.hours, duration.minutes)
-  const canSubmit = seconds > 0 && reason.trim() !== ''
+  const seconds = hoursToSeconds(hours)
+  const problem = hoursProblem(seconds, hours, allowSubtract)
+  const canSubmit = seconds !== null && seconds !== 0 && !problem && reason.trim() !== ''
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!canSubmit) return
-    onSubmit({
-      seconds: direction === 'subtract' ? -seconds : seconds,
-      reason: reason.trim(),
-      reference: reference.trim() === '' ? null : reference.trim(),
-    })
+    if (!canSubmit || seconds === null) return
+    onSubmit({ seconds, reason: reason.trim(), reference: reference.trim() === '' ? null : reference.trim() })
   }
 
   return (
-    <Dialog title={title} onClose={onClose}>
+    <Dialog title={title} size="md" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {children}
-        {allowSubtract && (
-          <SelectField
-            label="Movimiento"
-            value={direction}
-            onChange={(event) => setDirection(event.target.value === 'subtract' ? 'subtract' : 'add')}
-          >
-            <option value="add">Sumar horas</option>
-            <option value="subtract">Restar horas</option>
-          </SelectField>
-        )}
-        <DurationInputs value={duration} onChange={setDuration} error={fieldErrorOf(error, 'seconds')} />
+        <HoursInput value={hours} onChange={setHours} allowNegative={allowSubtract} error={problem ?? fieldErrorOf(error, 'seconds')} />
         <TextField
           label="Motivo"
           required
           maxLength={255}
+          placeholder="Ej.: Presupuesto aprobado de noviembre"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           error={fieldErrorOf(error, 'reason')}
@@ -72,15 +65,14 @@ export function AllocationFormDialog(props: AllocationFormDialogProps) {
           onChange={(event) => setReference(event.target.value)}
           error={fieldErrorOf(error, 'reference')}
         />
-        <ErrorAlert error={error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pending || !canSubmit}>
-            {pending ? 'Guardando…' : submitLabel}
+          <Button type="submit" loading={pending} disabled={!canSubmit}>
+            {submitLabel}
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

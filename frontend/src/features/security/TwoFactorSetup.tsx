@@ -44,8 +44,8 @@ export function TwoFactorSetup({ onActiveChange }: TwoFactorSetupProps) {
         Vas a necesitar una app de autenticación (Google Authenticator, 1Password, Authy…) en tu celular.
       </p>
       <ErrorAlert error={startMutation.error} />
-      <Button onClick={() => startMutation.mutate()} disabled={startMutation.isPending}>
-        {startMutation.isPending ? 'Preparando…' : 'Activar verificación en dos pasos'}
+      <Button onClick={() => startMutation.mutate()} loading={startMutation.isPending}>
+        Activar verificación en dos pasos
       </Button>
     </div>
   )
@@ -91,8 +91,8 @@ function ConfirmStep({ setup, onConfirm, isPending, error }: ConfirmStepProps) {
           onChange={(event) => setCode(event.target.value)}
         />
         <ErrorAlert error={error} />
-        <Button type="submit" disabled={isPending}>
-          {isPending ? 'Verificando…' : 'Confirmar'}
+        <Button type="submit" loading={isPending}>
+          Confirmar
         </Button>
       </form>
     </div>

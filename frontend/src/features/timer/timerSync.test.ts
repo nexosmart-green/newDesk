@@ -5,13 +5,30 @@ describe('timerSync', () => {
     vi.unstubAllGlobals()
   })
 
-  it('notifies other tabs through BroadcastChannel (RNF-12)', async () => {
+  it('reacts to another tab through BroadcastChannel (RNF-12)', async () => {
     const onChange = vi.fn()
     const unsubscribe = subscribeTimerChanged(onChange)
+    const otherTab = new BroadcastChannel('newdesk-timer')
+
+    otherTab.postMessage('another-tab-id')
+
+    await vi.waitFor(() => expect(onChange).toHaveBeenCalledTimes(1))
+    otherTab.close()
+    unsubscribe()
+  })
+
+  it('ignores its own broadcast: this tab already refreshed (no double fetch)', async () => {
+    const onChange = vi.fn()
+    const unsubscribe = subscribeTimerChanged(onChange)
+    const probe = vi.fn()
+    const listener = new BroadcastChannel('newdesk-timer')
+    listener.onmessage = probe
 
     broadcastTimerChanged()
 
-    await vi.waitFor(() => expect(onChange).toHaveBeenCalledTimes(1))
+    await vi.waitFor(() => expect(probe).toHaveBeenCalledTimes(1))
+    expect(onChange).not.toHaveBeenCalled()
+    listener.close()
     unsubscribe()
   })
 

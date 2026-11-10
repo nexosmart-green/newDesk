@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { MemberPicker, type PickedMember } from './MemberPicker'
 import { emptyProjectForm, toSaveProjectInput, type ProjectForm } from './projectForm'
 import { ProjectFormFields } from './ProjectFormFields'
@@ -27,19 +26,18 @@ export function CreateProjectDialog({ onClose, onCreated }: CreateProjectDialogP
   }
 
   return (
-    <Dialog title="Nuevo proyecto" onClose={onClose}>
+    <Dialog title="Nuevo proyecto" size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <ProjectFormFields form={form} error={mutation.error} onChange={(changes) => setForm({ ...form, ...changes })} />
         <MemberPicker selected={members} onChange={setMembers} />
-        <ErrorAlert error={mutation.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creando…' : 'Crear proyecto'}
+          <Button type="submit" loading={mutation.isPending}>
+            Crear proyecto
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

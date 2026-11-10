@@ -1,5 +1,5 @@
 import { useId, useState, type ChangeEvent } from 'react'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { LoaderCircle } from 'lucide-react'
 import { fieldErrorOf } from '@/lib/api'
 import type { CompanyProfile } from './types'
 import { useUploadCompanyLogo } from './useCompany'
@@ -42,7 +42,8 @@ export function CompanyLogoUpload({ company, canEdit }: CompanyLogoUploadProps) 
       {canEdit && (
         <div className="space-y-1">
           {/* `relative` anchors the sr-only input so it doesn't escape the layout. */}
-          <label className="relative inline-block cursor-pointer rounded border border-border px-3 py-2 text-sm focus-within:outline-2 focus-within:outline-accent">
+          <label className="relative inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2 focus-within:outline-2 focus-within:outline-accent">
+            {mutation.isPending && <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />}
             {mutation.isPending ? 'Subiendo…' : 'Cambiar logo'}
             <input
               type="file"
@@ -56,12 +57,10 @@ export function CompanyLogoUpload({ company, canEdit }: CompanyLogoUploadProps) 
           <p id={hintId} className="text-xs text-muted">
             JPG, PNG o WebP, hasta 2 MB.
           </p>
-          {error ? (
+          {error && (
             <p role="alert" className="text-sm text-danger">
               {error}
             </p>
-          ) : (
-            <ErrorAlert error={mutation.error} />
           )}
         </div>
       )}

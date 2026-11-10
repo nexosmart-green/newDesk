@@ -11,6 +11,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCan, useCanAny } from '@/features/auth/useAuth'
 import { CLIENTS_READ_PERMISSIONS } from '@/features/clients/types'
 import { REPORTS_PERMISSION } from '@/features/reports/types'
@@ -35,7 +36,14 @@ export interface NavGroup {
  * the backend policies decide (RNF-05).
  */
 export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
-  const canSeeClients = useCanAny(CLIENTS_READ_PERMISSIONS)
+  // Module switches (per role) first; then the finer permission inside the module.
+  const hasProjects = useHasModule(MODULES.projects)
+  const hasTime = useHasModule(MODULES.time)
+  const hasCalendar = useHasModule(MODULES.calendar)
+  const hasPeople = useHasModule(MODULES.people)
+  const hasClients = useHasModule(MODULES.clients)
+  const hasReports = useHasModule(MODULES.reports)
+  const canReadClients = useCanAny(CLIENTS_READ_PERMISSIONS)
   const canManageShifts = useCan(SHIFTS_PERMISSION)
   const canSeeReports = useCan(REPORTS_PERMISSION)
   const canSeeSettings = useCanAny(SETTINGS_PERMISSIONS)
@@ -47,20 +55,20 @@ export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
     groups: [
       {
         label: 'Mi trabajo',
-        items: [
-          { to: '/', label: 'Mis tareas', icon: CheckSquare, exact: true },
-          { to: '/mi-semana', label: 'Mi semana', icon: Clock },
-          { to: '/calendario', label: 'Calendario', icon: CalendarDays },
-        ],
+        items: visible([
+          hasProjects && { to: '/', label: 'Mis tareas', icon: CheckSquare, exact: true },
+          hasTime && { to: '/mi-semana', label: 'Mi semana', icon: Clock },
+          hasCalendar && { to: '/calendario', label: 'Calendario', icon: CalendarDays },
+        ]),
       },
       {
         label: 'Gestión',
         items: visible([
-          { to: '/proyectos', label: 'Proyectos', icon: FolderKanban },
-          canSeeClients && { to: '/clientes', label: 'Clientes', icon: Building2 },
-          { to: '/personas', label: 'Personas', icon: Users },
-          canManageShifts && { to: '/turnos', label: 'Turnos', icon: CalendarRange },
-          canSeeReports && { to: '/reportes/horas', label: 'Reportes', icon: BarChart3 },
+          hasProjects && { to: '/proyectos', label: 'Proyectos', icon: FolderKanban },
+          hasClients && canReadClients && { to: '/clientes', label: 'Clientes', icon: Building2 },
+          hasPeople && { to: '/personas', label: 'Personas', icon: Users },
+          hasCalendar && canManageShifts && { to: '/turnos', label: 'Turnos', icon: CalendarRange },
+          hasReports && canSeeReports && { to: '/reportes/horas', label: 'Reportes', icon: BarChart3 },
         ]),
       },
       {

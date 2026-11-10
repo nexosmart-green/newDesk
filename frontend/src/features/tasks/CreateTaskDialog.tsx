@@ -1,7 +1,8 @@
+import { Play } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { CommentDialog } from '@/features/timer/CommentDialog'
 import { TimerBlockedNotice } from '@/features/timer/TimerBlockedNotice'
@@ -69,19 +70,22 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
   if (partial?.timer_error) {
     const { task, timer_error: timerError } = partial
     return (
-      <Dialog title="Tarea creada" onClose={onClose}>
+      <Dialog title="Tarea creada" size="sm" onClose={onClose}>
         <p className="text-sm">
           Tarea <span className="font-mono uppercase">{task.code}</span> creada, pero el cronómetro no arrancó.
         </p>
         <TimerBlockedNotice code={timerError.code} message={timerError.message} projectId={projectId} />
-        <div className="flex justify-end gap-2">
-          <Link to={`/tareas/${task.code}`} className="px-3 py-2 text-sm text-accent">
+        <DialogFooter>
+          <Link
+            to={`/tareas/${task.code}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium text-accent hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
+          >
             Abrir {task.code}
           </Link>
           <Button variant="secondary" onClick={onClose}>
             Cerrar
           </Button>
-        </div>
+        </DialogFooter>
       </Dialog>
     )
   }
@@ -103,9 +107,11 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
 
   const error = create.error ?? createAndStart.error
   const pending = create.isPending || createAndStart.isPending
+  // Create errors toast (global); the create-and-start flow explains its own here.
+  const inlineError = createAndStart.error
 
   return (
-    <Dialog title="Nueva tarea" onClose={onClose}>
+    <Dialog title="Nueva tarea" description="Solo el título es obligatorio." size="lg" onClose={onClose}>
       <form onSubmit={handleCreate} className="space-y-4">
         <TaskFormFields
           values={values}
@@ -117,18 +123,19 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
         />
         {titleMissing && <p className="text-sm text-danger">El título es obligatorio.</p>}
         <AssigneeCheckboxes members={members} selected={assigneeIds} onChange={setAssigneeIds} />
-        <ErrorAlert error={error} />
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
+        <ErrorAlert error={inlineError} />
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" variant="secondary" disabled={pending}>
+          <Button type="submit" variant="secondary" loading={create.isPending} disabled={pending}>
             Crear
           </Button>
-          <Button disabled={pending} onClick={() => startWith()}>
-            <span aria-hidden="true">▶ </span>Crear e iniciar
+          <Button loading={createAndStart.isPending} disabled={pending} onClick={() => startWith()}>
+            <Play aria-hidden="true" className="size-4 fill-current" />
+            Crear e iniciar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

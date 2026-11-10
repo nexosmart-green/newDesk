@@ -21,7 +21,7 @@ export function MyTasksPage() {
       </header>
       <TaskFiltersBar filters={filters} statuses={statuses.data ?? []} onChange={change} />
       {!tasks.data ? (
-        <PageState isPending={tasks.isPending} error={tasks.error} />
+        <PageState isPending={tasks.isPending} error={tasks.error} shape="list" onRetry={() => void tasks.refetch()} />
       ) : (
         <TaskList tasks={tasks.data.data} userId={user?.id} showProject />
       )}

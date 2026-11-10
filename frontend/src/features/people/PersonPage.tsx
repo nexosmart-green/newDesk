@@ -29,7 +29,7 @@ export function PersonPage() {
       </section>
     )
   }
-  if (!person.data) return <PageState isPending={person.isPending} error={person.error} />
+  if (!person.data) return <PageState isPending={person.isPending} error={person.error} shape="detail" onRetry={() => void person.refetch()} />
 
   // CA-01.09 / RNF-06: rates are admin-only; the backend enforces it, the tab is a hint.
   const tabs: TabItem<PersonTab>[] = [{ id: 'perfil', label: 'Perfil' }]

@@ -58,7 +58,7 @@ export function MyWeekPage() {
       </div>
       <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
       {!timesheet.data ? (
-        <PageState isPending={timesheet.isPending} error={timesheet.error} />
+        <PageState isPending={timesheet.isPending} error={timesheet.error} shape="table" onRetry={() => void timesheet.refetch()} />
       ) : (
         <div className="space-y-3">
           {timesheet.data.days.map((day) => (

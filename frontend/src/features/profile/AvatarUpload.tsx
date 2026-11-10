@@ -26,7 +26,7 @@ export function AvatarUpload({ profile }: { profile: PersonProfile }) {
     <div className="flex items-center gap-3">
       <Avatar name={profile.full_name} url={profile.avatar?.profile} size="lg" />
       <div className="space-y-1">
-        <label className="relative inline-block cursor-pointer rounded border border-border px-3 py-2 text-sm focus-within:outline-2 focus-within:outline-accent">
+        <label className="relative inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-2 focus-within:outline-2 focus-within:outline-accent">
           Cambiar foto
           <input
             type="file"

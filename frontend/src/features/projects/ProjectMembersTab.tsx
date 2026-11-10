@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PersonSelect } from '@/features/people/PersonSelect'
 import { useProjectFromOutlet } from './projectContext'
 import { useAddProjectMember, useRemoveProjectMember } from './useProjects'
@@ -29,7 +29,7 @@ export function ProjectMembersTab() {
 
   return (
     <div className="space-y-4">
-      <ErrorAlert error={add.error ?? remove.error} showFieldErrors />
+      <FieldErrorsAlert error={add.error ?? remove.error} />
       {project.can.manage_members && (
         <div className="flex items-end gap-2">
           <PersonSelect
@@ -39,7 +39,7 @@ export function ProjectMembersTab() {
             excludeIds={memberIds}
             onChange={setToAdd}
           />
-          <Button disabled={toAdd === null || add.isPending} onClick={handleAdd}>
+          <Button disabled={toAdd === null} loading={add.isPending} onClick={handleAdd}>
             Agregar
           </Button>
         </div>
@@ -62,6 +62,7 @@ export function ProjectMembersTab() {
                   variant="link"
                   className="text-danger"
                   aria-label={`Quitar a ${member.full_name}`}
+                  loading={remove.isPending && remove.variables === member.id}
                   disabled={remove.isPending}
                   onClick={() => handleRemove(member.id)}
                 >

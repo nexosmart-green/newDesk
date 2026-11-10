@@ -1,9 +1,12 @@
+import { Disclosure } from '@/components/ui/Disclosure'
+import { OptionalDateField } from '@/components/ui/OptionalDateField'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
 import { useActiveClients } from '@/features/clients/useClients'
 import { PersonSelect } from '@/features/people/PersonSelect'
 import { fieldErrorOf } from '@/lib/api'
+import { formatDate } from '@/lib/dates'
 import type { ProjectForm } from './projectForm'
 import { projectTypeLabels, type ProjectDetail, type ProjectType } from './types'
 
@@ -16,6 +19,11 @@ interface ProjectFormFieldsProps {
 }
 
 const types = Object.keys(projectTypeLabels) as ProjectType[]
+
+function datesSummary(form: ProjectForm): string {
+  const parts = [form.starts_on && `Inicia ${formatDate(form.starts_on)}`, form.ends_on && `Termina ${formatDate(form.ends_on)}`].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : 'Inicio y fin estimado (opcionales)'
+}
 
 export function ProjectFormFields({ form, onChange, error, project }: ProjectFormFieldsProps) {
   const clients = useActiveClients()
@@ -72,11 +80,18 @@ export function ProjectFormFields({ form, onChange, error, project }: ProjectFor
           error={errorOf('leader_user_id')}
           onChange={(id) => onChange({ leader_user_id: id ? String(id) : '' })}
         />
-        <div className="grid grid-cols-2 gap-2">
-          <TextField label="Inicio" type="date" value={form.starts_on} error={errorOf('starts_on')} onChange={(event) => onChange({ starts_on: event.target.value })} />
-          <TextField label="Fin estimado" type="date" value={form.ends_on} error={errorOf('ends_on')} onChange={(event) => onChange({ ends_on: event.target.value })} />
-        </div>
       </div>
+      <Disclosure
+        key={errorOf('starts_on') || errorOf('ends_on') ? 'error' : 'ok'}
+        label="Fechas"
+        summary={datesSummary(form)}
+        defaultOpen={Boolean(form.starts_on || form.ends_on || errorOf('starts_on') || errorOf('ends_on'))}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <OptionalDateField label="Inicio" value={form.starts_on} error={errorOf('starts_on')} onChange={(starts_on) => onChange({ starts_on })} />
+          <OptionalDateField label="Fin estimado" value={form.ends_on} error={errorOf('ends_on')} onChange={(ends_on) => onChange({ ends_on })} />
+        </div>
+      </Disclosure>
       <TextAreaField
         label="Descripción"
         value={form.description}

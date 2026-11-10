@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { PageState } from '@/components/ui/PageState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { inputClassName } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { CatalogItemRow } from './CatalogItemRow'
@@ -29,9 +30,14 @@ export function CatalogList({ type }: { type: CatalogType }) {
         {labels.title}
       </h2>
       {catalog.isPending ? (
-        <p className="text-sm text-muted">Cargando…</p>
+        <div role="status" className="space-y-3 py-1">
+          <span className="sr-only">Cargando…</span>
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-4 w-3/5" />
+        </div>
       ) : catalog.isError ? (
-        <ErrorAlert error={catalog.error} showFieldErrors />
+        <PageState isPending={false} error={catalog.error} onRetry={() => void catalog.refetch()} />
       ) : catalog.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay valores.</p>
       ) : (
@@ -55,12 +61,11 @@ export function CatalogList({ type }: { type: CatalogType }) {
             onChange={(event) => setName(event.target.value)}
             className={inputClassName}
           />
-          <Button type="submit" disabled={create.isPending || !name.trim()}>
+          <Button type="submit" loading={create.isPending} disabled={!name.trim()}>
             Agregar
           </Button>
         </div>
         {nameError && <p className="text-sm text-danger">{nameError}</p>}
-        <ErrorAlert error={create.error} />
       </form>
     </section>
   )

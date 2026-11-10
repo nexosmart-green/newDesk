@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
@@ -97,10 +96,8 @@ export function OwnProfileForm({ profile }: { profile: PersonProfile }) {
           ))}
         </SelectField>
       </div>
-      <SuccessNotice message={mutation.isSuccess ? 'Perfil actualizado.' : null} />
-      <ErrorAlert error={mutation.error} />
-      <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+      <Button type="submit" loading={mutation.isPending}>
+        Guardar cambios
       </Button>
     </form>
   )

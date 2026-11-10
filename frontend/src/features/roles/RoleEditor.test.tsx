@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ApiError } from '@/lib/api'
 import { renderAt } from '@/test/renderWithProviders'
@@ -7,6 +7,8 @@ import * as rolesApi from './rolesApi'
 import type { PermissionOption, Role } from './types'
 
 const catalog: PermissionOption[] = [
+  { value: 'module.projects', label: 'Módulo Proyectos y tareas' },
+  { value: 'module.time', label: 'Módulo Horas y cronómetro' },
   { value: 'clients.manage', label: 'Gestionar clientes' },
   { value: 'projects.manage', label: 'Gestionar proyectos' },
   { value: 'time.track', label: 'Cronometrar' },
@@ -55,7 +57,37 @@ describe('RoleEditor', () => {
     expect(screen.queryByRole('button', { name: 'Guardar rol' })).not.toBeInTheDocument()
   })
 
-  it('shows the backend business rule as an alert', async () => {
+  it('shows module switches first and sends them with the permissions', async () => {
+    const update = vi.spyOn(rolesApi, 'updateRole').mockResolvedValue(role)
+    renderEditor({ role: { ...role, permissions: ['module.projects', 'projects.manage'] } })
+
+    const modules = screen.getByRole('region', { name: 'Módulos' })
+    const projects = within(modules).getByRole('switch', { name: 'Proyectos y tareas' })
+    const time = within(modules).getByRole('switch', { name: 'Horas y cronómetro' })
+    expect(projects).toHaveAttribute('aria-checked', 'true')
+    expect(time).toHaveAttribute('aria-checked', 'false')
+    // Module switches are not repeated as plain permission checkboxes.
+    expect(screen.queryByRole('checkbox', { name: /Módulo/ })).not.toBeInTheDocument()
+
+    await userEvent.click(time)
+    await userEvent.click(projects)
+    expect(time).toHaveAttribute('aria-checked', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar rol' }))
+
+    expect(update).toHaveBeenCalledWith(7, { name: 'PM', permissions: ['module.time', 'projects.manage'] })
+    expect(await screen.findByText('Rol guardado.')).toBeInTheDocument()
+  })
+
+  it('shows the system Admin with every module on, read-only', () => {
+    renderEditor({ role: { ...role, is_system: true, name: 'Admin', permissions: [] } })
+
+    for (const moduleSwitch of screen.getAllByRole('switch')) {
+      expect(moduleSwitch).toHaveAttribute('aria-checked', 'true')
+      expect(moduleSwitch).toBeDisabled()
+    }
+  })
+
+  it('shows the backend business rule as a toast', async () => {
     vi.spyOn(rolesApi, 'updateRole').mockRejectedValue(
       new ApiError(422, 'El rol del sistema no se puede modificar.', {}, 'system_role_locked'),
     )
@@ -63,7 +95,8 @@ describe('RoleEditor', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Guardar rol' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('El rol del sistema no se puede modificar.')
+    expect(await screen.findByText('El rol del sistema no se puede modificar.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('asks for confirmation before deleting an unused role', async () => {

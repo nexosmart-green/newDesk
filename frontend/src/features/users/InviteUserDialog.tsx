@@ -1,7 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { inputClassName, TextField } from '@/components/ui/TextField'
 import type { Role } from '@/features/roles/types'
 import { fieldErrorOf } from '@/lib/api'
@@ -27,7 +26,7 @@ export function InviteUserDialog({ roles, onClose, onInvited }: InviteUserDialog
   const roleError = fieldErrorOf(mutation.error, 'role_id')
 
   return (
-    <Dialog title="Invitar usuario" onClose={onClose}>
+    <Dialog title="Invitar usuario" description="Le llega un email para crear su contraseña." size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
@@ -77,15 +76,14 @@ export function InviteUserDialog({ roles, onClose, onInvited }: InviteUserDialog
           </select>
           {roleError && <p className="text-sm text-danger">{roleError}</p>}
         </div>
-        <ErrorAlert error={mutation.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Enviando…' : 'Enviar invitación'}
+          <Button type="submit" loading={mutation.isPending}>
+            Enviar invitación
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

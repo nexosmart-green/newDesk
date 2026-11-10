@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { PageState } from '@/components/ui/PageState'
 import { useCan } from '@/features/auth/useAuth'
 import { RoleEditor } from './RoleEditor'
 import { usePermissionCatalog, useRoles } from './useRoles'
@@ -13,8 +13,10 @@ export function RolesTab() {
   const canManage = useCan('roles.manage')
   const [selection, setSelection] = useState<Selection>(null)
 
-  if (roles.isPending || catalog.isPending) return <p className="text-muted">Cargando…</p>
-  if (roles.isError || catalog.isError) return <ErrorAlert error={roles.error ?? catalog.error} showFieldErrors />
+  if (!roles.data || !catalog.data) {
+    const retry = () => void Promise.all([roles.refetch(), catalog.refetch()])
+    return <PageState isPending={roles.isPending || catalog.isPending} error={roles.error ?? catalog.error} onRetry={retry} />
+  }
 
   const selectedRole = selection?.kind === 'role' ? roles.data.find((role) => role.id === selection.id) : undefined
   const editorKey = selection?.kind === 'new' ? 'new' : selectedRole?.id
@@ -36,7 +38,7 @@ export function RolesTab() {
                   type="button"
                   aria-current={selected ? 'true' : undefined}
                   onClick={() => setSelection({ kind: 'role', id: role.id })}
-                  className={`flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm ${selected ? 'bg-accent/15 text-accent' : 'hover:bg-surface'}`}
+                  className={`flex min-h-11 w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-accent ${selected ? 'bg-brand/15 font-medium text-accent' : 'hover:bg-surface'}`}
                 >
                   <span>
                     {role.name}

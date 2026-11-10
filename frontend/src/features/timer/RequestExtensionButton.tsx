@@ -10,8 +10,8 @@ export function RequestExtensionButton({ projectId }: { projectId: number }) {
 
   return (
     <div className="space-y-2">
-      <Button disabled={request.isPending} onClick={() => request.mutate({ projectId })}>
-        {request.isPending ? 'Enviando…' : 'Pedir ampliación'}
+      <Button loading={request.isPending} onClick={() => request.mutate({ projectId })}>
+        Pedir ampliación
       </Button>
       <ErrorAlert error={request.error} showFieldErrors />
     </div>

@@ -1,16 +1,18 @@
+import { Play, Square } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { ApiError } from '@/lib/api'
 import { CommentDialog } from './CommentDialog'
 import { RequestExtensionButton } from './RequestExtensionButton'
 import { StopTimerDialog } from './StopTimerDialog'
+import { isProvisional } from './timerOptimistic'
 import { TimerBlockedNotice } from './TimerBlockedNotice'
 import { timerRule } from './types'
 import { useStartTimer, useTimerState } from './useTimer'
 
 interface StartTimerButtonProps {
-  task: { code: string; title: string; project?: { id: number; hours_exhausted: boolean } }
+  task: { code: string; title: string; project?: { id: number; name?: string; hours_exhausted: boolean } }
   /** Compact icon-only rendering for cards and rows. */
   compact?: boolean
 }
@@ -37,7 +39,7 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
 
   function begin(previousComment?: string) {
     start.mutate(
-      { taskCode: task.code, previousComment },
+      { task, previousComment },
       {
         onSuccess: () => setAskingPrevious(false),
         onError: (error) => {
@@ -63,9 +65,9 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   if (!runningHere && task.project?.hours_exhausted) {
     return (
       <div className="flex flex-wrap items-start justify-end gap-2">
-        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'px-2 py-1' : undefined}>
-          <span aria-hidden="true">▶</span>
-          {!compact && <span className="ml-1">Iniciar</span>}
+        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'min-w-11 px-0' : undefined}>
+          <Play aria-hidden="true" className="size-4 fill-current" />
+          {!compact && <span>Iniciar</span>}
         </Button>
         <p id={noHoursId} className="self-center text-xs text-danger">
           Sin horas disponibles — pedir ampliación
@@ -81,12 +83,14 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
         variant={runningHere ? 'danger' : 'secondary'}
         aria-label={label}
         title={label}
-        disabled={start.isPending}
+        loading={start.isPending}
+        // A just-started (optimistic) entry can't be stopped until the server confirms it.
+        disabled={runningHere && active !== null && isProvisional(active)}
         onClick={handleClick}
-        className={compact ? 'px-2 py-1' : undefined}
+        className={compact ? 'min-w-11 px-0' : undefined}
       >
-        <span aria-hidden="true">{runningHere ? '■' : '▶'}</span>
-        {!compact && <span className="ml-1">{runningHere ? 'Detener' : 'Iniciar'}</span>}
+        {runningHere ? <Square aria-hidden="true" className="size-3.5 fill-current" /> : <Play aria-hidden="true" className="size-4 fill-current" />}
+        {!compact && <span>{runningHere ? 'Detener' : 'Iniciar'}</span>}
       </Button>
       {askingPrevious && (
         <CommentDialog
@@ -105,17 +109,17 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
         </CommentDialog>
       )}
       {blocked && (
-        <Dialog title="No se pudo iniciar el cronómetro" onClose={() => setBlocked(null)}>
+        <Dialog title="No se pudo iniciar el cronómetro" size="sm" onClose={() => setBlocked(null)}>
           <TimerBlockedNotice code={blocked.code} message={blocked.message} projectId={projectId} />
-          <div className="flex justify-end">
+          <DialogFooter>
             <Button variant="secondary" onClick={() => setBlocked(null)}>
               Cerrar
             </Button>
-          </div>
+          </DialogFooter>
         </Dialog>
       )}
       {active && stoppingId === active.id && (
-        <StopTimerDialog entry={active} elapsedSeconds={null} onClose={() => setStoppingId(null)} />
+        <StopTimerDialog entry={active} onClose={() => setStoppingId(null)} />
       )}
     </>
   )

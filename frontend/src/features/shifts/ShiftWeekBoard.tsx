@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { SuccessNotice } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import { useWeekParam } from '@/features/timesheet/useWeekParam'
 import { WeekNav } from '@/features/timesheet/WeekNav'
@@ -10,11 +9,9 @@ import { AssignCellsDialog } from './AssignCellsDialog'
 import { BulkAssignDialog } from './BulkAssignDialog'
 import { cellKey, type Cell } from './selection'
 import { ShiftGridTable } from './ShiftGridTable'
-import { useAssignShifts, useCopyPreviousWeek, useSetShiftCells, useShiftGrid, useShiftTemplates } from './useShifts'
+import { daysLabel, useAssignShifts, useCopyPreviousWeek, useSetShiftCells, useShiftGrid, useShiftTemplates } from './useShifts'
 
 type OpenDialog = 'cells' | 'bulk' | 'copy' | null
-
-const daysLabel = (count: number) => (count === 1 ? '1 día' : `${count} días`)
 
 /** The weekly grid with its actions: assign selected cells, bulk assign, copy previous week. */
 export function ShiftWeekBoard() {
@@ -26,7 +23,6 @@ export function ShiftWeekBoard() {
   const copy = useCopyPreviousWeek()
   const [selected, setSelected] = useState<Map<string, Cell>>(new Map())
   const [dialog, setDialog] = useState<OpenDialog>(null)
-  const [notice, setNotice] = useState<string | null>(null)
   const dates = datesBetween(week.from, week.to)
 
   function changeWeek(monday: string | null) {
@@ -48,8 +44,7 @@ export function ShiftWeekBoard() {
     setDialog(null)
   }
 
-  function finishAssign(cells: number) {
-    setNotice(`Listo: ${daysLabel(cells)} actualizados.`)
+  function finishAssign() {
     setSelected(new Map())
     closeDialog()
   }
@@ -60,12 +55,7 @@ export function ShiftWeekBoard() {
   }
 
   function confirmCopy() {
-    copy.mutate(week.from, {
-      onSuccess: (copied) => {
-        setNotice(copied === 0 ? 'La semana anterior no tenía turnos.' : `Se copiaron ${copied} turnos.`)
-        closeDialog()
-      },
-    })
+    copy.mutate(week.from, { onSuccess: closeDialog })
   }
 
   return (
@@ -81,7 +71,6 @@ export function ShiftWeekBoard() {
           </Button>
         </div>
       </div>
-      <SuccessNotice message={notice} />
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded border border-accent/40 bg-accent/10 px-3 py-2 text-sm" role="region" aria-label="Selección">
           <span>{daysLabel(selected.size)} seleccionados</span>
@@ -94,7 +83,7 @@ export function ShiftWeekBoard() {
         </div>
       )}
       {!grid.data ? (
-        <PageState isPending={grid.isPending} error={grid.error} />
+        <PageState isPending={grid.isPending} error={grid.error} shape="table" onRetry={() => void grid.refetch()} />
       ) : grid.data.people.length === 0 ? (
         <p className="text-sm text-muted">No hay personas activas.</p>
       ) : (

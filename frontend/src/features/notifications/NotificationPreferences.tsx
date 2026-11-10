@@ -1,4 +1,4 @@
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import type { NotificationPreference } from './types'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from './useNotifications'
@@ -10,7 +10,7 @@ export function NotificationPreferences() {
   const preferences = useNotificationPreferences()
   const update = useUpdateNotificationPreferences()
 
-  if (!preferences.data) return <PageState isPending={preferences.isPending} error={preferences.error} />
+  if (!preferences.data) return <PageState isPending={preferences.isPending} error={preferences.error} onRetry={() => void preferences.refetch()} />
   const list = preferences.data
 
   function toggle(changed: NotificationPreference, email: boolean) {
@@ -48,8 +48,7 @@ export function NotificationPreferences() {
           )
         })}
       </ul>
-      {update.isSuccess && <SuccessNotice message="Preferencias guardadas." />}
-      <ErrorAlert error={update.error} showFieldErrors />
+      <FieldErrorsAlert error={update.error} />
     </section>
   )
 }

@@ -6,7 +6,7 @@ import { useCompanyAiTokens } from './useAiConnections'
 export function CompanyTokensTab() {
   const tokens = useCompanyAiTokens()
 
-  if (!tokens.data) return <PageState isPending={tokens.isPending} error={tokens.error} />
+  if (!tokens.data) return <PageState isPending={tokens.isPending} error={tokens.error} onRetry={() => void tokens.refetch()} />
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">Tokens personales de MCP de toda la empresa. Revocar uno corta su acceso al instante.</p>

@@ -55,7 +55,7 @@ export function ClientsPage() {
         </SelectField>
       </div>
       {!clients.data ? (
-        <PageState isPending={clients.isPending} error={clients.error} />
+        <PageState isPending={clients.isPending} error={clients.error} onRetry={() => void clients.refetch()} />
       ) : clients.data.data.length === 0 ? (
         <p className="text-sm text-muted">No hay clientes que coincidan con la búsqueda.</p>
       ) : (

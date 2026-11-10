@@ -20,7 +20,9 @@ describe('ClientPage', () => {
     const dialog = screen.getByRole('dialog')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Borrar' }))
 
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent(message)
+    // The rule comes back as a toast; the dialog explains the way out.
+    expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(within(dialog).getByText(/Tiene proyectos/)).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Inactivar en su lugar' }))
     expect(changeStatus).toHaveBeenCalledWith(5, 'inactive')
   })

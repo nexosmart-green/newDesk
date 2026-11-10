@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/components/ui/toast/toastStore'
 import {
   assignShifts,
   copyPreviousWeek,
@@ -13,6 +14,9 @@ import type { AssignShiftsInput, ShiftCellsInput, ShiftTemplateInput } from './t
 
 const shiftsKey = ['shifts'] as const
 const templatesKey = [...shiftsKey, 'templates'] as const
+
+export const daysLabel = (count: number) => (count === 1 ? '1 día' : `${count} días`)
+const assigned = (cells: number) => toast.success(`Listo: ${daysLabel(cells)} actualizados.`)
 
 export function useShiftTemplates() {
   return useQuery({ queryKey: templatesKey, queryFn: fetchShiftTemplates, staleTime: 5 * 60_000 })
@@ -38,17 +42,36 @@ function useRefreshShifts() {
 
 export function useAssignShifts() {
   const refresh = useRefreshShifts()
-  return useMutation({ mutationFn: (input: AssignShiftsInput) => assignShifts(input), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (input: AssignShiftsInput) => assignShifts(input),
+    onSuccess: (cells) => {
+      assigned(cells)
+      return refresh()
+    },
+  })
 }
 
 export function useSetShiftCells() {
   const refresh = useRefreshShifts()
-  return useMutation({ mutationFn: (input: ShiftCellsInput) => setShiftCells(input), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (input: ShiftCellsInput) => setShiftCells(input),
+    onSuccess: (cells) => {
+      assigned(cells)
+      return refresh()
+    },
+  })
 }
 
 export function useCopyPreviousWeek() {
   const refresh = useRefreshShifts()
-  return useMutation({ mutationFn: (weekStart: string) => copyPreviousWeek(weekStart), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (weekStart: string) => copyPreviousWeek(weekStart),
+    onSuccess: (copied) => {
+      if (copied === 0) toast.info('La semana anterior no tenía turnos.')
+      else toast.success(`Se copiaron ${copied} turnos.`)
+      return refresh()
+    },
+  })
 }
 
 export function useSaveShiftTemplate() {
@@ -56,11 +79,16 @@ export function useSaveShiftTemplate() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number | null; input: ShiftTemplateInput }) =>
       id === null ? createShiftTemplate(input) : updateShiftTemplate(id, input),
+    meta: { successMessage: 'Plantilla guardada.' },
     onSuccess: refresh,
   })
 }
 
 export function useDeleteShiftTemplate() {
   const refresh = useRefreshShifts()
-  return useMutation({ mutationFn: (id: number) => deleteShiftTemplate(id), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (id: number) => deleteShiftTemplate(id),
+    meta: { successMessage: 'Plantilla borrada.' },
+    onSuccess: refresh,
+  })
 }

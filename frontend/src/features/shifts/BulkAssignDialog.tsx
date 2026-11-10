@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { TextField } from '@/components/ui/TextField'
 import type { Week } from '@/features/timesheet/week'
 import { fieldErrorOf } from '@/lib/api'
@@ -47,14 +47,14 @@ export function BulkAssignDialog({ people, templates, week, pending, error, onSu
   const allSelected = userIds.length === people.length
 
   return (
-    <Dialog title="Asignación masiva" onClose={onClose}>
+    <Dialog title="Asignación masiva" description="Varias personas, un rango de fechas y los días de la semana que aplican." size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset className="space-y-1">
           <legend className="text-sm text-muted">Personas</legend>
           <Button variant="link" onClick={() => setUserIds(allSelected ? [] : people.map((person) => person.id))}>
             {allSelected ? 'Ninguna' : 'Todas'}
           </Button>
-          <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-border p-2">
+          <div className="max-h-56 space-y-1 overflow-y-auto rounded border border-border p-2">
             {people.map((person) => (
               <label key={person.id} className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={userIds.includes(person.id)} onChange={() => setUserIds(toggle(userIds, person.id))} />
@@ -79,15 +79,15 @@ export function BulkAssignDialog({ people, templates, week, pending, error, onSu
           </div>
         </fieldset>
         <TemplateSelect templates={templates} value={template} onChange={setTemplate} />
-        <ErrorAlert error={error} showFieldErrors />
-        <div className="flex justify-end gap-2">
+        <FieldErrorsAlert error={error} />
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pending || !ready}>
-            {pending ? 'Guardando…' : 'Asignar'}
+          <Button type="submit" disabled={!ready} loading={pending}>
+            Asignar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

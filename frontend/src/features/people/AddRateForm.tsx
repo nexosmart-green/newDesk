@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { TextField } from '@/components/ui/TextField'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { fieldErrorOf } from '@/lib/api'
@@ -53,10 +52,8 @@ export function AddRateForm({ personId }: { personId: number }) {
         />
       </div>
       <p className="text-xs text-muted">La tarifa anterior queda vigente hasta el día previo.</p>
-      <SuccessNotice message={mutation.isSuccess ? 'Tarifa registrada.' : null} />
-      <ErrorAlert error={mutation.error} />
-      <Button type="submit" disabled={mutation.isPending || !amount || !validFrom}>
-        {mutation.isPending ? 'Guardando…' : 'Registrar tarifa'}
+      <Button type="submit" loading={mutation.isPending} disabled={!amount || !validFrom}>
+        Registrar tarifa
       </Button>
     </form>
   )
