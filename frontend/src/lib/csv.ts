@@ -11,7 +11,12 @@ export function toCsv(rows: readonly (readonly CsvCell[])[]): string {
 
 /** Saves `csv` as a file in the browser. The BOM makes Excel read the accents as UTF-8. */
 export function downloadCsv(filename: string, csv: string): void {
-  const url = URL.createObjectURL(new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8' }))
+  downloadBlob(new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8' }), filename)
+}
+
+/** Hands a blob (built here or downloaded from the API) to the browser as a file. */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = filename

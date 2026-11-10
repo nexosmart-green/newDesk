@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A worked stretch. `ended_at` NULL means it is the person's running timer (RF-05.03: lives on the server).
@@ -88,6 +90,17 @@ class TimeEntry extends Model
         }
 
         return max(0, (int) $this->started_at->diffInSeconds($now ?? now(), true));
+    }
+
+    /**
+     * SQL twin of elapsedSeconds() for aggregates: stored seconds, or "now − started_at" while running.
+     * The instant is generated here (digits only), never user input.
+     */
+    public static function elapsedSecondsExpression(?Carbon $now = null, string $table = 'time_entries'): Expression
+    {
+        $instant = ($now ?? now())->copy()->utc()->format('Y-m-d H:i:s');
+
+        return DB::raw("COALESCE({$table}.seconds, GREATEST(0, TIMESTAMPDIFF(SECOND, {$table}.started_at, '{$instant}')))");
     }
 
     public function scopeRunning(Builder $query): Builder

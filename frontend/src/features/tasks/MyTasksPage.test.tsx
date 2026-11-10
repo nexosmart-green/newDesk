@@ -3,18 +3,20 @@ import userEvent from '@testing-library/user-event'
 import * as authApi from '@/features/auth/authApi'
 import * as timerApi from '@/features/timer/timerApi'
 import { buildTask, buildTimerState, page, taskStatuses } from '@/test/fixtures'
-import { buildUser, renderAt } from '@/test/renderWithProviders'
+import { mockTaskCatalogs } from '@/test/mockTaskCatalogs'
+import { buildUser, renderRoutes } from '@/test/renderWithProviders'
 import { MyTasksPage } from './MyTasksPage'
 import * as tasksApi from './tasksApi'
 import { defaultTaskFilters } from './types'
 import { taskFiltersStorageKey } from './useTaskFilters'
 
-function renderAs(userId: number) {
+function renderAs(userId: number, path = '/mis-tareas') {
   vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ id: userId }))
   vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
   vi.spyOn(tasksApi, 'fetchTaskStatuses').mockResolvedValue(taskStatuses)
+  mockTaskCatalogs()
   const fetchMine = vi.spyOn(tasksApi, 'fetchMyTasks').mockResolvedValue(page([buildTask({ id: 1, code: 'bhn-1', title: 'Mía' })]))
-  return { ...renderAt(<MyTasksPage />), fetchMine }
+  return { ...renderRoutes([{ path: '/mis-tareas', element: <MyTasksPage /> }], path), fetchMine }
 }
 
 beforeEach(() => localStorage.clear())
@@ -30,20 +32,21 @@ describe('MyTasksPage', () => {
 
   it('remembers the filters per user (RF-04.05)', async () => {
     const first = renderAs(1)
-    await screen.findByText('Hola, Ana')
+    await screen.findByRole('button', { name: 'Iniciar cronómetro en bhn-1' })
     await userEvent.click(screen.getByLabelText('Solo vencidas'))
 
     expect(JSON.parse(localStorage.getItem(taskFiltersStorageKey('mine', 1)) ?? '{}')).toMatchObject({ overdue: true })
     first.unmount()
 
     const again = renderAs(1)
-    await screen.findByText('Hola, Ana')
+    await screen.findByRole('button', { name: 'Iniciar cronómetro en bhn-1' })
     expect(screen.getByLabelText('Solo vencidas')).toBeChecked()
     await vi.waitFor(() => expect(again.fetchMine).toHaveBeenLastCalledWith({ ...defaultTaskFilters, overdue: true }))
     again.unmount()
 
     renderAs(2)
-    await screen.findByText('Hola, Ana')
+    await screen.findByText('Mía')
+    await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Iniciar cronómetro en bhn-1' })).not.toBeInTheDocument())
     expect(screen.getByLabelText('Solo vencidas')).not.toBeChecked()
   })
 
@@ -54,6 +57,23 @@ describe('MyTasksPage', () => {
     expect(await screen.findByText('Mía')).toBeInTheDocument()
     expect(screen.getByLabelText('Solo vencidas')).not.toBeChecked()
     expect(fetchMine).toHaveBeenLastCalledWith(defaultTaskFilters)
+  })
+
+  it('opens on the overdue ones from the Panel link (?vencidas=1)', async () => {
+    const { fetchMine } = renderAs(1, '/mis-tareas?vencidas=1')
+
+    expect(await screen.findByLabelText('Solo vencidas')).toBeChecked()
+    expect(fetchMine).toHaveBeenLastCalledWith({ ...defaultTaskFilters, overdue: true })
+  })
+
+  it('filters by category and label', async () => {
+    const { fetchMine } = renderAs(1)
+    await screen.findByRole('option', { name: 'Backend-API' })
+
+    await userEvent.selectOptions(screen.getByLabelText('Categoría'), 'Backend-API')
+    await userEvent.selectOptions(screen.getByLabelText('Etiqueta'), 'Deuda técnica')
+
+    await vi.waitFor(() => expect(fetchMine).toHaveBeenLastCalledWith({ ...defaultTaskFilters, category_id: 1, label_id: 8 }))
   })
 
   it('still works when storage throws', async () => {

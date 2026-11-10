@@ -101,3 +101,18 @@ export function queryParams(values: Record<string, QueryValue>): Record<string, 
   }
   return params
 }
+
+/** Time-entry lists also total the whole filter (not just the page) in `meta.total_seconds`. */
+export interface TimedPage<T> {
+  data: T[]
+  meta: Paginated<T>['meta'] & { total_seconds: number }
+}
+
+export async function timedPageOf<T>(request: Promise<{ data: TimedPage<T> }>): Promise<TimedPage<T>> {
+  try {
+    const response = await request
+    return { data: response.data.data, meta: response.data.meta }
+  } catch (error) {
+    throw toApiError(error)
+  }
+}

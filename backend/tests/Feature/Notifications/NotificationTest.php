@@ -106,3 +106,10 @@ it('respects e-mail preferences but never mutes hour-block e-mails for Admins', 
     $this->actingAs($admin)->postJson("/api/v1/projects/{$project->id}/tasks", ['title' => 'X', 'assignee_ids' => [$dev->id]]);
     Notification::assertSentTo($dev, TaskAssignedNotification::class, fn ($n, $channels) => $channels === ['database']);
 });
+
+it('links the due-tasks summary to Mis tareas, filtered to overdue when there are any', function () {
+    $dev = userWithRole(adminUser());
+
+    expect((new TasksDueNotification(dueTomorrow: [], overdue: ['bhn-1']))->toArray($dev)['path'])->toBe('/mis-tareas?vencidas=1')
+        ->and((new TasksDueNotification(dueTomorrow: ['bhn-2'], overdue: []))->toArray($dev)['path'])->toBe('/mis-tareas');
+});

@@ -7,6 +7,8 @@ export function isValidComment(comment: string): boolean {
 
 export type EntrySource = 'timer' | 'manual' | 'migration'
 
+export const entrySourceLabels: Record<EntrySource, string> = { timer: 'Cronómetro', manual: 'Manual', migration: 'Migración' }
+
 /** A worked stretch or the running timer (`TimeEntryResource`). Times are UTC ISO-8601. */
 export interface TimeEntry {
   id: number

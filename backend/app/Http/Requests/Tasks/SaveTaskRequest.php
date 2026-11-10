@@ -31,6 +31,7 @@ class SaveTaskRequest extends FormRequest
     public function rules(): array
     {
         $presence = $this->route('task') instanceof Task ? 'sometimes' : 'required';
+        $companyId = $this->user()->company_id;
 
         return [
             'title' => [$presence, 'string', 'max:255'],
@@ -41,13 +42,34 @@ class SaveTaskRequest extends FormRequest
             'estimate_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:3600000'],
             'assignee_ids' => ['sometimes', 'array', 'max:20'],
             'assignee_ids.*' => ['integer', 'distinct'],
+            'category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('task_categories', 'id')->where('company_id', $companyId)],
+            'label_ids' => ['sometimes', 'array', 'max:20'],
+            'label_ids.*' => ['integer', 'distinct', Rule::exists('task_labels', 'id')->where('company_id', $companyId)],
         ];
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'category_id.exists' => 'La categoría elegida no existe.',
+            'label_ids.*.exists' => 'Alguna de las etiquetas elegidas no existe.',
+            'label_ids.max' => 'Una tarea admite hasta 20 etiquetas.',
+        ];
+    }
+
+    /** @return array<string, mixed> Task::EDITABLE fields plus `label_ids` when sent */
     public function taskData(): array
     {
-        return $this->safe()->except('assignee_ids');
+        $data = $this->safe()->except('assignee_ids');
+        if (array_key_exists('category_id', $data)) {
+            $data['category_id'] = $data['category_id'] === null ? null : (int) $data['category_id'];
+        }
+        if (array_key_exists('label_ids', $data)) {
+            $data['label_ids'] = array_map('intval', $data['label_ids']);
+        }
+
+        return $data;
     }
 
     /** @return list<int> */

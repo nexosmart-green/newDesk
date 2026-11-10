@@ -15,7 +15,8 @@ final class McpPresenter
     /** @return array<string, mixed> */
     public static function task(Task $task): array
     {
-        $task->loadMissing(['status', 'assignees', 'project']);
+        $task->loadMissing(['status', 'assignees', 'project', 'category', 'labels']);
+        $logged = $task->loggedSeconds();
 
         return [
             'code' => $task->code,
@@ -24,8 +25,12 @@ final class McpPresenter
             'status' => $task->status->name,
             'priority' => $task->priority->value,
             'due_on' => $task->due_on?->toDateString(),
-            'overdue' => $task->isOverdue(),
+            'overdue' => $task->isOverdue(auth()->user()?->localDate()),
             'assignees' => $task->assignees->map(fn ($user) => $user->fullName())->values()->all(),
+            'logged' => self::hours($logged),
+            'logged_seconds' => $logged,
+            'category' => $task->category?->name,
+            'labels' => $task->labels->pluck('name')->all(),
         ];
     }
 

@@ -1,5 +1,6 @@
 import type { AvatarUrls } from '@/features/people/types'
-import type { TimeEntry } from '@/features/timer/types'
+import type { EntrySource, TimeEntry } from '@/features/timer/types'
+import type { TimedPage } from '@/lib/api'
 
 /** RF-04.03: what the rules read from a configurable status. Closed ones are hidden by default. */
 export type StatusKind = 'open' | 'blocked' | 'closed'
@@ -33,6 +34,22 @@ export interface TaskAssignee {
   avatar: AvatarUrls | null
 }
 
+/** Company catalog (Configuración → Catálogos). One per task. */
+export interface TaskCategory {
+  id: number
+  name: string
+  /** Only in the catalog listing. */
+  tasks_count?: number
+}
+
+/** Company catalog with a `#rrggbb` color. N per task. */
+export interface TaskLabel {
+  id: number
+  name: string
+  color: string
+  tasks_count?: number
+}
+
 export interface Task {
   id: number
   code: string
@@ -47,8 +64,14 @@ export interface Task {
   estimate_seconds: number | null
   completed_at: string | null
   assignees?: TaskAssignee[]
-  /** Only in the task detail (`GET /tasks/{code}`). */
+  /** Sum of the task's entries, the running one counted up to now (server-computed). */
+  logged_seconds?: number
+  category?: Pick<TaskCategory, 'id' | 'name'> | null
+  labels?: TaskLabel[]
+  /** Only in the task detail (`GET /tasks/{code}`). Markdown (GFM). */
   description?: string | null
+  created_by?: { id: number; full_name: string } | null
+  created_at?: string
 }
 
 /** RF-04.05. Empty `status_ids` + `include_closed: false` = every non-closed status (default). */
@@ -58,6 +81,10 @@ export interface TaskFilters {
   assignee_id: number | null
   overdue: boolean
   search: string
+  category_id: number | null
+  label_id: number | null
+  /** Only "Todas las tareas" offers it (the other lists are already one project, or mine). */
+  project_id: number | null
 }
 
 export const defaultTaskFilters: TaskFilters = {
@@ -66,6 +93,9 @@ export const defaultTaskFilters: TaskFilters = {
   assignee_id: null,
   overdue: false,
   search: '',
+  category_id: null,
+  label_id: null,
+  project_id: null,
 }
 
 export interface SaveTaskInput {
@@ -75,6 +105,8 @@ export interface SaveTaskInput {
   starts_on: string | null
   due_on: string | null
   estimate_seconds: number | null
+  category_id: number | null
+  label_ids: number[]
   assignee_ids: number[]
 }
 
@@ -108,3 +140,19 @@ export interface NewComment {
 export function isAssignedTo(task: Task, userId: number | undefined): boolean {
   return userId !== undefined && (task.assignees ?? []).some((assignee) => assignee.id === userId)
 }
+
+/** One worked stretch of a task (tab "Horas"). Never carries rates. */
+export interface TaskTimeEntry {
+  id: number
+  user: TaskAssignee
+  started_at: string
+  ended_at: string | null
+  seconds: number
+  is_running: boolean
+  comment: string | null
+  comment_pending: boolean
+  source: EntrySource
+}
+
+/** `meta.total_seconds` is the whole task's total, not the page's. */
+export type TaskTimeEntriesPage = TimedPage<TaskTimeEntry>

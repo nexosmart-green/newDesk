@@ -8,6 +8,7 @@ use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\Tasks\Models\TaskImage;
 use App\Domain\TimeTracking\Actions\TransferTaskHours;
 use Illuminate\Support\Facades\DB;
 
@@ -53,6 +54,7 @@ final class MoveTask
 
             $task->forceFill(['project_id' => $to->id, 'number' => $to->task_sequence, 'code' => $newCode])->save();
             $unassigned = $this->keepOnlyDestinationMembers($task, $to);
+            $this->moveDescriptionImages($task, $from, $to);
 
             $details = ['from' => $oldCode, 'to' => $newCode, 'seconds' => $seconds, 'unassigned' => $unassigned];
             ($this->recordActivity)('task.moved_out', $task, $actor, after: [...$details, 'project' => $to->name], projectId: $from->id);
@@ -60,6 +62,20 @@ final class MoveTask
 
             return ['task' => $task, 'seconds_moved' => $seconds, 'unassigned' => $unassigned];
         });
+    }
+
+    /**
+     * Images are authorized by their project: the ones this description shows travel with the task,
+     * or the destination's members would get broken images.
+     */
+    private function moveDescriptionImages(Task $task, Project $from, Project $to): void
+    {
+        preg_match_all('#/api/v1/task-images/([0-9a-f-]{36})#i', (string) $task->description, $matches);
+        if ($matches[1] === []) {
+            return;
+        }
+
+        TaskImage::query()->where('project_id', $from->id)->whereIn('uuid', $matches[1])->update(['project_id' => $to->id]);
     }
 
     /** @return list<string> names removed because they are not active members of the destination */

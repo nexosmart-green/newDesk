@@ -1,8 +1,9 @@
+import { ListTodo } from 'lucide-react'
 import { screen } from '@testing-library/react'
 import { MODULES } from '@/features/auth/modules'
 import { currentUserKey } from '@/features/auth/useAuth'
 import { buildUser, createTestQueryClient, renderAt } from '@/test/renderWithProviders'
-import { useNavigation } from './navigation'
+import { sectionTitle, useNavigation } from './navigation'
 import { SidebarNav } from './SidebarNav'
 
 function Nav() {
@@ -20,9 +21,12 @@ describe('navigation (module switches)', () => {
   it('shows every module the role has', () => {
     renderNavFor(Object.values(MODULES))
 
-    for (const label of ['Mis tareas', 'Mi semana', 'Calendario', 'Proyectos', 'Clientes', 'Personas']) {
+    for (const label of ['Inicio', 'Mis tareas', 'Tareas', 'Mi semana', 'Calendario', 'Proyectos', 'Clientes', 'Personas']) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
     }
+    expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: 'Mis tareas' })).toHaveAttribute('href', '/mis-tareas')
+    expect(screen.getByRole('link', { name: 'Tareas' })).toHaveAttribute('href', '/tareas')
   })
 
   it('hides the entries of a module the role lacks', () => {
@@ -32,12 +36,22 @@ describe('navigation (module switches)', () => {
     expect(screen.getByRole('link', { name: 'Mis tareas' })).toBeInTheDocument()
   })
 
-  it('without the projects module, neither Mis tareas nor Proyectos', () => {
+  it('without the projects module, neither Mis tareas, Tareas nor Proyectos (Inicio stays)', () => {
     renderNavFor([MODULES.time, MODULES.people])
 
+    expect(screen.getByRole('link', { name: 'Inicio' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Mis tareas' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Tareas' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Proyectos' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Clientes' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Mi semana' })).toBeInTheDocument()
+  })
+})
+
+describe('sectionTitle', () => {
+  it('names the list and a single task apart', () => {
+    const groups = [{ label: 'Mi trabajo', items: [{ to: '/tareas', label: 'Tareas', icon: ListTodo }] }]
+    expect(sectionTitle('/tareas', groups, [])).toBe('Tareas')
+    expect(sectionTitle('/tareas/bhn-60', groups, [])).toBe('Tarea')
   })
 })

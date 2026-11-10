@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'Juan', 'last_name' => 'Colaborador', 'email' => 'colaborador@nexosmart.com',
         ]);
 
+        $this->call(TaskCatalogSeeder::class);
         $this->sampleProject($admin, $collaborator);
     }
 

@@ -24,7 +24,7 @@ class CreateAndStartController extends Controller
         $request->validate(['previous_comment' => ['nullable', 'string', 'max:5000']]);
 
         $result = $createAndStart($request->user(), $project, $request->taskData(), $request->assigneeIds(), $request->input('previous_comment'));
-        $task = $result['task']->load(['status', 'assignees', 'project']);
+        $task = $result['task']->load(Task::RESOURCE_RELATIONS);
         $timerError = $result['timer_error'];
 
         return ApiResponse::ok([

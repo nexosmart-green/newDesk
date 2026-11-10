@@ -1,10 +1,12 @@
 import { Disclosure } from '@/components/ui/Disclosure'
 import { OptionalDateField } from '@/components/ui/OptionalDateField'
 import { SelectField } from '@/components/ui/SelectField'
-import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { formatDate } from '@/lib/dates'
+import { CategoryPicker } from '@/features/taskCatalogs/CategoryPicker'
+import { LabelPicker } from '@/features/taskCatalogs/LabelPicker'
+import { MarkdownEditor } from './description/MarkdownEditor'
 import type { TaskFormValues } from './taskForm'
 import { isTaskPriority, taskPriorities, taskPriorityLabels } from './types'
 
@@ -14,6 +16,10 @@ interface TaskFormFieldsProps {
   onChange: (changes: Partial<TaskFormValues>) => void
   /** "Más opciones" starts open (editing a task that already has dates/estimate). */
   optionsOpen?: boolean
+  /** Where pasted images are stored. */
+  projectId: number | undefined
+  /** The saved category, shown while the catalog loads. */
+  currentCategory?: { id: number; name: string } | null
 }
 
 const OPTIONAL_FIELDS = ['starts_on', 'due_on', 'estimate_seconds'] as const
@@ -29,7 +35,7 @@ function optionsSummary(values: TaskFormValues): string {
 }
 
 /** RF-04.01 fields shared by "Nueva tarea" and the task page. Dates and estimate are optional. */
-export function TaskFormFields({ values, error, onChange, optionsOpen = false }: TaskFormFieldsProps) {
+export function TaskFormFields({ values, error, onChange, optionsOpen = false, projectId, currentCategory }: TaskFormFieldsProps) {
   const optionalError = OPTIONAL_FIELDS.some((field) => fieldErrorOf(error, field))
 
   return (
@@ -42,27 +48,39 @@ export function TaskFormFields({ values, error, onChange, optionsOpen = false }:
         onChange={(event) => onChange({ title: event.target.value })}
         error={fieldErrorOf(error, 'title')}
       />
-      <TextAreaField
+      <MarkdownEditor
         label="Descripción"
-        rows={4}
         value={values.description}
-        onChange={(event) => onChange({ description: event.target.value })}
+        projectId={projectId}
+        onChange={(description) => onChange({ description })}
         error={fieldErrorOf(error, 'description')}
       />
-      <SelectField
-        label="Prioridad"
-        value={values.priority}
-        className="sm:max-w-60"
-        onChange={(event) => {
-          if (isTaskPriority(event.target.value)) onChange({ priority: event.target.value })
-        }}
-      >
-        {taskPriorities.map((priority) => (
-          <option key={priority} value={priority}>
-            {taskPriorityLabels[priority]}
-          </option>
-        ))}
-      </SelectField>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SelectField
+          label="Prioridad"
+          value={values.priority}
+          onChange={(event) => {
+            if (isTaskPriority(event.target.value)) onChange({ priority: event.target.value })
+          }}
+        >
+          {taskPriorities.map((priority) => (
+            <option key={priority} value={priority}>
+              {taskPriorityLabels[priority]}
+            </option>
+          ))}
+        </SelectField>
+        <CategoryPicker
+          value={values.category_id}
+          current={currentCategory}
+          onChange={(category_id) => onChange({ category_id })}
+          error={fieldErrorOf(error, 'category_id')}
+        />
+      </div>
+      <LabelPicker
+        selected={values.label_ids}
+        onChange={(label_ids) => onChange({ label_ids })}
+        error={fieldErrorOf(error, 'label_ids') ?? fieldErrorOf(error, 'label_ids.0')}
+      />
       {/* A validation error inside forces it open: the message must be visible. */}
       <Disclosure
         key={optionalError ? 'error' : 'ok'}

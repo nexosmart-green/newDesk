@@ -189,3 +189,113 @@ body {
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }
+
+/*
+ * Rendered markdown (task descriptions, comments). Tailwind's preflight resets every element, so the
+ * reading styles live here, in tokens, instead of a typography plugin.
+ */
+.markdown {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  max-width: 72ch;
+}
+.markdown > * + * {
+  margin-top: 0.75em;
+}
+.markdown :where(h1, h2, h3, h4) {
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-top: 1.25em;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown h1 {
+  font-size: 1.25rem;
+}
+.markdown h2 {
+  font-size: 1.125rem;
+}
+.markdown :where(h3, h4) {
+  font-size: 1rem;
+}
+.markdown :where(ul, ol) {
+  padding-left: 1.4em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li + li {
+  margin-top: 0.25em;
+}
+.markdown li::marker {
+  color: var(--color-muted);
+}
+/* GFM checklists: no bullet, the checkbox is the marker. */
+.markdown li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+.markdown input[type="checkbox"] {
+  accent-color: var(--color-brand);
+  margin-right: 0.5em;
+  vertical-align: -0.1em;
+}
+.markdown a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown strong {
+  font-weight: 600;
+}
+.markdown blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding-left: 0.9em;
+  color: var(--color-muted);
+}
+.markdown :not(pre) > code {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 0.3rem;
+  padding: 0.05em 0.35em;
+  font-size: 0.875em;
+}
+.markdown pre {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+.markdown hr {
+  border-color: var(--color-border);
+}
+.markdown table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.markdown :where(th, td) {
+  border: 1px solid var(--color-border);
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+}
+.markdown th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+}

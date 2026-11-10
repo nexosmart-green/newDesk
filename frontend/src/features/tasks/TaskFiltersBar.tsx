@@ -1,12 +1,20 @@
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
+import { useTaskCategories, useTaskLabels } from '@/features/taskCatalogs/useTaskCatalogs'
 import type { TaskFilters, TaskStatus } from './types'
+
+interface Option {
+  id: number
+  name: string
+}
 
 interface TaskFiltersBarProps {
   filters: TaskFilters
   statuses: TaskStatus[]
-  /** Project members; omitted in "Mis tareas" (they're all mine). */
+  /** People to filter by; omitted in "Mis tareas" (they're all mine). */
   members?: { id: number; full_name: string }[]
+  /** Only "Todas las tareas" (the other lists are already one project). */
+  projects?: Option[]
   onChange: (changes: Partial<TaskFilters>) => void
 }
 
@@ -25,14 +33,20 @@ function statusChanges(value: string): Partial<TaskFilters> {
   return { status_ids: [Number(value)], include_closed: false }
 }
 
-/** RF-04.05: estado (default oculta cerradas), asignado, vencidas, búsqueda por código o título. */
-export function TaskFiltersBar({ filters, statuses, members, onChange }: TaskFiltersBarProps) {
+const idOrNull = (value: string) => (value ? Number(value) : null)
+
+/** RF-04.05: estado (default oculta cerradas), asignado, categoría, etiqueta, vencidas, búsqueda por código o título. */
+export function TaskFiltersBar({ filters, statuses, members, projects, onChange }: TaskFiltersBarProps) {
+  const categories = useTaskCategories()
+  const labels = useTaskLabels()
+
   return (
-    <div className={`grid gap-3 sm:items-end ${members ? 'sm:grid-cols-[1fr_11rem_11rem_auto]' : 'sm:grid-cols-[1fr_11rem_auto]'}`}>
+    <div className="grid grid-cols-2 items-end gap-3 lg:grid-cols-4">
       <TextField
         label="Buscar"
         type="search"
         placeholder="Código o título"
+        className="col-span-2"
         value={filters.search}
         onChange={(event) => onChange({ search: event.target.value })}
       />
@@ -45,12 +59,18 @@ export function TaskFiltersBar({ filters, statuses, members, onChange }: TaskFil
           </option>
         ))}
       </SelectField>
+      {projects && (
+        <SelectField label="Proyecto" value={filters.project_id ?? ''} onChange={(event) => onChange({ project_id: idOrNull(event.target.value) })}>
+          <option value="">Todos</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </SelectField>
+      )}
       {members && (
-        <SelectField
-          label="Asignado"
-          value={filters.assignee_id ?? ''}
-          onChange={(event) => onChange({ assignee_id: event.target.value ? Number(event.target.value) : null })}
-        >
+        <SelectField label="Asignado" value={filters.assignee_id ?? ''} onChange={(event) => onChange({ assignee_id: idOrNull(event.target.value) })}>
           <option value="">Todos</option>
           {members.map((member) => (
             <option key={member.id} value={member.id}>
@@ -59,8 +79,24 @@ export function TaskFiltersBar({ filters, statuses, members, onChange }: TaskFil
           ))}
         </SelectField>
       )}
-      <label className="flex items-center gap-2 py-2 text-sm">
-        <input type="checkbox" checked={filters.overdue} onChange={(event) => onChange({ overdue: event.target.checked })} />
+      <SelectField label="Categoría" value={filters.category_id ?? ''} onChange={(event) => onChange({ category_id: idOrNull(event.target.value) })}>
+        <option value="">Todas</option>
+        {(categories.data ?? []).map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField label="Etiqueta" value={filters.label_id ?? ''} onChange={(event) => onChange({ label_id: idOrNull(event.target.value) })}>
+        <option value="">Todas</option>
+        {(labels.data ?? []).map((label) => (
+          <option key={label.id} value={label.id}>
+            {label.name}
+          </option>
+        ))}
+      </SelectField>
+      <label className="col-span-2 flex min-h-11 items-center gap-2 text-sm sm:col-span-1">
+        <input type="checkbox" checked={filters.overdue} onChange={(event) => onChange({ overdue: event.target.checked })} className="size-4 accent-brand" />
         Solo vencidas
       </label>
     </div>

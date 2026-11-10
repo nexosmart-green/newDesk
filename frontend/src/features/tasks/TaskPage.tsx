@@ -1,46 +1,32 @@
+import { ArrowLeft, Clock } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
-import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
-import { useCan, useCurrentUser } from '@/features/auth/useAuth'
+import { Tabs, type TabItem } from '@/components/ui/Tabs'
+import { MODULES, useHasModule } from '@/features/auth/modules'
+import { useCurrentUser, useProfileTimeZone } from '@/features/auth/useAuth'
 import { useProject } from '@/features/projects/useProjects'
+import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { ApiError } from '@/lib/api'
-import { ManualTimeForm } from './ManualTimeForm'
-import { MoveTaskPanel } from './MoveTaskPanel'
+import { formatInstant } from '@/lib/dates'
+import { formatDuration } from '@/lib/duration'
 import { TaskDue, TaskStatusLabel } from './TaskBits'
-import { TaskAssigneesEditor } from './TaskAssigneesEditor'
 import { TaskComments } from './TaskComments'
-import { TaskDetailsForm } from './TaskDetailsForm'
-import { TaskStatusSelect } from './TaskStatusSelect'
+import { TaskDetailTab } from './TaskDetailTab'
+import { TaskHistoryTab } from './TaskHistoryTab'
+import { TaskHoursTab } from './TaskHoursTab'
 import { isAssignedTo, type Task } from './types'
-import { useTask, useTaskStatuses, useUpdateTaskStatus } from './useTasks'
+import { useTask } from './useTasks'
 
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
-      <h2 className="font-semibold">{title}</h2>
-      {children}
-    </section>
-  )
-}
+type TaskTab = 'detalle' | 'comentarios' | 'horas' | 'historial'
 
-function StatusPanel({ task }: { task: Task }) {
-  const statuses = useTaskStatuses()
-  const updateStatus = useUpdateTaskStatus()
-  return (
-    <div className="space-y-2">
-      <TaskStatusSelect
-        code={task.code}
-        statusId={task.status?.id}
-        statuses={statuses.data ?? []}
-        disabled={updateStatus.isPending}
-        onChange={(statusId) => updateStatus.mutate({ code: task.code, statusId })}
-      />
-      <FieldErrorsAlert error={updateStatus.error} />
-    </div>
-  )
-}
+const allTabs: TabItem<TaskTab>[] = [
+  { id: 'detalle', label: 'Detalle' },
+  { id: 'comentarios', label: 'Comentarios' },
+  { id: 'horas', label: 'Horas' },
+  { id: 'historial', label: 'Historial' },
+]
 
 /** `/tareas/:code` — the page notifications and the header timer link to. */
 export function TaskPage() {
@@ -53,63 +39,92 @@ export function TaskPage() {
       <section className="space-y-2">
         <h1 className="text-lg font-semibold">Tarea no encontrada</h1>
         <p className="text-sm text-muted">No existe o no sos miembro del proyecto.</p>
-        <Link to="/" className="text-sm text-accent">
+        <Link to="/mis-tareas" className="text-sm text-accent">
           Volver a Mis tareas
         </Link>
       </section>
     )
   }
   if (!task.data) return <PageState isPending={task.isPending} error={task.error} shape="detail" onRetry={() => void task.refetch()} />
-  return <TaskView task={task.data} projectId={task.data.project?.id ?? 0} />
+  return <TaskView task={task.data} />
 }
 
-function TaskView({ task: current, projectId }: { task: Task; projectId: number }) {
+/** The selected tab lives in `?tab=` so a link (or reload) lands on the same one. */
+function useTaskTab(tabs: TabItem<TaskTab>[]) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requested = searchParams.get('tab')
+  const selected = tabs.find((tab) => tab.id === requested)?.id ?? 'detalle'
+  const select = (tab: TaskTab) =>
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (tab === 'detalle') next.delete('tab')
+        else next.set('tab', tab)
+        return next
+      },
+      { replace: true },
+    )
+  return { selected, select }
+}
+
+function TaskView({ task }: { task: Task }) {
   const userId = useCurrentUser().data?.id
-  const canAssign = useCan('tasks.assign')
-  const project = useProject(projectId)
+  const hasTime = useHasModule(MODULES.time)
+  const project = useProject(task.project?.id ?? 0)
   const members = project.data?.members ?? []
-  const mine = isAssignedTo(current, userId)
+  const mine = isAssignedTo(task, userId)
+  const tabs = hasTime ? allTabs : allTabs.filter((tab) => tab.id !== 'horas')
+  const { selected, select } = useTaskTab(tabs)
 
   return (
-    <section className="max-w-3xl space-y-4">
-      {current.project && (
-        <Link to={`/proyectos/${current.project.id}/tareas`} className="text-sm text-accent">
-          ← {current.project.name}
+    <section className="max-w-6xl space-y-5">
+      {task.project && (
+        <Link to={`/proyectos/${task.project.id}/tareas`} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          {task.project.name}
         </Link>
       )}
-      <header className="flex flex-wrap items-start gap-3">
-        <div className="min-w-0 flex-1 space-y-1">
-          <p className="font-mono text-sm uppercase text-muted">{current.code}</p>
-          <h1 className="text-lg font-semibold">{current.title}</h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <TaskStatusLabel status={current.status} />
-            <TaskDue task={current} />
-          </div>
-        </div>
-        {mine && <StartTimerButton task={current} />}
-      </header>
-      <Panel title="Estado">
-        <StatusPanel task={current} />
-      </Panel>
-      <Panel title="Detalles">
-        <TaskDetailsForm key={current.id} task={current} />
-      </Panel>
-      <Panel title="Asignados">
-        {canAssign && project.data ? (
-          <TaskAssigneesEditor key={current.id} task={current} members={members} />
-        ) : (
-          <p className="text-sm">{(current.assignees ?? []).map((assignee) => assignee.full_name).join(', ') || 'Sin asignar'}</p>
-        )}
-      </Panel>
-      {mine && (
-        <Panel title="Cargar horas">
-          <ManualTimeForm taskCode={current.code} projectId={current.project?.id} />
-        </Panel>
-      )}
-      <TaskComments code={current.code} members={members} />
-      <Panel title="Mover a otro proyecto">
-        <MoveTaskPanel key={current.id} task={current} />
-      </Panel>
+      <TaskHeader task={task} showLogged={hasTime} timer={mine ? <StartTimerButton task={task} /> : null} />
+      <Tabs label="Secciones de la tarea" tabs={tabs} selected={selected} onSelect={select}>
+        {selected === 'detalle' && <TaskDetailTab task={task} members={members} membersLoaded={Boolean(project.data)} />}
+        {selected === 'comentarios' && <TaskComments code={task.code} members={members} />}
+        {selected === 'horas' && <TaskHoursTab task={task} canLog={mine} />}
+        {selected === 'historial' && <TaskHistoryTab code={task.code} />}
+      </Tabs>
     </section>
+  )
+}
+
+function TaskHeader({ task, showLogged, timer }: { task: Task; showLogged: boolean; timer: ReactNode }) {
+  const timeZone = useProfileTimeZone()
+  return (
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <div className="min-w-0 flex-1 space-y-2">
+        <p className="font-mono text-sm uppercase text-muted">{task.code}</p>
+        <h1 className="text-xl font-semibold leading-snug tracking-tight text-balance">{task.title}</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <TaskStatusLabel status={task.status} />
+          <TaskDue task={task} />
+          <CategoryTag category={task.category} />
+          <LabelChips labels={task.labels} />
+        </div>
+        {task.created_at && (
+          <p className="text-xs text-muted">
+            Creada {task.created_by ? `por ${task.created_by.full_name} ` : ''}el{' '}
+            <time dateTime={task.created_at}>{formatInstant(task.created_at, timeZone)}</time>
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-3">
+        {showLogged && task.logged_seconds !== undefined && (
+          <p className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+            <Clock aria-hidden="true" className="size-4 text-accent" />
+            <span className="sr-only">Horas registradas:</span>
+            <span className="tabular text-sm font-semibold">{formatDuration(task.logged_seconds)}</span>
+          </p>
+        )}
+        {timer}
+      </div>
+    </header>
   )
 }

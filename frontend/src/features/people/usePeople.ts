@@ -15,8 +15,10 @@ export const peopleKey = ['people'] as const
 const personKey = (id: number) => [...peopleKey, 'detail', id] as const
 const ratesKey = (id: number) => [...peopleKey, 'rates', id] as const
 
-export function usePeople(filters: DirectoryFilters) {
+/** `enabled: false` for roles without the people module (selectors that would 403). */
+export function usePeople(filters: DirectoryFilters, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: [...peopleKey, 'list', filters],
     queryFn: () => fetchPeople(filters),
     placeholderData: keepPreviousData,

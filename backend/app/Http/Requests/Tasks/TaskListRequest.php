@@ -29,6 +29,8 @@ class TaskListRequest extends FormRequest
             'include_closed' => ['sometimes', 'boolean'],
             'assignee_id' => ['sometimes', 'nullable', 'integer'],
             'project_id' => ['sometimes', 'nullable', 'integer'],
+            'category_id' => ['sometimes', 'nullable', 'integer'],
+            'label_id' => ['sometimes', 'nullable', 'integer'],
             'overdue' => ['sometimes', 'boolean'],
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
             'per_page' => ['sometimes', 'integer', 'between:1,200'],
@@ -41,8 +43,10 @@ class TaskListRequest extends FormRequest
         return [
             'status_ids' => array_map('intval', $this->validated('status_ids', [])),
             'include_closed' => $this->boolean('include_closed'),
-            'assignee_id' => $this->filled('assignee_id') ? $this->integer('assignee_id') : null,
-            'project_id' => $this->filled('project_id') ? $this->integer('project_id') : null,
+            'assignee_id' => $this->optionalInt('assignee_id'),
+            'project_id' => $this->optionalInt('project_id'),
+            'category_id' => $this->optionalInt('category_id'),
+            'label_id' => $this->optionalInt('label_id'),
             'overdue' => $this->boolean('overdue'),
             'search' => $this->validated('search'),
         ];
@@ -51,5 +55,10 @@ class TaskListRequest extends FormRequest
     public function perPage(): int
     {
         return $this->integer('per_page', 50);
+    }
+
+    private function optionalInt(string $key): ?int
+    {
+        return $this->filled($key) ? $this->integer($key) : null;
     }
 }

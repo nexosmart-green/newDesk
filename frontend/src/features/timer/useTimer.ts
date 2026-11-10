@@ -18,8 +18,11 @@ import { broadcastTimerChanged, subscribeTimerChanged } from './timerSync'
 import type { CorrectEntryInput, ManualEntryInput } from './types'
 
 export { timerKey }
-/** Everything a time entry can move: the header, project bags, the hours tab, Mi semana. */
-const timeDependentKeys = [timerKey, ['hours'], ['timesheet'], ['projects']] as const
+/**
+ * Everything a time entry can move: the header, project bags, the hours tab, Mi semana and its
+ * history, the tasks' logged hours (lists + detail "Horas") and the Panel's week.
+ */
+const timeDependentKeys = [timerKey, ['hours'], ['timesheet'], ['projects'], ['tasks'], ['dashboard']] as const
 
 export const TIMER_POLL_MS = 30_000
 

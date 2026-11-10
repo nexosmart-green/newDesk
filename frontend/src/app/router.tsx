@@ -6,7 +6,7 @@ import { HomePage } from './HomePage'
 
 /**
  * Each feature module adds its routes as children of the authenticated layout. Everything except
- * the login and "Mis tareas" (the page people open every morning) is lazy so the main chunk stays small.
+ * the login and the Panel (the page people open every morning) is lazy so the main chunk stays small.
  */
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -38,6 +38,11 @@ export const router = createBrowserRouter([
             path: '/mi-semana',
             lazy: async () => ({ Component: (await import('@/features/timesheet/MyWeekPage')).MyWeekPage }),
           },
+          {
+            path: '/mis-tareas',
+            lazy: async () => ({ Component: (await import('@/features/tasks/MyTasksPage')).MyTasksPage }),
+          },
+          { path: '/tareas', lazy: async () => ({ Component: (await import('@/features/tasks/AllTasksPage')).AllTasksPage }) },
           { path: '/tareas/:code', lazy: async () => ({ Component: (await import('@/features/tasks/TaskPage')).TaskPage }) },
           {
             path: '/personas',

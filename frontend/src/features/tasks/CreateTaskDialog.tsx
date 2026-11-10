@@ -116,6 +116,7 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
         <TaskFormFields
           values={values}
           error={error}
+          projectId={projectId}
           onChange={(changes) => {
             setTitleMissing(false)
             setValues((current) => ({ ...current, ...changes }))

@@ -5,6 +5,7 @@ import * as projectsApi from '@/features/projects/projectsApi'
 import * as timerApi from '@/features/timer/timerApi'
 import { ApiError } from '@/lib/api'
 import { buildPerson, buildProject, buildTask, buildTimerState, page, taskStatuses } from '@/test/fixtures'
+import { mockTaskCatalogs } from '@/test/mockTaskCatalogs'
 import { buildUser, renderRoutes } from '@/test/renderWithProviders'
 import { TaskPage } from './TaskPage'
 import * as tasksApi from './tasksApi'
@@ -12,13 +13,14 @@ import * as tasksApi from './tasksApi'
 const ana = buildPerson({ id: 1 })
 const juan = buildPerson({ id: 2, first_name: 'Juan', last_name: 'Pérez' })
 
-function renderTask() {
+function renderTask(path = '/tareas/bhn-60') {
   vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser())
   vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
   vi.spyOn(tasksApi, 'fetchTaskStatuses').mockResolvedValue(taskStatuses)
   vi.spyOn(tasksApi, 'fetchTaskComments').mockResolvedValue(page([]))
   vi.spyOn(projectsApi, 'fetchProject').mockResolvedValue(buildProject({ members: [ana, juan] }))
-  renderRoutes([{ path: '/tareas/:code', element: <TaskPage /> }], '/tareas/bhn-60')
+  mockTaskCatalogs()
+  renderRoutes([{ path: '/tareas/:code', element: <TaskPage /> }], path)
 }
 
 describe('TaskPage', () => {
@@ -33,8 +35,9 @@ describe('TaskPage', () => {
     })
     renderTask()
 
-    const box = await screen.findByLabelText('Nuevo comentario')
     await screen.findByRole('button', { name: 'Iniciar cronómetro en bhn-60' })
+    await userEvent.click(screen.getByRole('tab', { name: 'Comentarios' }))
+    const box = await screen.findByLabelText('Nuevo comentario')
     await userEvent.type(box, 'Mirá esto @Ju')
     await userEvent.click(await screen.findByRole('option', { name: 'Juan Pérez' }))
     expect(box).toHaveValue('Mirá esto @Juan Pérez ')
@@ -45,7 +48,7 @@ describe('TaskPage', () => {
 
   it('picks a mention with the keyboard', async () => {
     vi.spyOn(tasksApi, 'fetchTask').mockResolvedValue(buildTask())
-    renderTask()
+    renderTask('/tareas/bhn-60?tab=comentarios')
 
     const box = await screen.findByLabelText('Nuevo comentario')
     await userEvent.type(box, '@')

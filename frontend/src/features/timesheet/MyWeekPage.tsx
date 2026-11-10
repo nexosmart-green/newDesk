@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
+import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { PendingCommentDialog } from '@/features/timer/PendingCommentDialog'
 import type { PendingEntrySummary } from '@/features/timer/pendingEntry'
 import { formatDuration } from '@/lib/duration'
+import { TimeHistoryTab } from './TimeHistoryTab'
 import { TimesheetDaySection } from './TimesheetDaySection'
 import type { Timesheet, TimesheetEntry } from './types'
 import { useTimesheet } from './useTimesheet'
@@ -24,8 +26,41 @@ function findEntry(timesheet: Timesheet | undefined, id: number): TimesheetEntry
   return timesheet?.days.flatMap((day) => day.entries).find((entry) => entry.id === id)
 }
 
-/** RF-05.12 "Mi semana": personal timesheet Monday–Sunday with daily totals. */
+type WeekView = 'semana' | 'historial'
+
+const views: TabItem<WeekView>[] = [
+  { id: 'semana', label: 'Semana' },
+  { id: 'historial', label: 'Historial' },
+]
+
+/** RF-05.12 "Mi semana": the Monday–Sunday timesheet, and "Historial" for any range (`?vista=historial`). */
 export function MyWeekPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view: WeekView = searchParams.get('vista') === 'historial' ? 'historial' : 'semana'
+
+  function selectView(next: WeekView) {
+    setSearchParams(
+      (current) => {
+        const params = new URLSearchParams(current)
+        if (next === 'semana') params.delete('vista')
+        else params.set('vista', next)
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  return (
+    <section className="max-w-4xl space-y-4">
+      <h1 className="text-lg font-semibold">Mi semana</h1>
+      <Tabs label="Vistas de horas" tabs={views} selected={view} onSelect={selectView}>
+        {view === 'semana' ? <WeekTimesheet /> : <TimeHistoryTab />}
+      </Tabs>
+    </section>
+  )
+}
+
+function WeekTimesheet() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { week, isCurrentWeek, goToWeek } = useWeekParam()
   const timesheet = useTimesheet(week.from, week.to)
@@ -47,16 +82,15 @@ export function MyWeekPage() {
   }
 
   return (
-    <section className="max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Mi semana</h1>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
         {timesheet.data && (
           <p className="text-sm">
             Total de la semana: <strong className="font-mono">{formatDuration(timesheet.data.total_seconds)}</strong>
           </p>
         )}
       </div>
-      <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
       {!timesheet.data ? (
         <PageState isPending={timesheet.isPending} error={timesheet.error} shape="table" onRetry={() => void timesheet.refetch()} />
       ) : (
@@ -78,6 +112,6 @@ export function MyWeekPage() {
           onClose={() => updateParams({ revisar: null })}
         />
       )}
-    </section>
+    </div>
   )
 }

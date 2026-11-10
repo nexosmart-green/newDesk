@@ -1,5 +1,5 @@
 /** Any of these grants access to /configuracion (UI hint; the backend authorizes each call). */
-export const SETTINGS_PERMISSIONS = ['company.manage', 'roles.manage', 'users.manage', 'mcp.manage_tokens'] as const
+export const SETTINGS_PERMISSIONS = ['company.manage', 'roles.manage', 'users.manage', 'projects.manage', 'mcp.manage_tokens'] as const
 
 export interface SettingsTab {
   path: string
@@ -13,7 +13,8 @@ export const settingsTabs: readonly SettingsTab[] = [
   { path: 'empresa', label: 'Empresa', permissions: ['company.manage', 'roles.manage', 'users.manage'] },
   { path: 'roles', label: 'Roles', permissions: ['roles.manage', 'users.manage'] },
   { path: 'usuarios', label: 'Usuarios', permissions: ['users.manage'] },
-  { path: 'catalogos', label: 'Catálogos', permissions: ['users.manage'] },
+  // People catalogs (`users.manage`) and task categories/labels (`projects.manage`).
+  { path: 'catalogos', label: 'Catálogos', permissions: ['users.manage', 'projects.manage'] },
   { path: 'feriados', label: 'Feriados', permissions: ['company.manage'] },
   { path: 'tokens-ia', label: 'Tokens de IA', permissions: ['mcp.manage_tokens'] },
 ]

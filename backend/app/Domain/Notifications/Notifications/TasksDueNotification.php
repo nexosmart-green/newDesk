@@ -44,6 +44,6 @@ final class TasksDueNotification extends AppNotification
 
     protected function path(): string
     {
-        return '/';
+        return $this->overdue !== [] ? '/mis-tareas?vencidas=1' : '/mis-tareas';
     }
 }

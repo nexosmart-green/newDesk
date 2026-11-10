@@ -154,4 +154,10 @@ class User extends Authenticatable
     {
         return $this->timezone ?? $this->company->timezone;
     }
+
+    /** Today's date (Y-m-d) where the person is: due dates and "overdue" are judged on this day. */
+    public function localDate(): string
+    {
+        return now($this->effectiveTimezone())->toDateString();
+    }
 }
