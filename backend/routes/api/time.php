@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\TimeTracking\CreateAndStartController;
+use App\Http\Controllers\Api\V1\TimeTracking\DayClockController;
 use App\Http\Controllers\Api\V1\TimeTracking\HourExtensionController;
 use App\Http\Controllers\Api\V1\TimeTracking\ProjectHoursController;
 use App\Http\Controllers\Api\V1\TimeTracking\TimeEntryController;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('module:time')->group(function () {
     Route::get('/me/timer', [TimerController::class, 'show']);
     Route::post('/me/timer/stop', [TimerController::class, 'stop']);
+    Route::post('/me/day-clock', [DayClockController::class, 'start']);
+    Route::post('/me/day-clock/stop', [DayClockController::class, 'stop']);
+    Route::post('/me/day-clocks/{dayClock}/split', [DayClockController::class, 'split']);
     Route::post('/tasks/{task}/timer', [TimerController::class, 'start']);
     Route::post('/projects/{project}/tasks/start', CreateAndStartController::class);
     Route::get('/me/timesheet', [TimeEntryController::class, 'timesheet']);

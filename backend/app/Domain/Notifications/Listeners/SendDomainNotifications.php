@@ -6,6 +6,7 @@ use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Notifications\Actions\Recipients;
 use App\Domain\Notifications\Notifications\ExtensionRequestedNotification;
+use App\Domain\Notifications\Notifications\HoursOverdrawnNotification;
 use App\Domain\Notifications\Notifications\HoursThresholdNotification;
 use App\Domain\Notifications\Notifications\MentionedNotification;
 use App\Domain\Notifications\Notifications\ShiftChangedNotification;
@@ -15,6 +16,7 @@ use App\Domain\Scheduling\Events\ShiftsChanged;
 use App\Domain\Tasks\Events\CommentPosted;
 use App\Domain\Tasks\Events\TaskAssigned;
 use App\Domain\TimeTracking\Enums\StopReason;
+use App\Domain\TimeTracking\Events\HourBagOverdrawn;
 use App\Domain\TimeTracking\Events\HourExtensionRequested;
 use App\Domain\TimeTracking\Events\HourThresholdReached;
 use App\Domain\TimeTracking\Events\TimerAutoStopped;
@@ -45,6 +47,16 @@ final class SendDomainNotifications
         Notification::send(
             $this->recipients->adminsAndLeader($event->project),
             new HoursThresholdNotification($event->project->id, $event->project->name, $event->percent),
+        );
+    }
+
+    /** RF-05.19 / CA-05.19f: every split that overdraws tells Admin + leader, even if the bag was already negative. */
+    public function onHourBagOverdrawn(HourBagOverdrawn $event): void
+    {
+        $minutes = intdiv($event->seconds, 60);
+        Notification::send(
+            $this->recipients->adminsAndLeader($event->project),
+            new HoursOverdrawnNotification($event->project->id, $event->project->name, $event->user->fullName(), sprintf('%dh %02dm', intdiv($minutes, 60), $minutes % 60)),
         );
     }
 
@@ -95,6 +107,7 @@ final class SendDomainNotifications
             TaskAssigned::class => 'onTaskAssigned',
             CommentPosted::class => 'onCommentPosted',
             HourThresholdReached::class => 'onHourThreshold',
+            HourBagOverdrawn::class => 'onHourBagOverdrawn',
             TimerAutoStopped::class => 'onTimerAutoStopped',
             HourExtensionRequested::class => 'onExtensionRequested',
         ];

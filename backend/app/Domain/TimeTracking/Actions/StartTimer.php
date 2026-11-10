@@ -37,6 +37,7 @@ final class StartTimer
 
         return $this->lock->run($user->id, function () use ($user, $task, $previousComment) {
             $this->rules->assertNoPendingComment($user);
+            $this->rules->assertNoDayClock($user);
 
             $active = $this->activeEntry($user);
             if ($active?->task_id === $task->id) {

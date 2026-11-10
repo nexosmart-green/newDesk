@@ -2,8 +2,10 @@
 
 namespace App\Mcp\Support;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\TimeTracking\Models\DayClock;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Domain\TimeTracking\Support\HourBag;
 
@@ -46,6 +48,23 @@ final class McpPresenter
                 'percent_consumed' => $bag->percentConsumed(),
                 'blocked' => $bag->isExhausted(),
             ],
+        ];
+    }
+
+    /** RF-05.19: the day clock is shown here but started and split only on the web. @return array<string, mixed>|null */
+    public static function dayClock(User $user): ?array
+    {
+        $day = DayClock::query()->forCompany($user->company_id)->where('user_id', $user->id)->unsplit()->with('user.company')->first();
+
+        return $day === null ? null : [
+            'status' => $day->isRunning() ? 'running' : 'pending',
+            'started_at' => $day->started_at->toIso8601String(),
+            'ended_at' => $day->ended_at?->toIso8601String(),
+            'cutoff_at' => $day->cutoffAt()->toIso8601String(),
+            'elapsed' => self::hours($day->elapsedSeconds()),
+            'notice' => $day->isRunning()
+                ? 'Tenés el reloj del día corriendo: frenalo y repartilo en la web.'
+                : 'Tenés un día sin repartir: repartilo en la web antes de iniciar un cronómetro.',
         ];
     }
 

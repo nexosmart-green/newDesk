@@ -31,6 +31,8 @@ final class CreateAndStartTask
     public function __invoke(User $user, Project $project, array $data, array $assigneeIds, ?string $previousComment): array
     {
         $this->rules->assertNoPendingComment($user);
+        // Before creating anything: with a day clock the task would be created and the timer refused (CA-05.19b).
+        $this->rules->assertNoDayClock($user);
         $running = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->exists();
         if ($running) {
             $this->rules->assertValidComment($previousComment, 'previous_comment_required');

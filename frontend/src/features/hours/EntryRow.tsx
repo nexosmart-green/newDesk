@@ -1,12 +1,10 @@
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import type { EntrySource, TimeEntry } from '@/features/timer/types'
+import { entrySourceLabels, type TimeEntry } from '@/features/timer/types'
 import { formatDuration } from '@/lib/duration'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
 import { formatEntryRange } from './entryTimes'
-
-const sourceLabels: Record<EntrySource, string> = { timer: 'Cronómetro', manual: 'Manual', migration: 'Migración' }
 
 interface EntryRowProps {
   entry: TimeEntry
@@ -24,7 +22,7 @@ export function EntryRow({ entry, canChange, onEdit, onDelete }: EntryRowProps) 
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-medium">{formatDuration(entry.elapsed_seconds)}</span>
           <span className="text-muted">{formatEntryRange(entry.started_at, entry.ended_at, timeZone)}</span>
-          <Badge>{sourceLabels[entry.source]}</Badge>
+          <Badge>{entrySourceLabels[entry.source]}</Badge>
           {entry.is_running && <Badge tone="accent">En curso</Badge>}
         </p>
         <p>

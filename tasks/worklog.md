@@ -62,3 +62,11 @@
 - Pedido del usuario: crear tareas desde Mis tareas eligiendo el proyecto y poder arrancar el cronómetro con ▶.
 - `CreateTaskDialog` recibe `project?`; sin proyecto muestra el selector (activos que la persona ve, uno solo viene elegido) y marca a la persona como asignada si es miembro. Reusa "▶ Crear e iniciar" de main. `MyTasksPage` suma el botón (módulo Proyectos). `ACTIVE_PROJECTS` pasa a `useProjects.ts` (lo usan también "Mover a otro proyecto").
 - Probado en vivo como colaborador: bhn-2 creada con el cronómetro corriendo en el header y ■ en la lista. Front 304 tests, typecheck, lint y build ok.
+
+## 2026-11-10 — Reloj del día (RF-05.19)
+
+- Pedido: un único reloj por día que al frenarlo se reparte en partes (desde–hasta, proyecto, tarea, qué hiciste). UI elegida por el usuario: propuesta A "Línea del día" (mock en `frontend/public/propuestas-repartir-dia.html`, se borra al cerrar).
+- Decisiones del usuario: tarea mía o nueva; convive con el ▶ sin correr a la vez; huecos no cuentan; una parte puede dejar la bolsa en negativo (se guarda y avisa); los ▶ que corrían en ese proyecto no se cortan y guardan su tiempo (R-6, `time_entries.uncapped`), después nadie carga horas ahí salvo otro reparto; un día sin repartir bloquea el ▶ y otro día; corte a medianoche local.
+- Backend: tabla `day_clocks` (UNIQUE `unsplit_user_id`, invariante 7), `StartDayClock` / `StopDayClock` (+ `overdue` en `timers:cut`) / `SplitDayClock` (una transacción: día → proyectos por id → `CreateTask` como savepoint → `uncapped` → entries `source=day_clock`), `TimerRules::assertOpen` / `assertNoDayClock` (en `StartTimer` dentro del lock y en `CreateAndStartTask` antes de crear), `HourBagOverdrawn` → `HoursOverdrawnNotification` a Admin + líder, `day_clock` en `/me/timer`, `whoami` y `get_active_timer`.
+- MariaDB local (explicit_defaults_for_timestamp=OFF) le ponía ON UPDATE CURRENT_TIMESTAMP implícito al primer TIMESTAMP de la tabla: actualizar un registro corriendo le pisaba `started_at`. Arreglado en `day_clocks` y `time_entries` con un default explícito (migración `000400`). En MySQL 8 no pasaba; si producción es MariaDB, revisar otras tablas.
+- Tests: `DayClockTest` (8, CA-05.19a–i) y `DayClockConcurrencyTest` (QA-15..18 con procesos reales).

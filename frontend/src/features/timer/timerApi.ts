@@ -1,5 +1,5 @@
 import { api, dataOf, envelopeOf, type ApiEnvelope } from '@/lib/api'
-import type { CorrectEntryInput, ManualEntryInput, TimeEntry, TimerState } from './types'
+import type { CorrectEntryInput, DayClock, DayPartInput, DaySplitResult, ManualEntryInput, TimeEntry, TimerState } from './types'
 
 const taskPath = (code: string) => `/tasks/${encodeURIComponent(code)}`
 
@@ -34,4 +34,18 @@ export async function correctTimeEntry(entryId: number, input: CorrectEntryInput
 
 export async function deleteTimeEntry(entryId: number): Promise<string | null> {
   return (await envelopeOf(api.delete<ApiEnvelope<null>>(`/time-entries/${entryId}`))).message
+}
+
+/** RF-05.19 day clock. */
+export async function startDay(): Promise<DayClock> {
+  return dataOf(api.post<ApiEnvelope<DayClock>>('/me/day-clock'))
+}
+
+export async function stopDay(): Promise<DayClock> {
+  return dataOf(api.post<ApiEnvelope<DayClock>>('/me/day-clock/stop'))
+}
+
+/** Empty `parts` = nothing to count that day (the clock is discarded). */
+export async function splitDay(dayClockId: number, parts: DayPartInput[]): Promise<ApiEnvelope<DaySplitResult>> {
+  return envelopeOf(api.post<ApiEnvelope<DaySplitResult>>(`/me/day-clocks/${dayClockId}/split`, { parts }))
 }

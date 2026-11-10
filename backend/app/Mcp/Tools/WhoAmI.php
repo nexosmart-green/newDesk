@@ -27,6 +27,7 @@ class WhoAmI extends NewDeskTool
             'role' => $user->role->name,
             'permissions' => $user->role->permissionValues(),
             'active_timer' => $active ? McpPresenter::entry($active) : null,
+            'day_clock' => McpPresenter::dayClock($user),
             'pending_comments' => $pending->map(fn (TimeEntry $entry) => McpPresenter::entry($entry))->values()->all(),
             'notice' => $pending->isNotEmpty() ? 'Completá los comentarios pendientes con complete_pending_comment antes de iniciar otro cronómetro.' : null,
         ]);

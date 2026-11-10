@@ -24,7 +24,7 @@ Identity      usuarios, roles, perfil, catálogos (puestos, áreas, habilidades)
 Clients       clientes y contactos
 Projects      proyectos, miembros, actividad
 Tasks         tareas, estados, comentarios, adjuntos, secuencia de códigos
-TimeTracking  timers, registros, bolsa de horas (asignaciones), cortes   ⭐
+TimeTracking  timers, registros, bolsa de horas (asignaciones), cortes, reloj del día (RF-05.19)   ⭐
 Scheduling    turnos, plantillas, feriados, feed iCal
 Attendance    marcas crudas, mapeo, jornadas           (R2)
 Leaves        licencias                                (R2)
@@ -52,6 +52,7 @@ Support       reportes de clientes, chat, roadmap                              (
 2. **Bolsa por ledger.** `hour_allocations` solo inserta. Disponibles se calcula; se cachea en `projects.consumed_seconds` actualizado en la misma transacción que cierra un registro (y se reconcilia con un job nocturno que alerta si difiere).
 3. **Corte automático.** Job cada minuto: proyectos con timers activos donde `bolsa − consumido_cerrado − Σ(now − started_at activos) ≤ 0` → cerrar timers recortando el último tramo; evento por WebSocket.
 4. **Iniciar timer** = transacción con `SELECT … FOR UPDATE` sobre el proyecto (regla R-2).
+   **Reloj del día** (RF-05.19): `day_clocks` (≤1 sin repartir por persona, UNIQUE `unsplit_user_id`). Repartir = una transacción que bloquea el día y después los proyectos por id (R-6), crea las tareas nuevas como savepoint y escribe registros `source=day_clock`; si deja la bolsa en negativo, los ▶ que corrían quedan `uncapped` (ni corte por bolsa ni recorte).
 5. **Ingesta de cerradura** desacoplada: adaptador por proveedor → tabla `access_events_raw` (idempotente por `(device_id, external_id)` o hash) → normalizador → jornadas. La caída del proveedor nunca rompe el resto del sistema.
 
 6. **Una sola capa de reglas.** Controllers HTTP y tools MCP son adaptadores delgados sobre los mismos servicios/actions de dominio (`StartTimer`, `StopTimer`, `CreateTask`, `AllocateHours`…) + mismas policies. Prohibido poner reglas de negocio en un controller o en una tool.

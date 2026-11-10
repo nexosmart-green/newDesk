@@ -6,6 +6,7 @@
 - Carga inicial: clientes y proyectos a mano en newDesk → `monitoring:import --dry-run` → sesión en vivo con Playwright para revisar las parejas → `--link=<slug>:<código>` donde haga falta → importación real (`docs/06-migracion/corte-monitoreo.md` §2).
 - Falta ejecutar el corte del monitoreo en producción: ver `docs/06-migracion/corte-monitoreo.md` (bloqueantes en la sección 0).
 - Local: PHP 8.3 en `C:\tools\php83\php.exe` (el de XAMPP es 8.2), MariaDB de XAMPP en 3306 (`newdesk`, `newdesk_testing`). Sin Redis local: el test de `/health` falla por eso.
+- Reloj del día (RF-05.19): confirmar con el usuario los comportamientos que eligió el front (hora tipeada se aplica al salir del campo, "Agregar parte" llena el hueco más grande, "Repartir más tarde" descarta lo cargado). Local: proyecto de prueba "Cliente Dos" (cdos) y un ▶ del admin corriendo en cdos-1.
 
 Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: `feat/monitoreo`.
 
@@ -24,6 +25,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: `fea
 - [ ] E8 Puesta en marcha — guía lista (`docs/09-operacion/puesta-en-marcha.md`); falta servidor de staging, `.claude/bug-report.json`, backups (RNF-09)
 
 - [x] RF-04.12 Mover tareas entre proyectos con sus horas (pedido 2026-11-06) — confirmar defaults P-27
+- [x] RF-05.19 Reloj del día: un reloj por día, se reparte entre proyectos al frenarlo (pedido 2026-11-10) — QA-15..18 con procesos reales; probado en vivo (reparto con hueco y tarea nueva). Sin probar en vivo: negativo con ▶ ajeno corriendo y "Repartir más tarde" (cubiertos por tests)
 
 ## Pendientes / mejoras chicas detectadas
 

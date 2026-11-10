@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { formatDuration } from '@/lib/duration'
+import { entrySourceLabels } from '@/features/timer/types'
 import { zonedPartsOf } from '@/lib/timezone'
 import type { TimesheetDay, TimesheetEntry } from './types'
 import { dayLabel } from './week'
@@ -32,6 +33,12 @@ function EntryRow({ entry, timeZone, onComplete }: EntryRowProps) {
             {entry.task.code}
           </Link>{' '}
           {entry.task.title}
+          {entry.source === 'day_clock' && (
+            <>
+              {' '}
+              <Badge>{entrySourceLabels.day_clock}</Badge>
+            </>
+          )}
         </span>
         <span className="font-mono text-sm tabular-nums">{formatDuration(entry.seconds)}</span>
       </div>

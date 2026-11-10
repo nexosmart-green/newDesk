@@ -1,6 +1,6 @@
 import type { HourBag } from '@/features/hours/types'
 import type { Task, TaskStatus } from '@/features/tasks/types'
-import type { TimeEntry, TimerState } from '@/features/timer/types'
+import type { DayClock, TimeEntry, TimerState } from '@/features/timer/types'
 import type { Client } from '@/features/clients/types'
 import type { PersonProfile, PersonSummary } from '@/features/people/types'
 import type { ProjectDetail } from '@/features/projects/types'
@@ -145,5 +145,19 @@ export function buildTimeEntry(overrides: Partial<TimeEntry> = {}): TimeEntry {
 }
 
 export function buildTimerState(overrides: Partial<TimerState> = {}): TimerState {
-  return { active: null, pending_comments: [], server_time: SERVER_TIME, ...overrides }
+  return { active: null, pending_comments: [], day_clock: null, server_time: SERVER_TIME, ...overrides }
+}
+
+/** Pending by default: 09:02:37 → 18:14:00 in Buenos Aires (UTC−3), 33 083 s on the clock. */
+export function buildDayClock(overrides: Partial<DayClock> = {}): DayClock {
+  return {
+    id: 40,
+    started_at: '2026-11-10T12:02:37+00:00',
+    ended_at: '2026-11-10T21:14:00+00:00',
+    cutoff_at: '2026-11-11T03:00:00+00:00',
+    status: 'pending',
+    elapsed_seconds: 33_083,
+    server_time: SERVER_TIME,
+    ...overrides,
+  }
 }

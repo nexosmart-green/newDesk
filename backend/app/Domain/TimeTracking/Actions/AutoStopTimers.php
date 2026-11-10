@@ -95,6 +95,8 @@ final class AutoStopTimers
 
             $entries = TimeEntry::query()->forCompany($companyId)
                 ->where('project_id', $projectId)->running()
+                // R-6: the budget cut spares the ▶ that were running when a day split overdrew the bag.
+                ->when($reason === StopReason::BudgetExhausted, fn (Builder $q) => $q->where('uncapped', false))
                 ->when($constrain, $constrain)
                 ->orderBy('started_at')->orderBy('id')
                 ->lockForUpdate()->get();

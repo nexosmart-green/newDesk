@@ -34,6 +34,10 @@
 | QA-12 | Marcas de cerradura duplicadas no duplican (R2) | CA-07.02 |
 | QA-13 | Silencio de la cerradura dispara alerta (R2) | CA-07.x |
 | QA-14 | Migración: totales de horas por proyecto y persona Worksuite = newDesk | `06-migracion` |
+| QA-15 | Reloj del día y ▶ apretados a la vez: queda una sola cosa corriendo; 6 inicios dan un solo día (procesos reales) | CA-05.19a/b |
+| QA-16 | 6 repartos iguales del mismo día graban una sola vez; caché = ledger | CA-05.19i |
+| QA-17 | Reparto en negativo con un ▶ corriendo, cortes y otros ▶ arrancando a la vez: el ▶ previo guarda su tiempo entero, no arranca ninguno nuevo, reconcile ok | CA-05.19f/g |
+| QA-18 | Orden de locks: reparto con tarea nueva + ▶ que cambian de proyecto + alta de tareas en paralelo, sin deadlocks y con códigos correlativos | R-6, CA-04.01 |
 
 ## QC de datos post-migración
 

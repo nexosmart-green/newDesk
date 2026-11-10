@@ -42,7 +42,7 @@ class TimeEntry extends Model
 
     protected $guarded = ['id', 'active_user_id'];
 
-    protected $attributes = ['comment_pending' => false];
+    protected $attributes = ['comment_pending' => false, 'uncapped' => false];
 
     protected function casts(): array
     {
@@ -54,6 +54,7 @@ class TimeEntry extends Model
             'channel' => ActivitySource::class,
             'stop_reason' => StopReason::class,
             'comment_pending' => 'boolean',
+            'uncapped' => 'boolean',
         ];
     }
 

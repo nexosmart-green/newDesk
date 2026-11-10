@@ -75,6 +75,22 @@
   --color-sidebar-hover: var(--color-sidebar-hover);
 }
 
+/* "Repartir el día" (RF-05.19): one fill per project, dark ink on it (6.2:1 or more). Same in both themes. */
+@theme {
+  --color-part-1: #56b9ba;
+  --color-on-part-1: #0f2e2f;
+  --color-part-2: #f0a35e;
+  --color-on-part-2: #3a2108;
+  --color-part-3: #b3a6f5;
+  --color-on-part-3: #241a52;
+  --color-part-4: #7fb2f0;
+  --color-on-part-4: #0f2a4a;
+  --color-part-5: #8fcf7a;
+  --color-on-part-5: #18350f;
+  --color-part-6: #f29bb5;
+  --color-on-part-6: #4a1428;
+}
+
 html {
   color-scheme: dark;
 }

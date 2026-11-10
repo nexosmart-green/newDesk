@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import type { TimeEntry, TimerState } from './types'
+import type { DayClock, TimeEntry, TimerState } from './types'
 
 export const timerKey = ['timer'] as const
 
@@ -47,11 +47,12 @@ async function apply(client: QueryClient, next: (current: TimerState) => TimerSt
 
 /**
  * ▶ feels instant: the header shows the new task at 00:00:00 before the server confirms. Not while
- * comments are pending: the server will refuse (RF-05.17), so a flash of "running" would lie.
+ * comments are pending (RF-05.17) or a day clock is running/pending (RF-05.19): the server will refuse,
+ * so a flash of "running" would lie.
  */
 export function optimisticStart(client: QueryClient, task: StartingTask): Promise<TimerSnapshot> {
   return apply(client, (current) => {
-    if (current.pending_comments.length > 0) return current
+    if (current.pending_comments.length > 0 || current.day_clock) return current
     const now = new Date().toISOString()
     const user = current.active?.user ?? { id: 0, full_name: '' }
     return { ...current, active: provisionalEntry(task, now, user) }
@@ -66,6 +67,11 @@ export function optimisticStop(client: QueryClient): Promise<TimerSnapshot> {
 /** The server's entry replaces the placeholder right away (no flash back to the old state). */
 export function confirmStarted(client: QueryClient, entry: TimeEntry): void {
   client.setQueryData<TimerState>(timerKey, (current) => (current ? { ...current, active: entry } : current))
+}
+
+/** The day clock the server just answered with (started, stopped, or gone after a split). */
+export function confirmDayClock(client: QueryClient, dayClock: DayClock | null): void {
+  client.setQueryData<TimerState>(timerKey, (current) => (current ? { ...current, day_clock: dayClock } : current))
 }
 
 export function rollback(client: QueryClient, snapshot: TimerSnapshot | undefined): void {

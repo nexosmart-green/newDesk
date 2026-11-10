@@ -26,6 +26,6 @@ class GetActiveTimer extends NewDeskTool
     {
         $active = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->first();
 
-        return $this->json(['active_timer' => $active ? McpPresenter::entry($active) : null]);
+        return $this->json(['active_timer' => $active ? McpPresenter::entry($active) : null, 'day_clock' => McpPresenter::dayClock($user)]);
     }
 }
