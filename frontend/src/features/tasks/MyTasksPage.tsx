@@ -14,7 +14,7 @@ export function MyTasksPage() {
   const tasks = useMyTasks({ ...filters, search: useDebouncedValue(filters.search) })
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-4">
       <header>
         <h1 className="text-lg font-semibold">Hola, {user?.first_name}</h1>
         <h2 className="text-sm text-muted">Mis tareas</h2>

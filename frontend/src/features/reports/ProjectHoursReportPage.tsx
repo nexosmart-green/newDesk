@@ -53,7 +53,7 @@ export function ProjectHoursReportPage() {
   if (!canSee) return <p className="text-muted">No tenés acceso a los reportes.</p>
 
   return (
-    <section className="mx-auto max-w-4xl space-y-4">
+    <section className="max-w-4xl space-y-4">
       <Link to={`/reportes/horas${search ? `?${search}` : ''}`} className="text-sm text-accent hover:underline">
         ← Todos los proyectos
       </Link>

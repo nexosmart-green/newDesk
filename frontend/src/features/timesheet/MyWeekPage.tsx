@@ -47,7 +47,7 @@ export function MyWeekPage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">Mi semana</h1>
         {timesheet.data && (

@@ -14,7 +14,7 @@ export function SecurityPage() {
   const showSetup = !enabled || setupInProgress
 
   return (
-    <section className="mx-auto max-w-2xl space-y-4">
+    <section className="max-w-2xl space-y-4">
       <h1 className="text-lg font-semibold">Seguridad</h1>
       {mustSetUpTwoFactor(user) && (
         <p role="alert" className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">

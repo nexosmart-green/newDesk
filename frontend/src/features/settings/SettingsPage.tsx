@@ -17,7 +17,7 @@ export function SettingsPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-4">
       <h1 className="text-lg font-semibold">Configuración</h1>
       <TabNav label="Secciones de configuración" tabs={tabs} />
       <Outlet />

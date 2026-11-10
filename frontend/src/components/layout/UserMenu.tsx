@@ -1,11 +1,31 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { ChevronDown, KeyRound, LogOut, Moon, Sparkles, Sun, UserRound } from 'lucide-react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useCurrentUser, useLogout } from '@/features/auth/useAuth'
 
-const itemClassName = 'block w-full px-3 py-2 text-left text-sm hover:bg-bg focus-visible:bg-bg focus-visible:outline-none'
+const itemClassName =
+  'flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-text hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none'
 
-/** Disclosure menu under the user's name: Perfil · Seguridad · Salir. */
-export function UserMenu() {
+const initials = (firstName = '', lastName = '') => `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || '?'
+
+interface UserMenuProps {
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
+}
+
+function MenuLink({ to, icon, children, onClick }: { to: string; icon: ReactNode; children: ReactNode; onClick: () => void }) {
+  return (
+    <li>
+      <Link to={to} onClick={onClick} className={itemClassName}>
+        {icon}
+        {children}
+      </Link>
+    </li>
+  )
+}
+
+/** Account menu: profile, AI connections (RF-12), security, theme (on phones) and — set apart — logout. */
+export function UserMenu({ theme, onToggleTheme }: UserMenuProps) {
   const { data: user } = useCurrentUser()
   const logoutMutation = useLogout()
   const [open, setOpen] = useState(false)
@@ -14,14 +34,15 @@ export function UserMenu() {
 
   useEffect(() => {
     if (!open) return
-    function closeOnOutsideClick(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) setOpen(false)
+    function closeOnOutsideClick(event: PointerEvent) {
+      if (event.target instanceof Node && !containerRef.current?.contains(event.target)) setOpen(false)
     }
-    document.addEventListener('mousedown', closeOnOutsideClick)
-    return () => document.removeEventListener('mousedown', closeOnOutsideClick)
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick)
   }, [open])
 
   const close = () => setOpen(false)
+  const iconClass = 'size-4 text-muted'
 
   return (
     <div
@@ -35,29 +56,49 @@ export function UserMenu() {
         type="button"
         aria-expanded={open}
         aria-controls={menuId}
+        aria-label={`Cuenta de ${user?.full_name ?? 'usuario'}`}
         onClick={() => setOpen(!open)}
-        className="text-sm text-muted hover:text-text"
+        className="flex min-h-11 items-center gap-2 rounded-lg px-1.5 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent sm:px-2"
       >
-        {user?.full_name} <span aria-hidden="true">▾</span>
+        <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-brand-strong text-xs font-semibold text-white">
+          {initials(user?.first_name, user?.last_name)}
+        </span>
+        <span className="hidden text-left leading-tight md:block">
+          <span className="block text-sm font-medium">{user?.full_name}</span>
+          <span className="block text-xs text-muted">{user?.role.name}</span>
+        </span>
+        <ChevronDown aria-hidden="true" className="hidden size-4 text-muted md:block" />
       </button>
       {open && (
-        <ul id={menuId} className="absolute right-0 z-40 mt-2 w-40 overflow-hidden rounded border border-border bg-surface shadow-lg">
-          <li>
-            <Link to="/perfil" onClick={close} className={itemClassName}>
+        <div id={menuId} className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+          <div className="border-b border-border px-3 py-3">
+            <p className="truncate text-sm font-medium">{user?.full_name}</p>
+            <p className="truncate text-xs text-muted">{user?.email}</p>
+          </div>
+          <ul className="py-1">
+            <MenuLink to="/perfil" onClick={close} icon={<UserRound aria-hidden="true" className={iconClass} />}>
               Mi perfil
-            </Link>
-          </li>
-          <li>
-            <Link to="/seguridad" onClick={close} className={itemClassName}>
+            </MenuLink>
+            <MenuLink to="/perfil?tab=ia" onClick={close} icon={<Sparkles aria-hidden="true" className={iconClass} />}>
+              Conexiones de IA
+            </MenuLink>
+            <MenuLink to="/seguridad" onClick={close} icon={<KeyRound aria-hidden="true" className={iconClass} />}>
               Seguridad
-            </Link>
-          </li>
-          <li>
-            <button type="button" onClick={() => logoutMutation.mutate()} className={itemClassName}>
+            </MenuLink>
+            <li className="sm:hidden">
+              <button type="button" onClick={onToggleTheme} className={itemClassName}>
+                {theme === 'dark' ? <Sun aria-hidden="true" className={iconClass} /> : <Moon aria-hidden="true" className={iconClass} />}
+                {theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}
+              </button>
+            </li>
+          </ul>
+          <div className="border-t border-border py-1">
+            <button type="button" onClick={() => logoutMutation.mutate()} className={`${itemClassName} text-danger`}>
+              <LogOut aria-hidden="true" className="size-4" />
               Salir
             </button>
-          </li>
-        </ul>
+          </div>
+        </div>
       )}
     </div>
   )

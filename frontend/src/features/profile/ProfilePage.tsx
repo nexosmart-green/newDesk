@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { AiConnectionsTab } from '@/features/aiConnections/AiConnectionsTab'
@@ -20,15 +20,21 @@ const tabs: readonly TabItem<ProfileTab>[] = [
 ]
 
 /** "Mi perfil": what each person edits about themself (RF-01.05/06/07/09). */
+const isProfileTab = (value: string | null): value is ProfileTab => tabs.some((tab) => tab.id === value)
+
 export function ProfilePage() {
   const profile = useMyProfile()
-  const [tab, setTab] = useState<ProfileTab>('datos')
+  // Each tab has its own URL (`/perfil?tab=ia`), so menus and notifications can link straight to it.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requested = searchParams.get('tab')
+  const tab: ProfileTab = isProfileTab(requested) ? requested : 'datos'
+  const setTab = (next: ProfileTab) => setSearchParams(next === 'datos' ? {} : { tab: next }, { replace: true })
 
   if (!profile.data) return <PageState isPending={profile.isPending} error={profile.error} />
   const person = profile.data
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-4">
       <header className="flex flex-wrap items-center gap-4">
         <AvatarUpload profile={person} />
         <div>

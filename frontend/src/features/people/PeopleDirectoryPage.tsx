@@ -19,7 +19,7 @@ export function PeopleDirectoryPage() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-4">
       <h1 className="text-lg font-semibold">Personas</h1>
       <PeopleFilters filters={filters} canSeeInactive={canManageUsers} onChange={handleChange} />
       {!people.data ? (

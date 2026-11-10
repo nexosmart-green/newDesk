@@ -37,7 +37,7 @@ export function PersonPage() {
   const currentTab = canViewRates ? tab : 'perfil'
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-4">
       <Link to="/personas" className="text-sm text-accent">
         ← Personas
       </Link>

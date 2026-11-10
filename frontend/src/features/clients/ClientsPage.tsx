@@ -28,7 +28,7 @@ export function ClientsPage() {
   const change = (changes: Partial<ClientFilters>) => setFilters((current) => ({ ...current, ...changes, page: changes.page ?? 1 }))
 
   return (
-    <section className="mx-auto max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">Clientes</h1>
         {canManage && <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>}

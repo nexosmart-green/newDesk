@@ -25,7 +25,7 @@ export function ProjectsPage() {
   const change = (changes: Partial<ProjectFilters>) => setFilters((current) => ({ ...current, ...changes, page: changes.page ?? 1 }))
 
   return (
-    <section className="mx-auto max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">Proyectos</h1>
         {canCreate && <Button onClick={() => setCreating(true)}>Nuevo proyecto</Button>}

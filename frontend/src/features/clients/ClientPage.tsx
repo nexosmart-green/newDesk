@@ -33,7 +33,7 @@ export function ClientPage() {
   const data = client.data
 
   return (
-    <section className="mx-auto max-w-4xl space-y-6">
+    <section className="max-w-4xl space-y-6">
       <Link to="/clientes" className="text-sm text-accent">
         ← Clientes
       </Link>

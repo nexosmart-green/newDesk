@@ -1,3 +1,4 @@
+import { Square } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { formatClock } from '@/lib/duration'
@@ -17,28 +18,31 @@ export function GlobalTimer() {
   if (!active) return null
 
   return (
+    // The memorable piece of the shell: brand teal, with desk's pink as the "live" dot.
     <div
       role="group"
       aria-label="Cronómetro en curso"
-      className="flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 py-1 pl-3 pr-1 text-sm"
+      className="flex items-center gap-2 rounded-full bg-brand/15 py-1 pl-3 pr-1 text-sm ring-1 ring-brand/40"
     >
+      <span aria-hidden="true" className="size-2 rounded-full bg-live motion-safe:animate-[live-pulse_1.6s_ease-in-out_infinite]" />
       <Link
         to={`/tareas/${active.task.code}`}
         title={active.task.title}
-        className="font-mono font-medium uppercase text-accent hover:underline"
+        className="hidden max-w-40 truncate font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent sm:inline"
       >
         {active.task.code}
       </Link>
-      <span role="timer" aria-label="Tiempo transcurrido" className="font-mono tabular-nums">
+      <span role="timer" aria-label="Tiempo transcurrido" className="tabular text-base font-semibold tracking-tight">
         {formatClock(elapsed ?? 0)}
       </span>
       <button
         type="button"
         onClick={() => setStoppingId(active.id)}
         aria-label={`Detener cronómetro de ${active.task.code}`}
-        className="flex size-8 items-center justify-center rounded-full bg-danger text-white focus-visible:outline-2 focus-visible:outline-accent"
+        title="Detener"
+        className="grid size-9 place-items-center rounded-full bg-brand-strong text-white transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-accent"
       >
-        <span aria-hidden="true">■</span>
+        <Square aria-hidden="true" className="size-3.5 fill-current" />
       </button>
       {stoppingId === active.id && (
         <StopTimerDialog entry={active} elapsedSeconds={elapsed} onClose={() => setStoppingId(null)} />

@@ -72,7 +72,7 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
   const notice = (useLocation().state as { notice?: string } | null)?.notice
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-4">
       {current.project && (
         <Link to={`/proyectos/${current.project.id}/tareas`} className="text-sm text-accent">
           ← {current.project.name}

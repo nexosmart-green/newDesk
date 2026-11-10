@@ -34,7 +34,7 @@ export function ProjectPage() {
   ]
 
   return (
-    <section className="mx-auto max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-4">
       <Link to="/proyectos" className="text-sm text-accent">
         ← Proyectos
       </Link>
