@@ -11,7 +11,7 @@ use Tests\Support\StatusPageFixtures as Fixtures;
 /** Port of monitoreo's reports_purge_test.go and the report rows of store.Purge (D-041, D-049, D-093). */
 beforeEach(function () {
     $this->disk = Storage::fake('local');
-    $this->admin = provisionCompany();
+    $this->admin = adminUser();
     $this->project = Fixtures::project($this->admin);
 });
 

@@ -64,7 +64,7 @@ final class PortalBrowser
 function portalClientUser(string $email = 'dueno@playinn.com', string $clientName = 'Playinn', array $attributes = []): User
 {
     $admin = User::query()->where('email', 'admin@nexosmart.com')->first() ?? provisionCompany('admin@nexosmart.com');
-    $client = Client::query()->withoutGlobalScopes()->firstOrCreate(['company_id' => $admin->company_id, 'name' => $clientName]);
+    $client = Client::query()->withoutGlobalScopes()->firstOrCreate(['company_id' => $admin->company_id, 'legal_name' => $clientName]);
 
     // Portal users have no password: they always enter with a mailed code.
     return User::factory()->forRole(roleNamed($admin, DefaultRoles::CLIENT))
@@ -137,7 +137,7 @@ it('logs a client user in with the mailed code and keeps them in for 30 days (CA
 it('answers an unknown, team, inactive or look-alike address exactly like a known one, and mails nothing (D-076, D-077)', function () {
     portalClientUser('ana@example.com');
     portalClientUser('baja@playinn.com', attributes: ['status' => 'inactive']);
-    portalClientUser('viejo@retirado.com', 'Retirado')->client->update(['active' => false]);
+    portalClientUser('viejo@retirado.com', 'Retirado')->client->update(['status' => 'inactive']);
 
     foreach (['nadie@example.com', 'admin@nexosmart.com', 'baja@playinn.com', 'viejo@retirado.com', 'ana@exámple.com'] as $i => $email) {
         $browser = new PortalBrowser($this, "192.0.2.{$i}");
@@ -296,7 +296,7 @@ it('signs the client users out when their client is inactivated (D-038)', functi
     $user = portalClientUser();
     $this->actingAs($user)->getJson('/api/v1/me')->assertOk();
 
-    $user->client->update(['active' => false]);
+    $user->client->update(['status' => 'inactive']);
 
     $this->actingAs($user->fresh())->getJson('/api/v1/me')->assertUnauthorized();
 });

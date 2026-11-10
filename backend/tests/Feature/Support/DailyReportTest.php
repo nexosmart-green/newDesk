@@ -14,7 +14,7 @@ use Tests\Support\StatusPageFixtures as Fixtures;
  * itself is covered in tests/Unit/UnixSocketClaudeRunnerTest.php.
  */
 beforeEach(function () {
-    $this->admin = Reports::signIn(provisionCompany('admin@nexosmart.com.ar'));
+    $this->admin = Reports::signIn(adminUser('admin@nexosmart.com.ar'));
     $this->claude = new class implements ClaudeRunner
     {
         public bool $connected = true;

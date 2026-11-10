@@ -42,6 +42,12 @@ it('el cajón móvil lleva el foco adentro, cierra con Escape y lo devuelve al b
   expect(menu).toHaveFocus()
 })
 
+it('va a pantalla completa con su propio menú y la vuelta a newDesk', () => {
+  renderLayout()
+  expect(screen.getByRole('link', { name: 'Volver a newDesk' })).toHaveAttribute('href', '/')
+  expect(screen.getByRole('main')).toHaveTextContent('inicio')
+})
+
 it('aplica la piel solo a su subárbol y muestra el estado de la conexión', () => {
   renderLayout()
   expect(screen.getByText('inicio').closest('[data-skin="monitoreo"]')).not.toBeNull()

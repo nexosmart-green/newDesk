@@ -15,13 +15,11 @@ class ClientFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'name' => fake()->unique()->company(),
-            'active' => true,
+            'legal_name' => fake()->company().' S.A.',
+            'trade_name' => fake()->company(),
+            'tax_id' => '30-'.fake()->numerify('########').'-'.fake()->randomDigit(),
+            'email' => fake()->companyEmail(),
+            'status' => 'active',
         ];
-    }
-
-    public function inactive(): static
-    {
-        return $this->state(fn () => ['active' => false]);
     }
 }

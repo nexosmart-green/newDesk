@@ -7,6 +7,8 @@ use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\People\Actions\SeedCompanyCatalogs;
+use App\Domain\Tasks\Actions\SeedTaskStatuses;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,6 +17,11 @@ use Illuminate\Support\Facades\DB;
  */
 final class ProvisionCompany
 {
+    public function __construct(
+        private readonly SeedCompanyCatalogs $seedCatalogs,
+        private readonly SeedTaskStatuses $seedTaskStatuses,
+    ) {}
+
     /**
      * @param  array{name: string, currency?: string, timezone?: string}  $company
      * @param  array{first_name: string, last_name: string, email: string, password: string}  $admin
@@ -23,13 +30,15 @@ final class ProvisionCompany
     {
         return DB::transaction(function () use ($company, $admin) {
             $newCompany = Company::query()->create($company);
+            ($this->seedCatalogs)($newCompany);
+            ($this->seedTaskStatuses)($newCompany);
 
             $adminRole = null;
             foreach (DefaultRoles::definitions() as $name => $permissions) {
                 $role = Role::query()->create([
                     'company_id' => $newCompany->id,
                     'name' => $name,
-                    'is_system' => in_array($name, DefaultRoles::SYSTEM, true),
+                    'is_system' => $name === DefaultRoles::ADMIN,
                 ]);
                 $role->syncPermissions($permissions);
                 if ($name === DefaultRoles::ADMIN) {

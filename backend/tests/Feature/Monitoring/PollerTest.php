@@ -30,7 +30,7 @@ beforeEach(function () {
         'metrics' => FakeAgentGateway::metricsWithDisk(65),
     ];
     $this->app->instance(AgentGateway::class, $this->agent);
-    $this->admin = provisionCompany();
+    $this->admin = adminUser();
     $this->server = pollerServer($this->admin);
     $this->poller = app(Poller::class);
 });

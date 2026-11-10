@@ -39,7 +39,13 @@ export function ProjectsPage() {
       </label>
 
       {shown.length === 0 ? (
-        <Empty icon="servers">{projects.data.length === 0 ? 'Todavía no hay proyectos. Se crean desde Clientes.' : 'Ningún proyecto coincide con la búsqueda.'}</Empty>
+        <Empty icon="servers">
+          {projects.data.length === 0 ? (
+            <>Todavía no hay proyectos. Se crean en <Link to="/proyectos" className="link">Proyectos</Link>.</>
+          ) : (
+            'Ningún proyecto coincide con la búsqueda.'
+          )}
+        </Empty>
       ) : (
         groups.map((group) => (
           <section key={group.title} aria-label={group.title} className="space-y-3">

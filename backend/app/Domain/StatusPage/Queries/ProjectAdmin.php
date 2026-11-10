@@ -26,7 +26,7 @@ final class ProjectAdmin
         return [
             'id' => $project->id,
             'client_id' => $project->client_id,
-            'client_name' => $project->client->name,
+            'client_name' => $project->client->displayName(),
             'slug' => $project->slug,
             'code_prefix' => $project->code_prefix,
             'name' => $project->name,
@@ -66,7 +66,7 @@ final class ProjectAdmin
         return $projects->map(fn (Project $project) => [
             'id' => $project->id,
             'client_id' => $project->client_id,
-            'client_name' => $project->client->name,
+            'client_name' => $project->client->displayName(),
             'slug' => $project->slug,
             'name' => $project->name,
             'active' => $project->portal_active,

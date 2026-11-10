@@ -2,6 +2,7 @@
 
 namespace App\Domain\Clients\Models;
 
+use App\Domain\Clients\Enums\ClientStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Concerns\BelongsToCompany;
@@ -10,35 +11,31 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
  * @property int $company_id
- * @property string $name
- * @property string|null $legal_name
- * @property string|null $tax_id
- * @property string|null $contact_name
- * @property string|null $contact_email
- * @property string|null $contact_phone
- * @property string|null $notes
- * @property bool $active
+ * @property string $legal_name
+ * @property string|null $trade_name
+ * @property ClientStatus $status
  */
 #[UseFactory(ClientFactory::class)]
 class Client extends Model
 {
     use BelongsToCompany;
     use HasFactory;
+    use SoftDeletes;
 
-    protected $fillable = [
-        'company_id', 'name', 'legal_name', 'tax_id', 'contact_name', 'contact_email',
-        'contact_phone', 'notes', 'active',
-    ];
+    public const EDITABLE = ['legal_name', 'trade_name', 'tax_id', 'contact_name', 'email', 'phone', 'notes'];
 
-    protected $attributes = ['active' => true];
+    protected $fillable = ['company_id', 'status', ...self::EDITABLE];
+
+    protected $attributes = ['status' => 'active'];
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return ['status' => ClientStatus::class];
     }
 
     /** @return HasMany<Project, $this> */
@@ -51,5 +48,16 @@ class Client extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function displayName(): string
+    {
+        return $this->trade_name ?: $this->legal_name;
+    }
+
+    /** Monitoring checks it and its portal users log in only while this holds (RF-13.07). */
+    public function isActive(): bool
+    {
+        return $this->status === ClientStatus::Active && ! $this->trashed();
     }
 }

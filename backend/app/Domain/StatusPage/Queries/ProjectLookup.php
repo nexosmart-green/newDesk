@@ -19,7 +19,8 @@ final class ProjectLookup
     /** Every project, by name (monitoreo ListAllProjects). @return Collection<int, Project> */
     public function all(): Collection
     {
-        return Project::query()->with('client')->orderBy('name')->orderBy('id')->get();
+        // Internal projects have no client and no status page.
+        return Project::query()->with('client')->whereNotNull('client_id')->orderBy('name')->orderBy('id')->get();
     }
 
     /** The user's projects (lead or secondary) and those without developers; every project with $all. @return Collection<int, Project> */

@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Monitoring;
 
-use App\Domain\Clients\Models\Client;
 use App\Domain\Monitoring\Discord\DiscordError;
 use App\Domain\Monitoring\Discord\Notifier;
-use App\Domain\Projects\Actions\DeleteProject;
-use App\Domain\Projects\Actions\SaveProject;
 use App\Domain\Projects\Models\Project;
 use App\Domain\StatusPage\Actions\SetProjectFolders;
 use App\Domain\StatusPage\Actions\SetProjectLogo;
@@ -31,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * monitoreo /api/portal-admin/projects (RF-13.06): the team's side of the client projects. They are
- * newDesk's projects (ADR-0002 §6): creating and deleting go through RF-03's actions.
+ * newDesk's projects (ADR-0002 §6): they are created, renamed and closed in Proyectos (RF-03), never deleted.
  */
 class PortalProjectController extends Controller
 {
@@ -39,35 +36,10 @@ class PortalProjectController extends Controller
 
     private const LOGO_MAX_BYTES = 256 * 1024;
 
-    /** Every project of every client, with its owner and logo (D-048). */
+    /** Every project of every client, with its owner and logo (D-048). Internal projects have no portal. */
     public function index(ProjectAdmin $admin): JsonResponse
     {
-        return ApiResponse::ok($admin->rows(Project::query()->with('client')->orderBy('name')->orderBy('id')->get()));
-    }
-
-    /** An existing channel, or the bot creates one (D-059): a Discord failure is told, not fatal. */
-    public function store(PortalProjectRequest $request, Client $client, SaveProject $save, ProjectAdmin $admin, Notifier $notifier): JsonResponse
-    {
-        $project = $save([
-            'client_id' => $client->id,
-            'name' => $request->validated('name'),
-            'code_prefix' => $request->validated('code_prefix'),
-            'slug' => $request->validated('slug'),
-            'leader_user_id' => $request->validated('lead_user_id'),
-            'discord_channel_id' => $request->validated('discord_channel_id'),
-        ], $request->user());
-
-        $message = 'Proyecto creado.';
-        if ($request->boolean('create_discord_channel')) {
-            try {
-                $notifier->createChannel($project);
-            } catch (DiscordError $e) {
-                Log::warning('discord: create project channel', ['project' => $project->id, 'error' => $e->getMessage()]);
-                $message = "Proyecto creado, pero no se pudo crear el canal de Discord: {$e->getMessage()}.";
-            }
-        }
-
-        return ApiResponse::ok($admin->show($project), $message, 201);
+        return ApiResponse::ok($admin->rows(Project::query()->with('client')->whereNotNull('client_id')->orderBy('name')->orderBy('id')->get()));
     }
 
     public function show(Project $project, ProjectAdmin $admin): JsonResponse
@@ -75,16 +47,22 @@ class PortalProjectController extends Controller
         return ApiResponse::ok($admin->show($project));
     }
 
-    public function update(PortalProjectRequest $request, Project $project, UpdateStatusProject $update, ProjectAdmin $admin): JsonResponse
+    /** An existing channel, or the bot creates one (D-059): a Discord failure is told, not fatal. */
+    public function update(PortalProjectRequest $request, Project $project, UpdateStatusProject $update, ProjectAdmin $admin, Notifier $notifier): JsonResponse
     {
-        return ApiResponse::ok($admin->show($update($project, $request->updateInput($project), $request->user())), 'Proyecto actualizado.');
-    }
+        $project = $update($project, $request->updateInput($project), $request->user());
 
-    public function destroy(Request $request, Project $project, DeleteProject $delete): JsonResponse
-    {
-        $delete($project, $request->user());
+        $message = 'Proyecto actualizado.';
+        if ($request->boolean('create_discord_channel')) {
+            try {
+                $notifier->createChannel($project);
+            } catch (DiscordError $e) {
+                Log::warning('discord: create project channel', ['project' => $project->id, 'error' => $e->getMessage()]);
+                $message = "Proyecto actualizado, pero no se pudo crear el canal de Discord: {$e->getMessage()}.";
+            }
+        }
 
-        return ApiResponse::ok(message: 'Proyecto eliminado.');
+        return ApiResponse::ok($admin->show($project), $message);
     }
 
     /** The team's preview is the client's page. */

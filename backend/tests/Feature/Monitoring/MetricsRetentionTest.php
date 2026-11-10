@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->freezeTime();
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->server = tap((new Server)->forceFill([
         'company_id' => $admin->company_id, 'name' => 'reaquila', 'ip' => '203.0.113.10', 'agent_port' => 9100,
         'token' => 'agent-token-0123456789', 'tls_fingerprint' => str_repeat('a', 64),

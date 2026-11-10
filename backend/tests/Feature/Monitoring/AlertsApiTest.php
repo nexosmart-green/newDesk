@@ -14,7 +14,7 @@ use App\Domain\Monitoring\Models\SiteCheck;
  */
 beforeEach(function () {
     $this->freezeTime();
-    $this->admin = provisionCompany();
+    $this->admin = adminUser();
     $this->server = alertsApiServer($this->admin, 'reaquila');
     $this->developer = User::factory()->forRole(roleNamed($this->admin, DefaultRoles::DEVELOPER))->create();
 });
@@ -133,7 +133,7 @@ it('indexes the project folders of every server for the search (RF-13.04)', func
 });
 
 it('needs monitoring.view and hides other companies (ADR-0002 §10)', function () {
-    $foreign = alertsApiServer(provisionCompany('b@other.com'), 'ajeno');
+    $foreign = alertsApiServer(adminUser('b@other.com'), 'ajeno');
     storedAlert($foreign);
     $urls = ['/api/v1/monitoring/alerts', "/api/v1/monitoring/servers/{$this->server->id}/sites", '/api/v1/monitoring/inventory/projects'];
 

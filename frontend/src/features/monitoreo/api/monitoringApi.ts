@@ -22,6 +22,7 @@ export const monitoringApi = {
   // El sobre entero: el message avisa algo además del dato (el bot no pudo crear el canal, la prueba de Discord).
   postEnvelope: <T>(path: string, body?: unknown) => request<T>(api.post(url(path), body ?? {})),
   put: <T>(path: string, body: unknown) => request<T>(api.put(url(path), body)).then((envelope) => envelope.data),
+  putEnvelope: <T>(path: string, body: unknown) => request<T>(api.put(url(path), body)),
   del: <T>(path: string) => request<T>(api.delete(url(path))).then((envelope) => envelope.data),
 }
 

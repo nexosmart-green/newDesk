@@ -6,7 +6,7 @@ RF-13.12 · ADR-0002. Pasos manuales, en orden. Nada se corre con scripts. Cada 
 
 | Qué | Por qué | Estado |
 |---|---|---|
-| Decidir dónde corre newDesk (P-25) | Si no es el Servidor 5 (51.222.205.245), hay que sumar su IP en cada agente (paso 2.3) y crear su propio socket de Claude para el reporte diario | ⏳ |
+| Decidir dónde corre newDesk (P-28) | Si no es el Servidor 5 (51.222.205.245), hay que sumar su IP en cada agente (paso 2.3) y crear su propio socket de Claude para el reporte diario | ⏳ |
 | newDesk desplegado con Redis, Reverb, `supervisor:sync` (poller, workers `monitoring` y `discord`, scheduler, Reverb) | Sin el poller no hay datos; sin Reverb no hay tiempo real | ⏳ |
 | Los usuarios del equipo pueden entrar a newDesk | La importación crea a los que no existen como **invitados sin contraseña**. Hace falta la invitación de E0 (RF-01.01) o que se les defina contraseña antes del corte | ⏳ |
 | PHP-FPM y nginx con timeout ≥ 100 s, `upload_max_filesize` y `post_max_size` ≥ 16 MB | "Generar reporte" espera hasta 90 s al Claude del server; chequeo en vivo al reportar (~25 s); capturas | ⏳ |
@@ -39,9 +39,12 @@ Los valores de Discord, Healthchecks y PageSpeed son los mismos que usa hoy el p
 ## 2. Convivencia (días antes del corte)
 
 1. `php artisan migrate --force`
-2. `php artisan monitoring:import --company=<id> --storage-dir=<STORAGE_DIR del panel Go>`
+2. Clientes y proyectos se cargan **primero a mano** en newDesk (Clientes → Proyectos, `docs/09-operacion/puesta-en-marcha.md` §5). Después, en una sesión en vivo con Playwright mirando los dos paneles:
+   - `php artisan monitoring:import --company=<id> --dry-run`: tabla "proyecto de monitoreo → proyecto de newDesk" sin escribir nada. La pareja sale de un `--link`, de una importación anterior o del mismo nombre en el mismo cliente (cliente = mismo nombre legal o de fantasía); si no hay, dice NUEVO.
+   - Corregir cada pareja mal armada con `--link=<slug>:<código>` (se repite) y volver a correr el `--dry-run` hasta que la tabla esté bien.
+   - `php artisan monitoring:import --company=<id> --storage-dir=<STORAGE_DIR del panel Go> [--link=…]`. Un `--link` con un código que no existe o un slug que ya usa otro proyecto frena todo antes de copiar nada.
+   - A un proyecto vinculado solo se le suman los datos del monitoreo (slug, color, logo, dominio, `/api/errors`, Discord, portal activo); su nombre, código, tipo, responsable y miembros quedan como están en newDesk. Los NUEVOS se crean con bolsa de horas (sin horas cargadas), código derivado del slug y sus devs como responsable y miembros.
    - Imprime los usuarios del equipo que creó como invitados y los archivos de reportes que no encontró.
-   - Revisar los proyectos importados: cada proyecto de monitoreo queda como proyecto nuevo de newDesk con su código derivado del slug.
 3. **Solo si newDesk no corre en el Servidor 5**, en cada uno de los 6 servers:
    - sumar la IP de newDesk a `allowed_ips` en `/etc/monitor-agent/config.yaml`;
    - `ufw allow from <IP newDesk> to any port 9100 proto tcp`;
@@ -61,7 +64,7 @@ Los valores de Discord, Healthchecks y PageSpeed son los mismos que usa hoy el p
 2. Apagar el panel Go en el Servidor 5:
    `systemctl stop monitor-panel.socket monitor-panel.service` y `systemctl disable monitor-panel.socket`.
    No se borran ni la base `monitoreo` ni el binario: se guardan 30 días para volver atrás.
-3. Importación final, desde cero: `php artisan monitoring:import --company=<id> --storage-dir=… --fresh`.
+3. Importación final, desde cero: `php artisan monitoring:import --company=<id> --storage-dir=… --fresh` (las parejas de la convivencia quedan guardadas: no hace falta repetir los `--link`).
    - Verificar los conteos por tabla contra la base vieja: servers, alertas, componentes, reportes, mensajes y adjuntos.
 4. En newDesk:
    - `MONITORING_NOTIFY=true` (variable nueva, paso 1);
@@ -77,9 +80,9 @@ Los valores de Discord, Healthchecks y PageSpeed son los mismos que usa hoy el p
    ```
 
    Los slugs y los números de reporte se conservan, así que `/portal/<slug>` y `/reportes/<id>` caen en la misma página.
-6. MCP: cada dev genera un token en newDesk (Monitoreo → Configuración → Tokens) y en Claude Code ejecuta:
+6. MCP: cada dev genera un token en newDesk (Mi perfil → Conexiones de IA; el mismo token abre `/mcp` y `/mcp/monitoreo`) y en Claude Code ejecuta:
    - `claude mcp remove monitoreo`;
-   - el `claude mcp add` que muestra la pantalla de Tokens: `claude mcp add --transport http monitoreo https://<dominio newDesk>/mcp/monitoreo --header "Authorization: Bearer <token>"`.
+   - el `claude mcp add … monitoreo` que muestra la pantalla al crear el token: `claude mcp add --transport http monitoreo https://<dominio newDesk>/mcp/monitoreo --header "Authorization: Bearer <token>"`.
 
 ## 4. Verificación después del corte
 

@@ -11,7 +11,7 @@ const W = '/var/www/clientes.nexosmart.com.ar'
 export const teamAdmin: CurrentUser = {
   id: 1, first_name: 'Team', last_name: 'Violet', full_name: 'Team Violet', email: 'teamviolet@nexosmart.com.ar', locale: 'es', timezone: 'UTC',
   role: { id: 1, name: 'Admin' }, permissions: ['monitoring.view', 'monitoring.manage'], company: { id: 1, name: 'nexosmart', currency: 'USD', timezone: 'UTC' },
-  client: null,
+  two_factor: { enabled: false, required: false }, client: null,
 }
 
 const teamUser = (id: number, email: string, discord: string | null): User => ({

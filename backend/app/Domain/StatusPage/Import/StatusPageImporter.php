@@ -3,6 +3,7 @@
 namespace App\Domain\StatusPage\Import;
 
 use App\Domain\Clients\Actions\SaveClientUser;
+use App\Domain\Clients\Enums\ClientStatus;
 use App\Domain\Clients\Models\Client;
 use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Enums\UserStatus;
@@ -10,6 +11,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Monitoring\Import\LegacySecretBox;
 use App\Domain\Projects\Enums\ProjectStatus;
+use App\Domain\Projects\Enums\ProjectType;
 use App\Domain\Projects\Models\Project;
 use App\Domain\StatusPage\Queries\ProjectLogo;
 use Illuminate\Database\ConnectionInterface;
@@ -19,9 +21,10 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Copies monitoreo's clients, users and status pages (RF-13.12, ADR-0002 §9). Reads the legacy
- * database and never writes it (CA-13.23). Clients, users and portal_projects become newDesk rows
- * recorded in `import_mappings`, so a second run updates the same rows; components and their history
- * keep monitoreo's ids. Team users are matched by email; the ones newDesk does not have are created
+ * database and never writes it (CA-13.23). Clients and projects loaded by hand in newDesk first are
+ * reused (see projects() and --dry-run's pairs()); the rest are created. Everything is recorded in
+ * `import_mappings`, so a second run lands on the same rows; components and their history keep
+ * monitoreo's ids. Team users are matched by email; the ones newDesk does not have are created
  * invited (no password) and reported.
  */
 final class StatusPageImporter
@@ -43,10 +46,14 @@ final class StatusPageImporter
 
     private int $companyId;
 
-    /** @param  string  $connection  the legacy database (`monitoreo_legacy`; tests pass their own) */
+    /**
+     * @param  string  $connection  the legacy database (`monitoreo_legacy`; tests pass their own)
+     * @param  array<string, string>  $links  --link: monitoreo slug → code of the newDesk project it is
+     */
     public function __construct(
         private readonly LegacySecretBox $box,
         private readonly string $connection = 'monitoreo_legacy',
+        private readonly array $links = [],
     ) {}
 
     /** --fresh: only the status page history; clients, users and projects stay mapped and are updated. */
@@ -68,8 +75,8 @@ final class StatusPageImporter
         $teamUsers = $this->teamUsers($roles);
         $clients = $this->clients();
         $clientUsers = $this->clientUsers($clients, (int) $roles[DefaultRoles::CLIENT]);
-        $projects = $this->projects($clients);
-        $this->developers($projects, $teamUsers);
+        [$projects, $created] = $this->projects($clients);
+        $this->developers($created, $teamUsers);
 
         $project = fn (object $row) => ['project_id' => $projects[$row->project_id]];
 
@@ -123,21 +130,48 @@ final class StatusPageImporter
         return $map;
     }
 
-    /** @return array<int, int> legacy id → newDesk id */
+    /**
+     * --dry-run: how each portal_project would be paired with a newDesk project, writing nothing.
+     *
+     * @return list<array{slug: string, name: string, client: string, code: string|null}> code null = it would be created
+     */
+    public function pairs(int $companyId): array
+    {
+        $this->legacy = DB::connection($this->connection);
+        $this->companyId = $companyId;
+        $clients = $this->legacy->table('clients')->get()->keyBy('id');
+
+        return $this->legacy->table('portal_projects')->orderBy('id')->get()->map(function (object $row) use ($clients) {
+            $project = $this->findProject($row, $this->findClient($clients[$row->client_id])?->id);
+            $this->ensureSlugFree($row->slug, $project ?? new Project);
+
+            return ['slug' => $row->slug, 'name' => $row->name, 'client' => $clients[$row->client_id]->name, 'code' => $project?->code_prefix];
+        })->all();
+    }
+
+    /** A client newDesk already has (loaded by hand, RF-02) is reused as it is: same legal or trade name. @return array<int, int> legacy id → newDesk id */
     private function clients(): array
     {
         $map = [];
         foreach ($this->legacy->table('clients')->orderBy('id')->get() as $row) {
-            $client = $this->target('clients', $row->id, Client::class)
-                ?? Client::query()->forCompany($this->companyId)->where('name', $row->name)->first()
-                ?? new Client(['company_id' => $this->companyId]);
-            $client->timestamps = false;
-            $client->forceFill(['company_id' => $this->companyId, 'name' => $row->name, 'active' => (bool) $row->active,
-                'created_at' => $row->created_at, 'updated_at' => $row->updated_at])->save();
+            $client = $this->findClient($row);
+            if ($client === null) {
+                $client = new Client(['company_id' => $this->companyId]);
+                $client->timestamps = false;
+                $client->forceFill(['legal_name' => $row->name, 'status' => $row->active ? ClientStatus::Active : ClientStatus::Inactive,
+                    'created_at' => $row->created_at, 'updated_at' => $row->updated_at])->save();
+            }
             $map[$row->id] = $this->remember('clients', $row->id, $client->id);
         }
 
         return $map;
+    }
+
+    private function findClient(object $row): ?Client
+    {
+        return $this->target('clients', $row->id, Client::class)
+            ?? Client::query()->forCompany($this->companyId)
+                ->where(fn ($query) => $query->where('legal_name', $row->name)->orWhere('trade_name', $row->name))->first();
     }
 
     /** Portal users: the "Cliente" role, the address lowercased (the portal login matches it byte for byte, D-076). */
@@ -157,28 +191,67 @@ final class StatusPageImporter
         return $rows->count();
     }
 
-    /** portal_projects → projects, created as new ones the first time (code from the slug). @return array<int, int> */
+    /**
+     * portal_projects → projects. One newDesk already has (paired by --link, a previous run, or the same name
+     * in the same client) only takes the status page fields: its name, code, type, leader and members are
+     * newDesk's. The others are created as hour-bag projects (code from the slug), with their developers.
+     *
+     * @param  array<int, int>  $clients
+     * @return array{0: array<int, int>, 1: array<int, int>} every legacy id → newDesk id, and the created ones
+     */
     private function projects(array $clients): array
     {
         $map = [];
+        $created = [];
         foreach ($this->legacy->table('portal_projects')->orderBy('id')->get() as $row) {
-            $project = $this->target('portal_projects', $row->id, Project::class)
-                ?? new Project(['company_id' => $this->companyId, 'code_prefix' => $this->codePrefix($row->slug), 'status' => ProjectStatus::Active]);
+            $project = $this->findProject($row, $clients[$row->client_id]);
+            $isNew = $project === null;
+            $project ??= new Project(['company_id' => $this->companyId, 'client_id' => $clients[$row->client_id], 'name' => $row->name,
+                'code_prefix' => $this->codePrefix($row->slug), 'type' => ProjectType::Bag, 'status' => ProjectStatus::Active]);
+            $this->ensureSlugFree($row->slug, $project);
             $project->timestamps = false;
             $project->forceFill([
-                'client_id' => $clients[$row->client_id], 'name' => $row->name, 'slug' => $row->slug, 'primary_color' => $row->primary_color,
+                'slug' => $row->slug, 'primary_color' => $row->primary_color,
                 'domain' => $row->domain, 'domain_expires_at' => $row->domain_expires_at, 'domain_expires_manual' => $row->domain_expires_manual,
                 'domain_checked_at' => $row->domain_checked_at, 'domain_notice_level' => $row->domain_notice_level,
                 'errors_url' => $row->errors_url, 'discord_channel_id' => $row->discord_channel_id, 'portal_active' => (bool) $row->active,
                 'errors_token' => $row->errors_token_enc === null ? null
                     : $this->box->decrypt($row->errors_token_enc, LegacySecretBox::row('portal_projects.errors_token_enc', $row->id)),
-                'created_at' => $row->created_at, 'updated_at' => $row->updated_at,
+                ...($isNew ? ['created_at' => $row->created_at, 'updated_at' => $row->updated_at] : []),
             ])->save();
             $this->logo($project, $row);
             $map[$row->id] = $this->remember('portal_projects', $row->id, $project->id);
+            if ($isNew) {
+                $created[$row->id] = $project->id;
+            }
         }
 
-        return $map;
+        return [$map, $created];
+    }
+
+    /** --link=<slug>:<code> wins (to fix a wrong pair), then a previous run, then the same name in the same client. */
+    private function findProject(object $row, ?int $clientId): ?Project
+    {
+        if (isset($this->links[$row->slug])) {
+            $code = mb_strtolower($this->links[$row->slug]);
+
+            return Project::query()->forCompany($this->companyId)->where('code_prefix', $code)->first()
+                ?? throw new \RuntimeException("--link={$row->slug}:{$code}: no hay un proyecto con el código {$code}.");
+        }
+
+        return $this->target('portal_projects', $row->id, Project::class)
+            ?? ($clientId === null ? null : Project::query()->forCompany($this->companyId)
+                ->where('client_id', $clientId)->where('name', $row->name)->first());
+    }
+
+    /** Old portal URLs keep working only with monitoreo's slug: another project holding it is a pair to fix. */
+    private function ensureSlugFree(string $slug, Project $project): void
+    {
+        $holder = Project::query()->withTrashed()->forCompany($this->companyId)->where('slug', $slug)
+            ->when($project->exists, fn ($query) => $query->whereKeyNot($project->id))->value('code_prefix');
+        if ($holder !== null) {
+            throw new \RuntimeException("El identificador {$slug} ya lo usa el proyecto {$holder}: si es el mismo, vinculalo con --link={$slug}:{$holder}.");
+        }
     }
 
     /** The BLOB becomes a file on the private disk. */
@@ -236,13 +309,14 @@ final class StatusPageImporter
         return $count;
     }
 
-    /** "playinn-cafe" → playinncafe: lowercase letters and digits, 2 to 12, unique in the company (CA-03.01). */
+    /** "playinn-cafe" → playinncaf: a letter, then letters and digits, 2 to 10, unique in the company (CA-03.01). */
     private function codePrefix(string $slug): string
     {
-        $base = substr(str_pad((string) preg_replace('/[^a-z0-9]/', '', strtolower($slug)), 2, '0'), 0, 12);
+        $clean = (string) preg_replace('/[^a-z0-9]/', '', strtolower($slug));
+        $base = substr(str_pad(ctype_alpha($clean[0] ?? '') ? $clean : 'p'.$clean, 2, '0'), 0, 10);
         for ($n = 1; ; $n++) {
-            $candidate = $n === 1 ? $base : substr($base, 0, 12 - strlen((string) $n)).$n;
-            if (! Project::query()->forCompany($this->companyId)->where('code_prefix', $candidate)->exists()) {
+            $candidate = $n === 1 ? $base : substr($base, 0, 10 - strlen((string) $n)).$n;
+            if (! Project::query()->withTrashed()->forCompany($this->companyId)->where('code_prefix', $candidate)->exists()) {
                 return $candidate;
             }
         }

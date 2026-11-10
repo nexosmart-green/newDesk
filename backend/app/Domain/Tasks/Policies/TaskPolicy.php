@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Domain\Tasks\Policies;
+
+use App\Domain\Identity\Enums\Permission;
+use App\Domain\Identity\Models\User;
+use App\Domain\Projects\Models\Project;
+use App\Domain\Projects\Policies\ProjectPolicy;
+use App\Domain\Tasks\Models\Task;
+use App\Domain\TimeTracking\Models\TimeEntry;
+use Illuminate\Auth\Access\Response;
+
+/**
+ * Tasks inherit project visibility (404 for outsiders, CA-03.03).
+ * P-04: any project member creates, edits, comments and moves tasks; assigning needs `tasks.assign`.
+ */
+class TaskPolicy
+{
+    public function view(User $user, Task $task): Response
+    {
+        return $this->participates($user, $task->project) ? Response::allow() : Response::denyAsNotFound();
+    }
+
+    public function create(User $user, Project $project): Response
+    {
+        return $this->participates($user, $project) ? Response::allow() : Response::denyAsNotFound();
+    }
+
+    public function update(User $user, Task $task): Response
+    {
+        return $this->view($user, $task);
+    }
+
+    public function comment(User $user, Task $task): Response
+    {
+        return $this->view($user, $task);
+    }
+
+    public function assign(User $user, Task $task): Response
+    {
+        if (! $this->participates($user, $task->project)) {
+            return Response::denyAsNotFound();
+        }
+
+        return $user->hasPermission(Permission::TasksAssign) ? Response::allow() : Response::deny();
+    }
+
+    /**
+     * RF-04.12 / CA-04.12d (P-27 answered by the PO): participant in both projects, and then
+     *  - no hours on the task → anyone;
+     *  - every hour on it was registered by this person → they can fix their own mistake;
+     *  - otherwise (someone else's hours) → `hours.allocate`, since it changes which client pays them.
+     */
+    public function move(User $user, Task $task, Project $destination): Response
+    {
+        if (! $this->participates($user, $task->project) || ! $this->participates($user, $destination)) {
+            return Response::denyAsNotFound();
+        }
+
+        $othersHours = TimeEntry::query()->forCompany($task->company_id)
+            ->where('task_id', $task->id)->where('user_id', '!=', $user->id)->exists();
+
+        return ! $othersHours || $user->hasPermission(Permission::HoursAllocate)
+            ? Response::allow()
+            : Response::deny('Esta tarea tiene horas registradas por otras personas: moverla cambia qué cliente las paga. Pedíselo a quien gestiona las horas.');
+    }
+
+    /** Members work on the project; `projects.manage` sees and acts on every project. */
+    private function participates(User $user, Project $project): bool
+    {
+        return $user->company_id === $project->company_id
+            && (ProjectPolicy::seesAllProjects($user) || $project->hasMember($user));
+    }
+}

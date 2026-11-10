@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Event;
  */
 beforeEach(function () {
     Event::fake([AlertChanged::class, AlertBroadcast::class]);
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->server = tap((new Server)->forceFill([
         'company_id' => $admin->company_id, 'name' => 'reaquila', 'ip' => '203.0.113.10', 'agent_port' => 9100,
         'token' => 'agent-token-0123456789', 'tls_fingerprint' => str_repeat('a', 64),
@@ -207,9 +207,11 @@ it('keeps its streaks in the cache and forgets a deleted server', function () {
     $two = new AlertResult(AlertRules::DISK, 0, 2, diskResult(96)->observations);
 
     ($this->apply)([$two], $this->start);
+    // The per server+rule lock is free again. Released right away: with the clock frozen (TestCase) it would never expire.
+    $lock = Cache::lock(AlertState::lockKey($this->server->id, AlertRules::DISK), 1);
     expect($state->streaks($this->server->id, AlertRules::DISK))->toBe(['/' => ['since' => $this->start->getTimestamp(), 'count' => 1]])
-        // The per server+rule lock is free again.
-        ->and(Cache::lock(AlertState::lockKey($this->server->id, AlertRules::DISK), 1)->get())->toBeTrue();
+        ->and($lock->get())->toBeTrue();
+    $lock->release();
 
     $state->forgetServer($this->server->id);
     ($this->apply)([$two], $this->start->addMinute());

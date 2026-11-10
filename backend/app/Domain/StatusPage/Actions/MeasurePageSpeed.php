@@ -2,6 +2,7 @@
 
 namespace App\Domain\StatusPage\Actions;
 
+use App\Domain\Clients\Enums\ClientStatus;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\StatusPage\Jobs\MeasureComponentPageSpeed;
 use App\Domain\StatusPage\Models\Component;
@@ -32,7 +33,7 @@ final class MeasurePageSpeed
     {
         $components = Component::query()->withoutGlobalScope('company')->where('kind', Component::HTTP)->whereNotNull('url')
             ->whereHas('project', fn ($projects) => $projects->withoutGlobalScope('company')->where('portal_active', true)
-                ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('active', true)))
+                ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('status', ClientStatus::Active)))
             ->orderBy('id')->get();
         $done = 0;
         foreach ($components as $component) {

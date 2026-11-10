@@ -1,10 +1,13 @@
 <?php
 
-use App\Http\Middleware\AuthorizeMcp;
+use App\Http\Middleware\AuthorizeMcpToken;
 use App\Mcp\Servers\MonitoreoServer;
+use App\Mcp\Servers\NewDeskServer;
 use Laravel\Mcp\Facades\Mcp;
 
-// MCP servers (RF-12, RF-13.10). They take only a personal token in `Authorization: Bearer` (no session):
-// the permissions are those of the owner's current role, checked on every call.
+// RF-12.01: Streamable HTTP. Bearer token in the Authorization header only (never in the query string).
+// The same personal token opens both servers; monitoreo's also needs `monitoring.view` (RF-13.10).
+Mcp::web('/mcp', NewDeskServer::class)
+    ->middleware(['auth:sanctum', AuthorizeMcpToken::class]);
 Mcp::web('/mcp/monitoreo', MonitoreoServer::class)
-    ->middleware(['auth:sanctum', 'active', 'team', AuthorizeMcp::class.':mcp.use,monitoring.view', 'throttle:mcp']);
+    ->middleware(['auth:sanctum', AuthorizeMcpToken::class.':monitoring.view']);

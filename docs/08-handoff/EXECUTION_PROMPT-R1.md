@@ -48,7 +48,7 @@ Globales del usuario: `C:\Users\GREEN\.claude\knowledge\backend-base.md`, `C:\Us
 - **Detener timer exige comentario (≥10 caracteres)**, web y MCP. Cortes automáticos → `comment_pending`, bloquea el próximo timer hasta completarlo.
 - Tokens MCP: Sanctum con prefijo `nd_`, hash, se muestran una vez, permisos evaluados **por request** contra el rol actual.
 - Tests contra MySQL real de testing **aislada** (DB propia `newdesk_testing`), nunca la de desarrollo.
-- Ramas: `feat/<epica>-<tema>` desde `main`; conventional commits en inglés; PR por épica. Pushear siempre.
+- Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Conventional commits en inglés; pushear siempre.
 - Al cerrar cada épica: actualizar `C:\NexoSmart\Projects\newDesk\tasks\todo.md` (review) y marcar en `C:\NexoSmart\Projects\newDesk\docs\07-backlog\backlog.md`.
 
 ## Fuera de alcance R1

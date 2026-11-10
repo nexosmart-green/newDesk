@@ -28,7 +28,7 @@ beforeEach(function () {
     Sleep::fake(syncWithCarbon: true);
     Event::fake([SnapshotSaved::class, AlertChanged::class]);
     $this->app->instance(SiteChecker::class, new SiteChecker(fn (string $name) => ['104.16.0.1']));
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->server = tap((new Server)->forceFill([
         'company_id' => $admin->company_id, 'name' => 'reaquila', 'ip' => '203.0.113.10', 'agent_port' => 9100,
         'token' => FakeAgentGateway::TOKEN, 'tls_fingerprint' => FakeAgentGateway::FINGERPRINT,

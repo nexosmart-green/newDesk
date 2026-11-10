@@ -3,7 +3,7 @@ import './skin.css'
 
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Outlet } from 'react-router'
-import { Brand, ConnectionStatus, MobileBar, RoadmapToggle, SidebarNav } from './LayoutParts'
+import { BackToDesk, Brand, ConnectionStatus, MobileBar, RoadmapToggle, SidebarNav } from './LayoutParts'
 import { DESKTOP, useMediaQuery } from './lib/useMediaQuery'
 import { useEvents } from './realtime/useEvents'
 import { FloatingReportsProvider } from './reports/FloatingReports'
@@ -19,7 +19,7 @@ function readRoadmapOpen(): boolean {
   }
 }
 
-// El layout del panel de monitoreo dentro del de newDesk: el header (usuario, tema, salir) es el de newDesk.
+// El panel de monitoreo a pantalla completa, fuera del shell de newDesk: usuario, tema y salir quedan del lado de newDesk.
 export function MonitoringLayout() {
   // Una sola conexión a Reverb para todo el módulo; el modo en vivo lo pide ServerPage.
   const connection = useEvents()
@@ -72,8 +72,8 @@ export function MonitoringLayout() {
   }
 
   return (
-    // -m-4: al ras del <main className="p-4"> de AppLayout, como el panel original.
-    <div data-skin="monitoreo" className={`-m-4 min-h-dvh lg:grid ${roadmapColumn ? 'lg:grid-cols-[16rem_1fr_20rem]' : 'lg:grid-cols-[16rem_1fr]'}`}>
+    // Toda la pantalla: en Monitoreo no van el menú ni el header de newDesk (se vuelve con BackToDesk).
+    <div data-skin="monitoreo" className={`min-h-dvh lg:grid ${roadmapColumn ? 'lg:grid-cols-[16rem_1fr_20rem]' : 'lg:grid-cols-[16rem_1fr]'}`}>
       {/* Adentro de la piel: las ventanas flotantes (fixed) usan sus tokens y sobreviven a la navegación. */}
       <FloatingReportsProvider>
         <a href="#main" onClick={skipToMain} className="btn btn-primary sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50">
@@ -82,9 +82,9 @@ export function MonitoringLayout() {
         <aside id="sidebar" ref={sidebar} className="drawer glass flex flex-col border-r border-line" data-open={menuOpen || undefined}>
           <Brand />
           <SidebarNav onNavigate={() => setMenuOpen(false)} />
-          {/* sticky: con el header de newDesk arriba, la sidebar arranca más abajo y el estado quedaría fuera de la pantalla. */}
           <div className="space-y-3 border-t border-line p-4 lg:sticky lg:bottom-0">
             <ConnectionStatus connection={connection} />
+            <BackToDesk onNavigate={() => setMenuOpen(false)} />
           </div>
         </aside>
         <button type="button" aria-label="Cerrar menú" tabIndex={-1} className="scrim" data-open={menuOpen || undefined} onClick={() => setMenuOpen(false)} />
@@ -92,10 +92,9 @@ export function MonitoringLayout() {
         <div className="min-w-0" inert={menuOpen || roadmapDrawer}>
           <MobileBar open={menuOpen} onMenu={() => setMenuOpen(true)} onRoadmap={() => setRoadmapDrawer(true)} buttonRef={menuButton} connection={connection} />
           {desktop && !roadmapOpen && <RoadmapToggle onClick={() => toggleRoadmap(true)} className="fixed right-4 bottom-4 z-20" />}
-          {/* div y no <main>: el <main> de la página es el de AppLayout. */}
-          <div id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] px-5 pt-6 pb-16 outline-none sm:px-8 lg:px-10 lg:pt-10">
+          <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] px-5 pt-6 pb-16 outline-none sm:px-8 lg:px-10 lg:pt-10">
             <Outlet />
-          </div>
+          </main>
         </div>
 
         {roadmapColumn && (

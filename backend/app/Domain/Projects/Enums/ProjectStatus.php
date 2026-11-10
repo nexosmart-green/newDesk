@@ -2,13 +2,18 @@
 
 namespace App\Domain\Projects\Enums;
 
-/** RF-03.01. */
 enum ProjectStatus: string
 {
     case Active = 'active';
     case Paused = 'paused';
     case Finished = 'finished';
     case Cancelled = 'cancelled';
+
+    /** RF-03.08: closed projects accept no new tasks nor timers. */
+    public function isClosed(): bool
+    {
+        return $this === self::Finished || $this === self::Cancelled;
+    }
 
     public function label(): string
     {

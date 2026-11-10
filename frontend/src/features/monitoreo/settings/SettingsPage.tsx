@@ -2,19 +2,15 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { useCan } from '@/features/auth/useAuth'
 import { Tabs } from '../components/Tabs'
 import { ServersAdmin } from './ServersAdmin'
-import { TokensPanel } from './TokensPanel'
 
-// Usuarios y sesiones son los de newDesk (RF-13, diferencia 5): acá quedan Servidores (admin) y los tokens
-// personales del MCP, para quien puede usarlo (RF-12.02).
-const allTabs = [
-  { id: 'servers', label: 'Servidores', permission: 'monitoring.manage' },
-  { id: 'tokens', label: 'Tokens', permission: 'mcp.use' },
-] as const
+// Usuarios y sesiones son los de newDesk (RF-13, diferencia 5): acá quedan Servidores (admin).
+// The personal MCP tokens live in Mi perfil → Conexiones de IA (/perfil?tab=ia), which also shows the monitoreo command.
+const allTabs = [{ id: 'servers', label: 'Servidores', permission: 'monitoring.manage' }] as const
 
 type SettingsTab = (typeof allTabs)[number]['id']
 
 export function SettingsPage() {
-  const allowed = { 'monitoring.manage': useCan('monitoring.manage'), 'mcp.use': useCan('mcp.use') }
+  const allowed = { 'monitoring.manage': useCan('monitoring.manage') }
   const params = useParams()
   const navigate = useNavigate()
   const tabs = allTabs.filter((tab) => allowed[tab.permission])
@@ -28,7 +24,6 @@ export function SettingsPage() {
       <Tabs label="Configuración" tabs={tabs} active={active} onChange={(id) => navigate(`/monitoreo/settings/${id}`)} />
       <div key={active} className="fade-in">
         {active === 'servers' && <ServersAdmin />}
-        {active === 'tokens' && <TokensPanel />}
       </div>
     </div>
   )

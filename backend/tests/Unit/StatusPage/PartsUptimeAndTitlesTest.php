@@ -94,7 +94,7 @@ it('builds 90 daily bars and counts only down time, once (D-039)', function () {
 // TestStatusWithoutComponentsHasNoUptime
 it('measures nothing for a project without components', function () {
     $now = CarbonImmutable::parse('2026-10-07 15:00:00', 'UTC');
-    $project = (new Project)->forceFill(['slug' => 'nuevo', 'name' => 'Nuevo'])->setRelation('client', (new Client)->forceFill(['name' => 'X']));
+    $project = (new Project)->forceFill(['slug' => 'nuevo', 'name' => 'Nuevo'])->setRelation('client', (new Client)->forceFill(['legal_name' => 'X']));
 
     $view = StatusPage::build($project, collect(), collect(), null, $now);
     expect($view['uptime']['month_pct'])->toBeNull()->and($view['uptime']['range_pct'])->toBeNull()

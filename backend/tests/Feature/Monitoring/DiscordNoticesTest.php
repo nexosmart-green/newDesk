@@ -13,8 +13,8 @@ use App\Domain\Monitoring\Discord\Notifier;
 use App\Domain\Monitoring\Events\AlertChanged;
 use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Monitoring\Polling\PollerSignals;
-use App\Domain\Projects\Actions\SaveProject;
 use App\Domain\Projects\Models\Project;
+use App\Domain\Projects\Support\ProjectSlug;
 use App\Domain\StatusPage\Models\ProjectFolder;
 use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Broadcasters\Broadcaster;
@@ -38,7 +38,7 @@ beforeEach(function () {
     Http::preventStrayRequests();
     config(['newdesk.monitoring.notify' => true, 'newdesk.frontend_url' => 'https://panel.test']);
     $this->discord = FakeDiscord::install();
-    $admin = provisionCompany('admin@nexosmart.com.ar');
+    $admin = adminUser('admin@nexosmart.com.ar');
     $this->companyId = $admin->company_id;
     $this->server = Fixtures::server($admin, 'Servidor 5');
 
@@ -308,7 +308,7 @@ it('pings nobody when there is no lead, and names channels after the project', f
 
     expect($message->mention)->toBe([])
         ->and($message->content)->toBe("🔴 **Reaquila** · El sitio responde HTTP 502\n<https://panel.test/p>")
-        ->and('monitoreo-'.SaveProject::slugify('Droguería Sur'))->toBe('monitoreo-drogueria-sur');
+        ->and('monitoreo-'.ProjectSlug::slugify('Droguería Sur'))->toBe('monitoreo-drogueria-sur');
 });
 
 // TestAlertNoticeEscapesAgentNames (NV-13, D-078)

@@ -80,10 +80,6 @@ export interface Alert {
 
 export interface Session { id: string; ip: string; user_agent: string; created_at: string; expires_at: string; current: boolean }
 
-// Token personal para conectar Claude por MCP (D-050). `token` (texto plano) llega solo al crearlo.
-export interface APIToken { id: string; name: string; created_at: string; last_used_at: string | null }
-export interface APITokenCreated extends APIToken { token: string }
-
 // done: usuario de cliente, entra sin autenticador (ya tiene la sesión).
 export type NextStep = 'totp' | 'enroll' | 'done'
 export interface Enrollment { secret: string; otpauth_url: string; qr_png_base64: string }
@@ -194,25 +190,24 @@ export interface ComponentAdmin {
   status: PortalState; status_since: string | null; detail: string | null; last_checked_at: string | null
   last_ok_at: string | null; latency_ms: number | null; status_code: number | null; ssl_expires_at: string | null
 }
-// code_prefix: el código del proyecto de newDesk (RF-03.01), que monitoreo no tenía: minúsculas y dígitos, 2 a 12.
+// Name and code_prefix are newDesk's project fields: they are edited in Proyectos (/proyectos/:id), not here.
 export interface ProjectInput {
-  name: string; slug: string; code_prefix: string; primary_color: string | null; domain: string | null; domain_expires_manual: string | null; active: boolean
+  slug: string; primary_color: string | null; domain: string | null; domain_expires_manual: string | null; active: boolean
   // /api/errors del bug-report del proyecto: null o "" borra la URL y el token; el token vacío o ausente no cambia.
   errors_url?: string | null; errors_token?: string
   // Canal de Discord del proyecto, de la lista del bot. Ausente = no cambia, null o "" = sin canal.
   discord_channel_id?: string | null
+  // The bot creates the channel and picks it; if it cannot, the project is saved anyway and the envelope message says so.
+  create_discord_channel?: boolean
   developers?: DevelopersInput // ausente = no se tocan
 }
-export interface ProjectAdmin extends Omit<ProjectInput, 'errors_url' | 'errors_token' | 'discord_channel_id' | 'developers'> {
-  id: number; client_id: number; client_name: string; has_logo: boolean; logo_updated_at: string | null
+export interface ProjectAdmin extends Omit<ProjectInput, 'errors_url' | 'errors_token' | 'discord_channel_id' | 'create_discord_channel' | 'developers'> {
+  id: number; name: string; code_prefix: string; client_id: number; client_name: string; has_logo: boolean; logo_updated_at: string | null
   domain_expires_at: string | null; domain_checked_at: string | null; status: PortalState; phrase: string; components: ComponentAdmin[]
   errors_url: string | null; has_errors_token: boolean; discord_channel_id: string | null
   folders: ProjectFolder[]
   developers: Developer[]
 }
-// create_discord_channel: el bot crea el canal y lo estrena etiquetando al dev principal.
-// Si no puede, el proyecto se crea igual y el message del sobre lo avisa.
-export interface ProjectCreateInput { name: string; code_prefix: string; slug?: string; lead_user_id?: number; discord_channel_id?: string; create_discord_channel?: boolean }
 
 // Lo que ve el bot de Discord (GET /api/discord/channels y /members). Sin bot configurado, 503.
 // can_send false = el bot ve el canal pero no puede escribir ahí.

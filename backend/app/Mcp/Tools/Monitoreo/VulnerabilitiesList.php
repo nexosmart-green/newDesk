@@ -51,7 +51,7 @@ final class VulnerabilitiesList extends MonitoreoTool
             if ($found === [] && $projects->count() > 1) {
                 continue;
             }
-            $out[] = ['id' => $project->id, 'name' => $project->name, 'slug' => $project->slug, 'client' => $project->client->name,
+            $out[] = ['id' => $project->id, 'name' => $project->name, 'slug' => $project->slug, 'client' => $project->client->displayName(),
                 'developers' => $developers[$project->id] ?? [], 'counts' => $vulnerabilities->counts($project->id), 'dirs' => $found];
         }
         $result = ['projects' => $out, 'total' => count($out), 'scope' => $named !== '' ? 'project' : ($all ? 'all' : 'mine')];

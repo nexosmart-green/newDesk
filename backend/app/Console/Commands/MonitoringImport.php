@@ -21,7 +21,9 @@ class MonitoringImport extends Command
     protected $signature = 'monitoring:import
         {--company= : Company that owns the servers (default: the only one)}
         {--fresh : Empty the monitoring and status page history tables and the reports first}
-        {--storage-dir= : monitoreo STORAGE_DIR, to copy the report screenshots and chat images}';
+        {--storage-dir= : monitoreo STORAGE_DIR, to copy the report screenshots and chat images}
+        {--dry-run : Only show which newDesk project each monitoreo project goes to; write nothing}
+        {--link=* : <slug>:<code> pairs a monitoreo project with the newDesk project of that code}';
 
     protected $description = 'Import servers, alerts, site checks, clients, users, status pages and problem reports from the monitoreo database (read-only)';
 
@@ -35,9 +37,29 @@ class MonitoringImport extends Command
             return self::FAILURE;
         }
 
+        $links = [];
+        foreach ($this->option('link') as $link) {
+            if (preg_match('/^([a-z0-9-]+):([a-zA-Z0-9]+)$/', $link, $match) !== 1) {
+                $this->error("--link={$link}: usá <slug>:<código>, por ejemplo playinn-cafe:playinn.");
+
+                return self::FAILURE;
+            }
+            $links[$match[1]] = $match[2];
+        }
+
         $box = new LegacySecretBox((string) config('newdesk.monitoreo.encryption_key'));
+        $statusPages = new StatusPageImporter($box, links: $links);
+        if ($this->option('dry-run')) {
+            $this->table(['Proyecto de monitoreo', 'Cliente', 'Proyecto de newDesk'], array_map(fn (array $pair) => [
+                "{$pair['name']} ({$pair['slug']})", $pair['client'], $pair['code'] ?? 'NUEVO',
+            ], $statusPages->pairs($companyId)));
+            $this->line('Nada se escribió. Corregí una pareja con --link=<slug>:<código>, o importá sin --dry-run.');
+
+            return self::SUCCESS;
+        }
+        // A wrong --link or a taken slug stops here, before anything is copied.
+        $statusPages->pairs($companyId);
         $importer = new MonitoreoImporter($box);
-        $statusPages = new StatusPageImporter($box);
         $reports = new SupportImporter;
         if ($this->option('fresh')) {
             $reports->wipe();

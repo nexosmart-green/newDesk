@@ -42,7 +42,7 @@ final class ReportSubmittedMail extends Mailable implements ShouldQueue
         $browser = $report->browser;
 
         $html = '<div style="font-family:system-ui,sans-serif;font-size:15px;color:#111;line-height:1.5">';
-        $html .= sprintf('<p><strong>%s</strong> · %s<br>%s · <strong>%s</strong> · %s</p>', $e($report->client->name), $e($report->project->name),
+        $html .= sprintf('<p><strong>%s</strong> · %s<br>%s · <strong>%s</strong> · %s</p>', $e($report->client->displayName()), $e($report->project->name),
             $e($report->user_email), $e($urgency), $e($where));
         $html .= sprintf('<p style="white-space:pre-wrap;background:#f5f5f7;padding:12px;border-radius:8px">%s</p>', $e($report->description));
         $html .= sprintf('<p><strong>Chequeo en vivo:</strong> %s</p><ul>', $e($live['message']));
@@ -65,7 +65,7 @@ final class ReportSubmittedMail extends Mailable implements ShouldQueue
             $e($browser->screen), $e($browser->timezone), $e($browser->language));
         $html .= sprintf('<p><a href="%s">Ver el reporte en el panel</a> · Respondé este mail para contestarle al cliente.</p></div>', $e($reportUrl));
 
-        $subject = sprintf('%s %s · %s: %s', $report->urgency === 'blocking' ? '[URGENTE]' : '[Reporte]', $report->client->name,
+        $subject = sprintf('%s %s · %s: %s', $report->urgency === 'blocking' ? '[URGENTE]' : '[Reporte]', $report->client->displayName(),
             $report->project->name, Text::oneLine($report->description, 60));
 
         return new self($subject, $html, $report->user_email);

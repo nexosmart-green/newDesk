@@ -8,8 +8,18 @@ namespace App\Domain\Identity\Enums;
  */
 enum Permission: string
 {
+    // Module access: the Admin turns whole areas of the system on/off per role (pedido 2026-11-10).
+    case ModuleProjects = 'module.projects';
+    case ModuleTime = 'module.time';
+    case ModuleClients = 'module.clients';
+    case ModulePeople = 'module.people';
+    case ModuleCalendar = 'module.calendar';
+    case ModuleReports = 'module.reports';
+
     case ClientsManage = 'clients.manage';
     case ProjectsManage = 'projects.manage';
+    /** RF-03.08: reopening a finished/cancelled project is an Admin decision. */
+    case ProjectsReopen = 'projects.reopen';
     case MembersManage = 'members.manage';
     case HoursAllocate = 'hours.allocate';
     case TasksAssign = 'tasks.assign';
@@ -32,8 +42,15 @@ enum Permission: string
     public function label(): string
     {
         return match ($this) {
+            self::ModuleProjects => 'Módulo Proyectos y tareas',
+            self::ModuleTime => 'Módulo Horas y cronómetro',
+            self::ModuleClients => 'Módulo Clientes',
+            self::ModulePeople => 'Módulo Personas',
+            self::ModuleCalendar => 'Módulo Turnos y calendario',
+            self::ModuleReports => 'Módulo Reportes',
             self::ClientsManage => 'Gestionar clientes',
             self::ProjectsManage => 'Gestionar proyectos',
+            self::ProjectsReopen => 'Reabrir proyectos finalizados o cancelados',
             self::MembersManage => 'Asignar miembros a proyectos',
             self::HoursAllocate => 'Cargar / ampliar horas',
             self::TasksAssign => 'Asignar tareas',
@@ -49,6 +66,17 @@ enum Permission: string
             self::MonitoringView => 'Ver monitoreo',
             self::MonitoringManage => 'Administrar monitoreo',
         };
+    }
+
+    public function isModule(): bool
+    {
+        return str_starts_with($this->value, 'module.');
+    }
+
+    /** @return list<self> */
+    public static function modules(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $permission) => $permission->isModule()));
     }
 
     /** @return list<string> */

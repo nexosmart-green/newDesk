@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\Support\StatusPageFixtures as Fixtures;
 
 beforeEach(function () {
-    $this->admin = provisionCompany('teamviolet@nexosmart.com.ar');
+    $this->admin = adminUser('teamviolet@nexosmart.com.ar');
     config(['newdesk.monitoring.notify' => true, 'newdesk.monitoring.alert_email' => 'teamviolet@nexosmart.com.ar',
         'newdesk.frontend_url' => 'https://panel.x']);
     Mail::fake();

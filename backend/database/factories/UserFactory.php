@@ -43,6 +43,20 @@ class UserFactory extends Factory
         return $this->state(fn () => ['role_id' => $role->id, 'company_id' => $role->company_id]);
     }
 
+    public function withTwoFactor(string $secret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'): static
+    {
+        return $this->state(fn () => [
+            'two_factor_secret' => $secret,
+            'two_factor_recovery_codes' => ['recov-ery01', 'recov-ery02'],
+            'two_factor_confirmed_at' => now(),
+        ]);
+    }
+
+    public function invited(): static
+    {
+        return $this->state(fn () => ['status' => UserStatus::Invited, 'password' => null]);
+    }
+
     public function inactive(): static
     {
         return $this->state(fn () => ['status' => UserStatus::Inactive]);

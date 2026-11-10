@@ -26,7 +26,7 @@ final class SetProjectFolders
     {
         $inventories = ServerSnapshot::query()->where('section', 'projects')->pluck('data', 'server_id')
             ->map(fn (?string $data) => array_column(json_decode((string) $data, true)['items'] ?? [], 'path'));
-        $owners = ProjectFolder::query()->with(['project:id,name,client_id', 'project.client:id,name'])->get()
+        $owners = ProjectFolder::query()->with(['project:id,name,client_id', 'project.client:id,legal_name,trade_name'])->get()
             ->keyBy(fn (ProjectFolder $folder) => "{$folder->server_id}|{$folder->path}");
 
         [$problems, $chosen] = [[], []];
@@ -39,7 +39,7 @@ final class SetProjectFolders
             if (! in_array($folder['path'], $inventories->get($folder['server_id'], []), true)) {
                 $problems[] = "{$folder['path']} no está en el inventario de ese servidor.";
             } elseif ($owner !== null && $owner->project_id !== $project->id) {
-                $problems[] = "{$folder['path']} ya es de {$owner->project->client->name} ({$owner->project->name}).";
+                $problems[] = "{$folder['path']} ya es de {$owner->project->client->displayName()} ({$owner->project->name}).";
             } else {
                 $chosen[$key] = ['server_id' => $folder['server_id'], 'path' => $folder['path']];
             }

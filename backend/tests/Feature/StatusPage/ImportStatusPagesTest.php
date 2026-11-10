@@ -93,7 +93,7 @@ afterEach(fn () => DB::purge('monitoreo_test'));
 
 it('imports clients, users and status pages, mapping legacy rows and keeping component ids (CA-13.23)', function () {
     Storage::fake('local');
-    $admin = provisionCompany('teamviolet@nexosmart.com.ar');
+    $admin = adminUser('teamviolet@nexosmart.com.ar');
     Fixtures::server($admin, 'reaquila', ['id' => 7]);
     createLegacyStatusPageTables();
     $importer = new StatusPageImporter(new LegacySecretBox(GoSealedTokens::MASTER_KEY), 'monitoreo_test');
@@ -115,7 +115,7 @@ it('imports clients, users and status pages, mapping legacy rows and keeping com
 
     $project = Project::query()->sole();
     expect($project->only(['slug', 'name', 'code_prefix', 'client_id', 'portal_active', 'discord_channel_id', 'domain_notice_level']))->toBe([
-        'slug' => 'playinn-cafe', 'name' => 'Playinn Café', 'code_prefix' => 'playinncafe', 'client_id' => $client->id, 'portal_active' => true,
+        'slug' => 'playinn-cafe', 'name' => 'Playinn Café', 'code_prefix' => 'playinncaf', 'client_id' => $client->id, 'portal_active' => true,
         'discord_channel_id' => '1427806155307745290', 'domain_notice_level' => 1,
     ])
         ->and($project->errors_token)->toBe('token-del-proyecto')
@@ -144,4 +144,50 @@ it('imports clients, users and status pages, mapping legacy rows and keeping com
     $importer->wipe();
     expect(Component::query()->count())->toBe(0)->and(Project::query()->count())->toBe(1)
         ->and(DB::connection('monitoreo_test')->table('portal_components')->count())->toBe(1);
+});
+
+// ADR-0002 §12: clients and projects are loaded by hand first; the import only adds the status page to them.
+it('reuses the client and project loaded by hand and keeps their newDesk data', function () {
+    Storage::fake('local');
+    $admin = adminUser('teamviolet@nexosmart.com.ar');
+    Fixtures::server($admin, 'reaquila', ['id' => 7]);
+    $client = Client::query()->create(['company_id' => $admin->company_id, 'legal_name' => 'Playinn S.A.', 'trade_name' => 'Playinn']);
+    $project = Project::factory()->create(['company_id' => $admin->company_id, 'client_id' => $client->id, 'name' => 'Playinn Café',
+        'code_prefix' => 'pcafe', 'type' => 'internal', 'leader_user_id' => null]);
+    createLegacyStatusPageTables();
+
+    (new StatusPageImporter(new LegacySecretBox(GoSealedTokens::MASTER_KEY), 'monitoreo_test'))->import($admin->company_id);
+
+    $project->refresh();
+    expect(Client::query()->count())->toBe(1)->and(Project::query()->count())->toBe(1)
+        ->and(User::query()->whereNotNull('client_id')->sole()->client_id)->toBe($client->id)
+        ->and($project->only(['name', 'code_prefix', 'leader_user_id', 'slug', 'discord_channel_id']))->toBe([
+            'name' => 'Playinn Café', 'code_prefix' => 'pcafe', 'leader_user_id' => null, 'slug' => 'playinn-cafe', 'discord_channel_id' => '1427806155307745290',
+        ])
+        ->and($project->type->value)->toBe('internal')
+        ->and($project->members()->count())->toBe(0)
+        ->and($project->errors_token)->toBe('token-del-proyecto')
+        ->and(Component::query()->sole()->project_id)->toBe($project->id);
+});
+
+it('shows the pairs without writing anything and follows --link', function () {
+    $admin = adminUser('teamviolet@nexosmart.com.ar');
+    $client = Client::query()->create(['company_id' => $admin->company_id, 'legal_name' => 'Playinn']);
+    $cafe = Project::factory()->create(['company_id' => $admin->company_id, 'client_id' => $client->id, 'name' => 'Café de Playinn', 'code_prefix' => 'cafe']);
+    createLegacyStatusPageTables();
+    $box = new LegacySecretBox(GoSealedTokens::MASTER_KEY);
+
+    expect((new StatusPageImporter($box, 'monitoreo_test'))->pairs($admin->company_id))
+        ->toBe([['slug' => 'playinn-cafe', 'name' => 'Playinn Café', 'client' => 'Playinn', 'code' => null]])
+        ->and((new StatusPageImporter($box, 'monitoreo_test', ['playinn-cafe' => 'CAFE']))->pairs($admin->company_id)[0]['code'])->toBe('cafe')
+        ->and(Project::query()->count())->toBe(1)->and(Client::query()->count())->toBe(1)
+        ->and(DB::table('import_mappings')->count())->toBe(0);
+
+    expect(fn () => (new StatusPageImporter($box, 'monitoreo_test', ['playinn-cafe' => 'nada']))->pairs($admin->company_id))
+        ->toThrow(RuntimeException::class, 'no hay un proyecto con el código nada');
+
+    // Another project holding monitoreo's slug is a pair to fix, told before anything is copied.
+    $cafe->forceFill(['slug' => 'playinn-cafe'])->save();
+    expect(fn () => (new StatusPageImporter($box, 'monitoreo_test'))->pairs($admin->company_id))
+        ->toThrow(RuntimeException::class, '--link=playinn-cafe:cafe');
 });

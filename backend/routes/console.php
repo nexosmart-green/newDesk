@@ -7,13 +7,19 @@ use App\Domain\StatusPage\Actions\CheckComponents;
 use App\Domain\StatusPage\Actions\CheckDomains;
 use App\Domain\StatusPage\Actions\MeasurePageSpeed;
 use App\Domain\Support\Actions\PurgeReports;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Run by `schedule:work` under Supervisord (`php artisan supervisor:sync`), never crontab (RNF-11).
+
+// RF-05.06 / RF-05.10: budget and forgotten-timer cuts. Granularity = max over-consumption (R-1).
+Schedule::command('timers:cut')->everyMinute()->withoutOverlapping(5)->onOneServer();
+
+// RF-09.03: daily summary at 08:00 local time of each company.
+Schedule::command('tasks:notify-due')->hourly()->onOneServer();
+
+// Invariants 2–3: caches vs ledgers.
+Schedule::command('hours:reconcile')->dailyAt('03:15')->onOneServer();
 
 // RF-13.03/05: hourly metric rollups and retention (raw 7 days, hourly 1 year, site history 30 days).
 Schedule::command('monitoring:retention')->hourly()->withoutOverlapping();

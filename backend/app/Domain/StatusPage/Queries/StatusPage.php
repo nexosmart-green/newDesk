@@ -168,7 +168,7 @@ final class StatusPage
         return [
             'slug' => $project->slug,
             'name' => $project->name,
-            'client_name' => $project->client->name,
+            'client_name' => $project->client->displayName(),
             'primary_color' => $project->primary_color,
             'logo_url' => $logoUrl,
             'status' => $status,

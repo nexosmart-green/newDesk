@@ -190,7 +190,7 @@ class Report extends Model
             'status' => $this->status,
             'description' => Text::clip($this->description, 140),
             'client_id' => $this->client_id,
-            'client_name' => $this->client->name,
+            'client_name' => $this->client->displayName(),
             'project_id' => $this->project_id,
             'project_name' => $this->project->name,
             'user_email' => $this->user_email === '' ? null : $this->user_email,

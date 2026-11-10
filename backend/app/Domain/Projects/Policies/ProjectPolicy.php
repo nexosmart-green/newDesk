@@ -9,17 +9,12 @@ use Illuminate\Auth\Access\Response;
 
 class ProjectPolicy
 {
-    public function viewAny(User $user): bool
-    {
-        return true; // the list itself is filtered by Project::visibleTo()
-    }
-
-    /** CA-03.03: a non-member gets 404, not 403 — we do not confirm the project exists. */
+    /**
+     * CA-03.03: a non-member gets 404, not 403 — we don't even confirm the project exists.
+     */
     public function view(User $user, Project $project): Response
     {
-        return $user->hasPermission(Permission::ProjectsManage) || $project->hasMember($user)
-            ? Response::allow()
-            : Response::denyAsNotFound();
+        return $this->canSee($user, $project) ? Response::allow() : Response::denyAsNotFound();
     }
 
     public function create(User $user): bool
@@ -27,18 +22,33 @@ class ProjectPolicy
         return $user->hasPermission(Permission::ProjectsManage);
     }
 
-    public function update(User $user, Project $project): bool
+    public function update(User $user, Project $project): Response
+    {
+        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::ProjectsManage));
+    }
+
+    public function manageMembers(User $user, Project $project): Response
+    {
+        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::MembersManage));
+    }
+
+    public static function seesAllProjects(User $user): bool
     {
         return $user->hasPermission(Permission::ProjectsManage);
     }
 
-    public function delete(User $user, Project $project): bool
+    private function canSee(User $user, Project $project): bool
     {
-        return $user->hasPermission(Permission::ProjectsManage);
+        return $user->company_id === $project->company_id
+            && (self::seesAllProjects($user) || $project->hasMember($user));
     }
 
-    public function manageMembers(User $user, Project $project): bool
+    private function visibleAnd(User $user, Project $project, bool $allowed): Response
     {
-        return $user->hasPermission(Permission::MembersManage);
+        if (! $this->canSee($user, $project)) {
+            return Response::denyAsNotFound();
+        }
+
+        return $allowed ? Response::allow() : Response::deny();
     }
 }

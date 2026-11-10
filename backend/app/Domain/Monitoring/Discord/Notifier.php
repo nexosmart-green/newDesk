@@ -9,8 +9,8 @@ use App\Domain\Monitoring\Events\AlertChanged;
 use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Monitoring\Jobs\SendDiscordMessage;
 use App\Domain\Monitoring\Models\Alert;
-use App\Domain\Projects\Actions\SaveProject;
 use App\Domain\Projects\Models\Project;
+use App\Domain\Projects\Support\ProjectSlug;
 use App\Domain\Shared\Text;
 use App\Domain\StatusPage\Models\ProjectFolder;
 use App\Domain\StatusPage\Queries\Vulnerabilities;
@@ -116,15 +116,15 @@ final class Notifier implements ShouldQueue
     public function createChannel(Project $project): string
     {
         $project->loadMissing('client', 'leader');
-        $created = $this->discord->createChannel('monitoreo-'.SaveProject::slugify($project->name),
-            "Avisos de Monitoreo · {$project->client->name} · {$project->name}");
+        $created = $this->discord->createChannel('monitoreo-'.ProjectSlug::slugify($project->name),
+            "Avisos de Monitoreo · {$project->client->displayName()} · {$project->name}");
         $project->forceFill(['discord_channel_id' => $created['id']])->save();
 
         $body = ['Acá van a llegar los avisos del proyecto: caídas del sitio y de sus procesos, vulnerabilidades activas, reportes del cliente y errores de la API.'];
         if (($summary = self::summaryChannel()) !== null) {
             $body[] = 'Las caídas del server y el resumen de las 9 y las 18 h van a '.DiscordMessage::channelLink($summary).'.';
         }
-        $this->discord->send($this->message($this->channelOf($project), '👋', 'canal de '.DiscordMessage::escape($project->client->name), $body, true,
+        $this->discord->send($this->message($this->channelOf($project), '👋', 'canal de '.DiscordMessage::escape($project->client->displayName()), $body, true,
             self::projectUrl($project)));
 
         return $created['id'];

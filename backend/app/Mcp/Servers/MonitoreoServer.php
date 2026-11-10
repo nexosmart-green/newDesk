@@ -8,7 +8,7 @@ use Laravel\Mcp\Server;
 /**
  * monitoreo's MCP (RF-13.10, D-050, D-051, D-053, D-092): the client reports, their chat and images,
  * and what is needed to investigate them, with the same name, instructions and 12 tools as the Go
- * panel. Who may call it and the audit source are set by the route (AuthorizeMcp).
+ * panel. Who may call it and the audit source are set by the route (AuthorizeMcpToken).
  */
 class MonitoreoServer extends Server
 {

@@ -27,7 +27,7 @@ class MonitoringUserResource extends ApiResource
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'last_login_at' => $this->last_login_at?->toIso8601ZuluString(),
             'discord_user_id' => $this->discord_user_id,
-            'client' => $this->client_id === null ? null : ['id' => $this->client_id, 'name' => $this->client->name],
+            'client' => $this->client_id === null ? null : ['id' => $this->client_id, 'name' => $this->client->displayName()],
         ];
     }
 }

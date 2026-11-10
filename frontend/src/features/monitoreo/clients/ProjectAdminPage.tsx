@@ -1,13 +1,11 @@
-import { Link, useLocation, useNavigate, useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { useCan } from '@/features/auth/useAuth'
 import { errorMessage } from '../api/monitoringApi'
 import { useAdminProject, useProjectPreview } from '../api/usePortalAdmin'
-import { useProjectMutations } from '../api/useProjectMutations'
 import { ErrorNote, Panel, Spinner } from '../components/Panel'
 import { Badge } from '../components/Status'
 import { portalStateMeta } from '../lib/status'
 import { PortalStatusView } from '../portal/PortalStatusView'
-import { ConfirmButton } from '../settings/ConfirmButton'
 import { BackLink } from './ClientPage'
 import { ComponentsPanel } from './ComponentsPanel'
 import { LogoPanel } from './LogoPanel'
@@ -22,10 +20,6 @@ export function ProjectAdminPage() {
   const projectId = Number(params.pid)
   const project = useAdminProject(projectId)
   const isAdmin = useCan('monitoring.manage')
-  const navigate = useNavigate()
-  // Lo que respondió el alta (ClientPage): puede avisar que el bot no pudo crear el canal de Discord.
-  const created = useLocation().state as { notice?: string; warning?: boolean } | null
-  const { remove } = useProjectMutations(projectId)
 
   if (project.isPending) return <Spinner label="Cargando el proyecto…" />
   if (project.isError) return <ErrorNote onRetry={() => void project.refetch()}>{errorMessage(project.error)}</ErrorNote>
@@ -42,13 +36,7 @@ export function ProjectAdminPage() {
         <span className="text-sm text-muted">
           Cliente: <Link to={`/monitoreo/clientes/${data.client_id}`} className="link">{data.client_name}</Link>
         </span>
-        {isAdmin && (
-          <div className="ml-auto">
-            <ConfirmButton label="Eliminar proyecto" confirmLabel="¿Seguro? Se pierde el historial" onConfirm={() => remove.mutate(undefined, { onSuccess: () => navigate('/monitoreo/proyectos') })} />
-          </div>
-        )}
       </div>
-      {created?.notice && (created.warning ? <ErrorNote>{created.notice}</ErrorNote> : <p role="status" className="fade-in text-sm text-ok">{created.notice}</p>)}
 
       <div className="grid gap-5 xl:grid-cols-[1fr_20rem]">
         <ProjectForm key={data.id} project={data} readOnly={!isAdmin} />

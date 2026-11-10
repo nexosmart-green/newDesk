@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { useCan } from '@/features/auth/useAuth'
 import { errorMessage, fieldError } from '../api/monitoringApi'
 import { useClient } from '../api/usePortalAdmin'
-import { useClientMutations } from '../api/useProjectMutations'
+import { usePortalUserMutations } from '../api/useProjectMutations'
 import type { ProjectRow, User } from '../api/types'
 import { DataTable } from '../components/DataTable'
 import { Icon } from '../components/Icon'
@@ -12,7 +12,6 @@ import { Badge } from '../components/Status'
 import { formatRelative } from '../lib/format'
 import { portalStateMeta } from '../lib/status'
 import { ConfirmButton } from '../settings/ConfirmButton'
-import { NewProjectForm } from './NewProjectForm'
 
 export function BackLink({ to, children }: { to: string; children: string }) {
   return (
@@ -27,9 +26,7 @@ export function ClientPage() {
   const id = Number(useParams().id)
   const detail = useClient(id)
   const isAdmin = useCan('monitoring.manage')
-  const navigate = useNavigate()
-  const mutations = useClientMutations()
-  const [renaming, setRenaming] = useState<string | null>(null)
+  const mutations = usePortalUserMutations()
   const [email, setEmail] = useState('')
 
   if (detail.isPending) return <Spinner label="Cargando el cliente…" />
@@ -39,43 +36,15 @@ export function ClientPage() {
   return (
     <div className="rise space-y-5">
       <BackLink to="/monitoreo/clientes">Clientes</BackLink>
+      {/* Name and status belong to the newDesk client: edited in Clientes, like its projects in Proyectos. */}
       <div className="flex flex-wrap items-center gap-3">
-        {renaming === null ? (
-          <h1 className="title">{client.name}</h1>
-        ) : (
-          <form
-            className="flex flex-wrap items-center gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              mutations.update.mutate({ id, patch: { name: renaming.trim() } }, { onSuccess: () => setRenaming(null) })
-            }}
-          >
-            <label>
-              <span className="sr-only">Nombre del cliente</span>
-              <input className="input w-64" value={renaming} onChange={(e) => setRenaming(e.target.value)} autoFocus />
-            </label>
-            <button type="submit" className="btn btn-primary btn-sm" disabled={!renaming.trim() || mutations.update.isPending}>Guardar</button>
-            <button type="button" className="btn btn-sm" onClick={() => setRenaming(null)}>Cancelar</button>
-          </form>
-        )}
+        <h1 className="title">{client.name}</h1>
         <Badge tone={client.active ? 'ok' : 'idle'}>{client.active ? 'Activo' : 'Inactivo'}</Badge>
-        {isAdmin && renaming === null && (
-          <div className="ml-auto flex flex-wrap gap-2">
-            <button type="button" className="btn btn-sm" onClick={() => setRenaming(client.name)}>Renombrar</button>
-            <button type="button" className="btn btn-sm" onClick={() => mutations.update.mutate({ id, patch: { active: !client.active } })}>
-              {client.active ? 'Desactivar' : 'Activar'}
-            </button>
-            <ConfirmButton label="Eliminar cliente" confirmLabel="¿Borrar el cliente y sus usuarios?" onConfirm={() => mutations.remove.mutate(id, { onSuccess: () => navigate('/monitoreo/clientes') })} />
-          </div>
-        )}
+        <Link to={`/clientes/${id}`} className="btn btn-sm ml-auto">Editar en Clientes</Link>
       </div>
-      {fieldError(mutations.update.error, 'name') && <ErrorNote>{fieldError(mutations.update.error, 'name')}</ErrorNote>}
-      {/* Un cliente con proyectos no se borra (422): el back dice que se inactive. */}
-      {mutations.remove.isError && <ErrorNote>{errorMessage(mutations.remove.error)}</ErrorNote>}
       {!client.active && <p className="text-sm text-muted">Inactivo: sus usuarios no pueden entrar al portal.</p>}
 
       <Panel title={`Proyectos · ${projects.length}`} bodyClassName="">
-        {isAdmin && <NewProjectForm clientId={id} />}
         <DataTable<ProjectRow>
           noun="proyectos"
           rows={projects}

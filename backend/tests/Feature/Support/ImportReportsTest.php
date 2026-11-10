@@ -54,7 +54,7 @@ afterEach(fn () => DB::purge('monitoreo_test'));
 
 it('imports the reports with their chat, images and roadmaps, keeping their ids (CA-13.23)', function () {
     Storage::fake('local');
-    $admin = provisionCompany('teamviolet@nexosmart.com.ar');
+    $admin = adminUser('teamviolet@nexosmart.com.ar');
     $project = Fixtures::project($admin);
     $owner = Reports::clientUser($project, 'dueno@playinn.com');
     // What StatusPageImporter left in import_mappings.

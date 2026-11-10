@@ -4,27 +4,29 @@ namespace App\Http\Resources;
 
 use App\Domain\Clients\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin Client
  */
-class ClientResource extends ApiResource
+class ClientResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
             'legal_name' => $this->legal_name,
+            'trade_name' => $this->trade_name,
+            'display_name' => $this->displayName(),
             'tax_id' => $this->tax_id,
             'contact_name' => $this->contact_name,
-            'contact_email' => $this->contact_email,
-            'contact_phone' => $this->contact_phone,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'notes' => $this->notes,
-            'active' => $this->active,
+            'status' => $this->status->value,
             'projects_count' => $this->whenCounted('projects'),
-            'created_at' => $this->created_at?->toIso8601ZuluString(),
+            'projects' => ProjectSummaryResource::collection($this->whenLoaded('projects')),
         ];
     }
 }

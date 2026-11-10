@@ -20,7 +20,8 @@ it('closes every team route to client users and every portal route to the team (
     Route::prefix('api/v1/portal')->middleware(['api', 'auth:sanctum', 'active', 'client'])
         ->get('_probe', fn () => ApiResponse::ok());
 
-    $public = ['api/v1/auth/login', 'api/v1/portal/auth/request-code', 'api/v1/portal/auth/verify-code'];
+    $public = ['api/v1/auth/login', 'api/v1/auth/two-factor-challenge', 'api/v1/auth/forgot-password', 'api/v1/auth/reset-password',
+        'api/v1/invitations/{token}', 'api/v1/invitations/{token}/accept', 'api/v1/portal/auth/request-code', 'api/v1/portal/auth/verify-code'];
     $bothSides = ['api/v1/me', 'api/v1/auth/logout', 'api/v1/broadcasting/auth'];
 
     $failures = [];

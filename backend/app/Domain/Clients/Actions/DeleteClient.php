@@ -9,24 +9,30 @@ use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Facades\DB;
 
 /**
- * CA-02.01: a client with projects is inactivated, never deleted. Without projects it goes
- * away together with its portal users (as in monitoreo).
+ * CA-02.01: a client with projects is never deleted — it is deactivated instead. Its portal users go
+ * with it (RF-13.07): the soft delete would not fire the users.client_id cascade.
  */
 final class DeleteClient
 {
-    public function __construct(private readonly RecordActivity $recordActivity) {}
+    public function __construct(
+        private readonly DeleteClientUser $deleteUser,
+        private readonly RecordActivity $recordActivity,
+    ) {}
 
-    public function __invoke(Client $client, User $actor): void
+    public function __invoke(User $actor, Client $client): void
     {
-        if ($client->projects()->exists()) {
-            throw new BusinessRuleViolation(
-                'Un cliente con proyectos no se borra: inactivalo.',
-                'client_has_projects',
-            );
-        }
+        DB::transaction(function () use ($actor, $client) {
+            if ($client->projects()->withTrashed()->lockForUpdate()->exists()) {
+                throw new BusinessRuleViolation(
+                    "{$client->displayName()} tiene proyectos: no se borra, se inactiva.",
+                    'client_has_projects',
+                );
+            }
 
-        DB::transaction(function () use ($client, $actor) {
-            ($this->recordActivity)('client.deleted', $client, $actor, $client->only(['name', 'active']));
+            foreach ($client->users()->get() as $user) {
+                ($this->deleteUser)($user, $actor);
+            }
+            ($this->recordActivity)('client.deleted', $client, $actor, $client->only(Client::EDITABLE));
             $client->delete();
         });
     }

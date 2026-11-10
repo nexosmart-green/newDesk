@@ -2,6 +2,7 @@
 
 namespace App\Domain\StatusPage\Actions;
 
+use App\Domain\Clients\Enums\ClientStatus;
 use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Monitoring\Models\Server;
 use App\Domain\Monitoring\Models\ServerSnapshot;
@@ -37,7 +38,7 @@ final class CheckComponents
     {
         $components = Component::query()->withoutGlobalScope('company')
             ->whereHas('project', fn ($projects) => $projects->withoutGlobalScope('company')->where('portal_active', true)
-                ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('active', true)))
+                ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('status', ClientStatus::Active)))
             ->orderBy('id')->get();
         $this->check($components);
     }
@@ -188,7 +189,7 @@ final class CheckComponents
             return;
         }
         $project = Project::query()->withoutGlobalScope('company')->with(['client' => fn ($query) => $query->withoutGlobalScope('company')])->find($component->project_id);
-        if ($project === null || ! $project->portal_active || ! $project->client->active) {
+        if ($project === null || ! $project->portal_active || $project->client?->isActive() !== true) {
             return;
         }
         $verb = count($component->parts) > 1 ? 'ya funcionan con normalidad' : 'ya funciona con normalidad';

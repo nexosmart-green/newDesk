@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Domain\Identity\Models\User;
+use App\Http\Auth\SessionLogin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\CurrentUserResource;
@@ -17,20 +17,23 @@ use Illuminate\Validation\ValidationException;
  */
 class SessionController extends Controller
 {
+    public function __construct(private readonly SessionLogin $sessionLogin) {}
+
     public function store(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
-
         // Only active users can log in (RF-01.10); invited users have no password yet.
-        if (! Auth::guard('web')->attempt([...$credentials, 'status' => 'active'], $request->boolean('remember'))) {
+        $user = $this->sessionLogin->findActiveUserByCredentials($request->string('email'), $request->string('password'));
+        if ($user === null) {
             throw ValidationException::withMessages(['email' => 'Credenciales incorrectas.']);
         }
 
-        $request->session()->regenerate();
+        if ($user->hasTwoFactorEnabled()) {
+            $this->sessionLogin->holdForTwoFactor($request, $user, $request->boolean('remember'));
 
-        /** @var User $user */
-        $user = Auth::guard('web')->user();
-        $user->forceFill(['last_login_at' => now()])->save();
+            return ApiResponse::ok(['two_factor_required' => true]);
+        }
+
+        $this->sessionLogin->complete($request, $user, $request->boolean('remember'));
 
         return CurrentUserResource::make($user)->response();
     }

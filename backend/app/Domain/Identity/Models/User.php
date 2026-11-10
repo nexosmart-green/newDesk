@@ -6,12 +6,22 @@ use App\Domain\Clients\Models\Client;
 use App\Domain\Companies\Models\Company;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Enums\UserStatus;
+use App\Domain\Identity\Notifications\ResetPasswordNotification;
+use App\Domain\People\Models\EmployeeProfile;
+use App\Domain\People\Models\HourlyRate;
+use App\Domain\People\Models\Skill;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -29,6 +39,9 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $locale
  * @property string|null $timezone
  * @property string|null $discord_user_id
+ * @property string|null $two_factor_secret
+ * @property list<string>|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
  */
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable
@@ -42,10 +55,20 @@ class User extends Authenticatable
         'status', 'locale', 'timezone', 'discord_user_id',
     ];
 
-    protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
+    /** Mirrors the column defaults so fresh instances behave like reloaded ones (team by default: isClient() needs no reload). */
+    protected $attributes = [
+        'client_id' => null,
+        'discord_user_id' => null,
+        'locale' => 'es',
+        'timezone' => null,
+        'avatar_path' => null,
+        'two_factor_secret' => null,
+        'two_factor_recovery_codes' => null,
+        'two_factor_confirmed_at' => null,
+        'last_login_at' => null,
+    ];
 
-    /** Team by default; a freshly created model must answer isClient() without a reload. */
-    protected $attributes = ['client_id' => null];
+    protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     protected function casts(): array
     {
@@ -55,7 +78,25 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'status' => UserStatus::class,
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null;
+    }
+
+    /** RF-01.02: mandatory for Admin (the system role). */
+    public function requiresTwoFactor(): bool
+    {
+        return (bool) $this->role?->is_system;
     }
 
     /** @return BelongsTo<Company, $this> */
@@ -83,6 +124,37 @@ class User extends Authenticatable
         return $this->client_id !== null;
     }
 
+    /** Everyone but the client portal users: the people, assignees, shifts and admins of newDesk. */
+    public function scopeTeam(Builder $query): Builder
+    {
+        return $query->whereNull('client_id');
+    }
+
+    /** @return HasOne<EmployeeProfile, $this> */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(EmployeeProfile::class)->withoutGlobalScopes();
+    }
+
+    /** @return BelongsToMany<Skill, $this> */
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'user_skills')->withPivot('level')->withoutGlobalScopes();
+    }
+
+    /** @return HasMany<HourlyRate, $this> */
+    public function hourlyRates(): HasMany
+    {
+        return $this->hasMany(HourlyRate::class)->withoutGlobalScopes();
+    }
+
+    /** "Mi equipo" (RF-01.07): people whose profile reports to this user. */
+    public function directReports(): HasManyThrough
+    {
+        return $this->hasManyThrough(User::class, EmployeeProfile::class, 'reports_to_user_id', 'id', 'id', 'user_id')
+            ->withoutGlobalScopes();
+    }
+
     public function fullName(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
@@ -96,7 +168,7 @@ class User extends Authenticatable
     /** Inactivating a client also signs its portal users out (D-038). */
     public function canLogin(): bool
     {
-        return $this->isActive() && ($this->client_id === null || $this->client->active);
+        return $this->isActive() && ($this->client_id === null || $this->client?->isActive() === true);
     }
 
     /**

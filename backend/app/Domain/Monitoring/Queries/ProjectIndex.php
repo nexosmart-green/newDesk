@@ -21,10 +21,10 @@ final class ProjectIndex
         $snapshots = ServerSnapshot::query()->whereIn('server_id', $servers->modelKeys())
             ->whereIn('section', ['projects', 'sites'])->get(['server_id', 'section', 'data']);
         $section = fn (string $name) => $snapshots->where('section', $name)->pluck('data', 'server_id')->all();
-        $links = ProjectFolder::query()->with(['project:id,name,client_id', 'project.client:id,name'])->get()
+        $links = ProjectFolder::query()->with(['project:id,name,client_id', 'project.client:id,legal_name,trade_name'])->get()
             ->mapWithKeys(fn (ProjectFolder $folder) => ["{$folder->server_id}|{$folder->path}" => [
                 'project_id' => $folder->project_id, 'project_name' => $folder->project->name,
-                'client_id' => $folder->project->client_id, 'client_name' => $folder->project->client->name,
+                'client_id' => $folder->project->client_id, 'client_name' => $folder->project->client->displayName(),
             ]])->all();
 
         return self::build($servers, $section('projects'), $section('sites'), $links);

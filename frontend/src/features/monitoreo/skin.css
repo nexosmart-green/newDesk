@@ -1,6 +1,6 @@
 /* Piel de monitoreo (ADR-0002 punto 8): los tokens y componentes de monitoreo/web/src/index.css, solo bajo
    [data-skin='monitoreo']. Las utilidades de Tailwind compilan a var(--color-…): acá se redefinen las que
-   comparten nombre con newDesk (bg, surface, text, muted, accent); las propias de monitoreo (surface-2, line,
+   comparten nombre con newDesk (bg, surface, surface-2, text, muted, accent); las propias de monitoreo (surface-3, line,
    crit…) están registradas en src/index.css. El claro/oscuro sigue a la clase que pone useTheme en <html>; en el portal del
    cliente, a su propio selector (data-portal-theme). */
 
@@ -45,6 +45,7 @@
     /* Utilidades de newDesk con el mismo nombre que las de monitoreo. */
     --color-bg: var(--bg);
     --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
     --color-text: var(--text);
     --color-muted: var(--muted);
     --color-accent: var(--accent);

@@ -33,10 +33,19 @@ Se reescribe el panel en newDesk; el agente no cambia. Puntos de diseño:
 9. **Migración:** importador de solo lectura sobre la base `monitoreo` que conserva los IDs de servidores, alertas, componentes y reportes (los links viejos siguen andando tras el redirect). Los cruces de clientes, proyectos y usuarios quedan en `import_mappings`.
 10. **API espejo:** cada endpoint Go `/api/<ruta>` del equipo vive en `/api/v1/monitoring/<ruta>` y cada uno del portal `/api/portal/<ruta>` en `/api/v1/portal/<ruta>`, con el mismo request y la misma respuesta (el Go ya usa `{data, message, errors}` y `meta {page, per_page, total}`). Así el front se porta cambiando solo el prefijo. Acceso: "staff" del Go = permiso `monitoring.view`; "admin" = `monitoring.manage`. Validación: 422 con `errors` por campo (el Go devolvía 400).
 11. **Convivencia:** hasta el corte, newDesk consulta a los agentes con el mismo token pero con `MONITORING_NOTIFY=false` (sin Discord, mails ni heartbeat).
+12. **Unión con `main` (2026-11-10).** `main` (= `dev_green`) trajo R1 completo, con clientes, proyectos, tokens y MCP propios. Al mergearlo en `feat/monitoreo`:
+    - Clientes y proyectos son los de main (RF-02/03): `legal_name`/`trade_name` (`displayName()`), `status` + softDeletes, `type` bolsa/interno. Se borraron las migraciones, acciones, requests y tests de la versión básica. `users.client_id` vive en su propia migración.
+    - Crear, renombrar, (des)activar y borrar clientes, y crear, renombrar y cerrar proyectos, se hace solo en Clientes y Proyectos. Monitoreo edita lo suyo: slug, color, logo, dominio, `/api/errors`, Discord (puede crear el canal), portal activo y devs. Los devs pasan por `UpdateProject` (responsable) y `AddProjectMember`/`RemoveProjectMember` (miembros), así cortan timers y no sacan al responsable. Un proyecto nunca se borra desde monitoreo (lo decidió el usuario). Cada proyecto nuevo recibe slug. Los proyectos sin cliente (internos) no aparecen en monitoreo ni en el portal.
+    - Un solo sistema de tokens: Conexiones de IA (`/me/ai-tokens`). El mismo token abre `/mcp` y `/mcp/monitoreo`. `AuthorizeMcpToken` suma permisos por servidor (`monitoring.view`), rechaza usuarios cliente y limita a 60 llamadas por minuto por token, compartidas entre los dos servidores (monitoreo tenía 120). Un token en la API REST, el broadcasting o el portal recibe 403 (`RejectMcpTokens`).
+    - Usuarios cliente fuera de todo lo del equipo: `User::team()` en usuarios, personas, turnos, miembros, MCP y "reporta a". `{user}` resuelve solo usuarios del equipo y `{clientUser}` solo usuarios del portal. El reset de contraseña los excluye. El rol Cliente **no** es `is_system`, porque en main eso significa Admin (2FA obligatorio, avisos a admins, último admin): `Role::isPortal()` lo protege de editar, borrar o asignarse a gente del equipo.
+    - Desarrollador recibe los módulos de Colaborador más `monitoring.view`. No hay `module.monitoring`: `monitoring.view` ya prende o apaga el módulo por rol.
+    - Importación: los clientes y proyectos se cargan primero a mano. `monitoring:import --dry-run` muestra las parejas y `--link=<slug>:<código>` las corrige. Un proyecto vinculado solo recibe los campos del monitoreo; los que no tienen pareja se crean con bolsa de horas.
+    - Frontend: una entrada "Monitoreo" en el sidebar de main. Adentro sigue el menú y la piel de monitoreo. El usuario cliente va a `/portal` antes del chequeo de 2FA.
+    - Las preguntas P-25..P-29 de monitoreo pasaron a P-28..P-32 (main ya usaba P-25..P-27).
 
 ## Consecuencias
 
 - Es un port grande (~10 fases). Cada fase queda en `feat/monitoreo` con sus tests.
-- Si newDesk no corre en el Servidor 5, hay que sumar su IP a `allowed_ips` y ufw de cada agente (solo config). P-25.
+- Si newDesk no corre en el Servidor 5, hay que sumar su IP a `allowed_ips` y ufw de cada agente (solo config). P-28.
 - Los tokens MCP `mon_` se pierden: cada dev genera uno nuevo.
 - Long-running PHP: el poller se reinicia solo por edad o memoria, y `/health` controla que siga vivo.

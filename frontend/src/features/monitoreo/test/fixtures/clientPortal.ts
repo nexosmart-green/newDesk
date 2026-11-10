@@ -11,7 +11,7 @@ const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOS
 
 const clientUser = (id: number, email: string, client: { id: number; name: string }): CurrentUser => ({
   id, first_name: '', last_name: '', full_name: email, email, locale: 'es', timezone: 'America/Argentina/Buenos_Aires', role: { id: 9, name: 'Cliente' },
-  permissions: [], company: { id: 1, name: 'nexosmart', currency: 'USD', timezone: 'UTC' }, client,
+  permissions: [], two_factor: { enabled: false, required: false }, company: { id: 1, name: 'nexosmart', currency: 'USD', timezone: 'UTC' }, client,
 })
 export const playinnUser = clientUser(101, 'cliente@playinn.com', { id: 1, name: 'Playinn' }) // un solo proyecto
 export const olimpoUser = clientUser(103, 'cliente@olimpo.com.ar', { id: 2, name: 'Club Olimpo' }) // dos proyectos

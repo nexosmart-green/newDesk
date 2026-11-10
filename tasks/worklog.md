@@ -46,3 +46,13 @@
 - F9: runbook manual `docs/06-migracion/corte-monitoreo.md` (bloqueantes, variables, convivencia, día del corte, redirects nginx, verificación, vuelta atrás).
 - Tests finales: back 273 ok + 1 skip (socket unix en Windows) + 1 que falla solo por falta de Redis local; front 160 ok; typecheck, lint y build ok.
 - `/bug-report` no se pudo correr: newDesk no tiene URL de staging/prod todavía (no hay `.claude/bug-report.json`).
+
+## 2026-11-10 — Unión de `main` (dev_green, R1) en `feat/monitoreo`
+
+- Pedido: traer lo de dev_green y unificarlo con monitoreo, en la rama `feat/monitoreo` (no en main ni dev_green). Merge de `origin/main` e5047b9 en un worktree aparte (`newDesk-merge`), 32 conflictos.
+- Decisiones (ADR-0002 §12): clientes/proyectos de main; monitoreo solo edita lo suyo (slug, color, logo, dominio, errores, Discord, portal activo, devs); un proyecto no se borra desde monitoreo (pedido del usuario); un solo sistema de tokens (Conexiones de IA) para `/mcp` y `/mcp/monitoreo`, 60/min por token; usuarios cliente fuera de todo lo del equipo (`User::team()`, `{user}`/`{clientUser}`, reset de contraseña, rol Cliente bloqueado y no `is_system`); Desarrollador con los módulos de Colaborador; preguntas P-25..P-29 de monitoreo → P-28..P-32.
+- Importación: `monitoring:import --dry-run` muestra las parejas proyecto-monitoreo ↔ proyecto-desk y `--link=<slug>:<código>` las corrige; los proyectos cargados a mano solo reciben los campos del monitoreo (pedido: cargar clientes primero y vincular en una sesión en vivo con Playwright).
+- Frontend: sidebar de main con una entrada "Monitoreo"; monitoreo abre a pantalla completa con su menú y "Volver a newDesk" al pie (pedido del usuario con captura). Usuario cliente → `/portal` antes del chequeo de 2FA.
+- Tests: el `TestCase` de main congela el reloj; un test de monitoreo tomaba un `Cache::lock` de 1 s sin soltarlo y colgaba la suite (corregido); el admin de los tests de monitoreo pasa a `adminUser()` (2FA obligatorio de main).
+- Falla en main sin la unión (no tocado, para el otro dev): `ReviewRegressionTest` "a person cannot move an old entry into the window by correcting it". `/health` sigue fallando local solo por falta de Redis.
+- `origin/main` avanzó a eaea73c (UI) durante la unión: va en una segunda unión.

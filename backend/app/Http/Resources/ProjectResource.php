@@ -2,33 +2,31 @@
 
 namespace App\Http\Resources;
 
-use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * Project detail (RF-03.04 "Resumen" header).
+ *
  * @mixin Project
  */
-class ProjectResource extends ApiResource
+class ProjectResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        $person = fn (?User $user) => $user === null ? null : ['id' => $user->id, 'full_name' => $user->fullName()];
+        $this->resource->loadMissing(['client', 'leader', 'members.profile.jobTitle', 'members.profile.area']);
 
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'code_prefix' => $this->code_prefix,
+            ...ProjectSummaryResource::make($this->resource)->toArray($request),
             'description' => $this->description,
-            'starts_on' => $this->starts_on?->toDateString(),
-            'ends_on' => $this->ends_on?->toDateString(),
-            'status' => $this->status->value,
-            'status_label' => $this->status->label(),
-            'client' => $this->whenLoaded('client', fn () => ['id' => $this->client->id, 'name' => $this->client->name]),
-            'leader' => $this->whenLoaded('leader', fn () => $person($this->leader)),
-            'members' => $this->whenLoaded('members', fn () => $this->members->map($person)->values()),
-            'created_at' => $this->created_at?->toIso8601ZuluString(),
+            'prefix_locked' => $this->prefixIsLocked(),
+            'members' => PersonResource::collection($this->members),
+            'can' => [
+                'update' => $request->user()?->can('update', $this->resource) ?? false,
+                'manage_members' => $request->user()?->can('manageMembers', $this->resource) ?? false,
+            ],
         ];
     }
 }

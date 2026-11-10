@@ -23,7 +23,7 @@ final class ReportSearch
         }
         $query = Report::query()
             ->when($projectIds !== null, fn (Builder $query) => $query->whereIn('project_id', $projectIds))
-            ->when($client !== '', fn (Builder $query) => $query->whereHas('client', fn (Builder $query) => $query->where('name', 'like', "%{$client}%")))
+            ->when($client !== '', fn (Builder $query) => $query->whereHas('client', fn (Builder $query) => $query->where('legal_name', 'like', "%{$client}%")->orWhere('trade_name', 'like', "%{$client}%")))
             ->when($status !== '', fn (Builder $query) => $query->where('status', $status))
             ->when($urgency !== '', fn (Builder $query) => $query->where('urgency', $urgency))
             ->when($unread, fn (Builder $query) => $query->whereNotNull('last_client_message_at')

@@ -8,12 +8,10 @@ use App\Domain\Identity\Models\User;
 
 class ClientPolicy
 {
-    /** Whoever creates projects or follows monitoring needs the client list. */
+    /** Project managers need the list to pick a client. */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission(Permission::ClientsManage)
-            || $user->hasPermission(Permission::ProjectsManage)
-            || $user->hasPermission(Permission::MonitoringView);
+        return $user->hasPermission(Permission::ClientsManage) || $user->hasPermission(Permission::ProjectsManage);
     }
 
     public function view(User $user, Client $client): bool

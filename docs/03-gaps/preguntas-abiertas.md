@@ -19,6 +19,7 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-18 / P-19 | Migración y acceso a la DB | ✅ **Después del proyecto.** R1 arranca con carga inicial limpia; migración pasa a épica post-R1. |
 | P-20 | Horas vendidas por proyecto | ✅ OK, el dueño las carga al dar de alta los proyectos. |
 | P-03 | ¿Los clientes entran al sistema? | ✅ **Sí, solo al portal de monitoreo** (estado de sus proyectos y reportes), con código por mail (RF-13.07). Ver avance y horas sigue en C. |
+| P-27 | Mover tareas con horas (RF-04.12) | ✅ (2026-11-06) "Correcto": si el destino no tiene horas, se rechaza. **Puede moverla quien registró las horas** (si todas son suyas) o quien tenga `hours.allocate`. |
 
 ## Pendientes
 
@@ -36,8 +37,10 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 | P-22 | ⚪ | Dominio | `desk.nexosmart.es` al salir; staging aparte. |
 | P-23 | 🟡 | **"Configurable por empresa"**: ¿newDesk lo va a usar **más de una empresa** (multi-empresa / SaaS) o solo NexoSmart con su configuración? | Solo NexoSmart, pero con tabla `companies` y `company_id` desde el día 1 para no cerrar la puerta. |
 | P-24 | 🟡 | Cerradura: ¿la salida se abre girando la perilla de adentro? ¿Quién tiene la cuenta admin de Nexxt Home? ¿Confirmamos modelo con foto de la etiqueta? | — Ver G-25: la cerradura registra **aperturas desde afuera**, la salida suele no quedar registrada a nombre de nadie. |
-| P-25 | 🟡 | **Monitoreo:** ¿en qué servidor corre newDesk en producción? | Servidor 5 (51.222.205.245): los agentes ya aceptan esa IP y el socket de Claude del reporte diario ya está ahí. Si es otro, hay que sumar su IP en `allowed_ips` + ufw de los 6 agentes y crear su propio socket de Claude. |
-| P-26 | ⚪ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. |
-| P-27 | ⚪ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. |
-| P-28 | ⚪ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. |
-| P-29 | ⚪ | Monitoreo: los devs secundarios de un proyecto son sus miembros (RF-03.03). Guardar devs desde Monitoreo reemplaza la lista de miembros. Cuando haya pantallas de proyectos con miembros que no son devs (diseño, PM), ¿se separan "desarrolladores" de "miembros"? | Por ahora iguales. Revisar en E2: si hace falta, columna `role` en `project_members` (lead/secondary/member). |
+| P-25 | ⚪ | RF-01.05 pide fotos **HEIC**. GD (PHP) no decodifica HEIC; hace falta Imagick + libheif en el servidor de prod. ¿Instalamos Imagick en prod o alcanza con que iPhone suba JPG? | Hoy: JPG/PNG/WebP con mensaje claro para iPhone ("Cámara → Formatos → Más compatible"); Safari ya convierte HEIC→JPEG al subir en la mayoría de los casos. El procesador está detrás de la interfaz `AvatarProcessor`: agregar HEIC = un adaptador Imagick, sin tocar el dominio. |
+| P-26 | ⚪ | RF-06.06 "Feriados nacionales (AR) cargados": ¿de qué fuente oficial los tomamos? Los trasladables cambian cada año por decreto. | Hoy se cargan desde la app (Admin → feriados, alcance nacional/empresa). Propuesta: importar al inicio de cada año desde la API pública ArgentinaDatos o el calendario oficial de argentina.gob.ar, con revisión manual. |
+| P-28 | 🟡 | **Monitoreo:** ¿en qué servidor corre newDesk en producción? | Servidor 5 (51.222.205.245): los agentes ya aceptan esa IP y el socket de Claude del reporte diario ya está ahí. Si es otro, hay que sumar su IP en `allowed_ips` + ufw de los 6 agentes y crear su propio socket de Claude. |
+| P-29 | ⚪ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. |
+| P-30 | ⚪ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. |
+| P-31 | ⚪ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. |
+| P-32 | ⚪ | Monitoreo: los devs secundarios de un proyecto son sus miembros (RF-03.03). Guardar devs desde Monitoreo reemplaza la lista de miembros. Cuando haya pantallas de proyectos con miembros que no son devs (diseño, PM), ¿se separan "desarrolladores" de "miembros"? | Por ahora iguales. Revisar en E2: si hace falta, columna `role` en `project_members` (lead/secondary/member). |

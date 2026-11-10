@@ -26,7 +26,7 @@ beforeEach(function () {
     Storage::fake('local');
     Mail::fake();
     config(['newdesk.monitoring.notify' => true, 'newdesk.monitoring.alert_email' => 'team@nexosmart.com.ar', 'newdesk.frontend_url' => 'https://desk.test']);
-    $this->admin = provisionCompany('admin@nexosmart.com.ar');
+    $this->admin = adminUser('admin@nexosmart.com.ar');
     $this->project = Fixtures::project($this->admin);
     $this->owner = Reports::clientUser($this->project, 'dueno@playinn.com');
 });

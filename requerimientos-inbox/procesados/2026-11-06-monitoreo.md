@@ -22,6 +22,6 @@
 - Equipo: login de newDesk tal cual. Clientes: código de 6 dígitos al mail.
 - Migración: todo, con historial.
 - Links viejos de `monitoreo.nexosmart.com`: redirigen a la misma página en newDesk.
-- Hosting de newDesk: sin definir (P-25).
+- Hosting de newDesk: sin definir (P-28).
 
-→ Absorbido en RF-13 (RF-13.01–RF-13.13), RF-02.04 y P-03 ✅. ADR-0002. Preguntas P-25..P-28.
+→ Absorbido en RF-13 (RF-13.01–RF-13.13), RF-02.04 y P-03 ✅. ADR-0002. Preguntas P-28..P-31.

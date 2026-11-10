@@ -44,7 +44,7 @@ export function ServerPage() {
       {detail.isPending && <HeaderSkeleton />}
       {detail.isError && <ErrorNote onRetry={() => void detail.refetch()}>{errorMessage(detail.error)}</ErrorNote>}
 
-      <div className="glass sticky top-13 z-10 -mx-5 border-b border-line px-5 py-2 sm:-mx-8 sm:px-8 lg:top-0 lg:-mx-10 lg:px-10">
+      <div className="glass sticky top-29 z-10 -mx-5 border-b border-line px-5 py-2 sm:-mx-8 sm:px-8 lg:top-16 lg:-mx-10 lg:px-10">
         <Tabs
           label="Secciones del servidor"
           tabs={tabDefs.map((t) => ({ ...t, badge: badges[t.id] }))}

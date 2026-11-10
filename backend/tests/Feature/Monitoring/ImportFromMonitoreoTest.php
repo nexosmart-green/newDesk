@@ -63,7 +63,7 @@ function createLegacyMonitoreoTables(): void
 }
 
 it('copies monitoreo keeping ids and re-sealing each token for newDesk (CA-13.23, CA-13.24)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     createLegacyMonitoreoTables();
     $importer = new MonitoreoImporter(new LegacySecretBox(GoSealedTokens::MASTER_KEY), DB::getDefaultConnection());
 
@@ -99,8 +99,8 @@ it('copies monitoreo keeping ids and re-sealing each token for newDesk (CA-13.23
 });
 
 it('asks which company owns the servers when there are several', function () {
-    provisionCompany('a@nexo.com');
-    provisionCompany('b@other.com');
+    adminUser('a@nexo.com');
+    adminUser('b@other.com');
 
     expect(Artisan::call('monitoring:import'))->toBe(1)
         ->and(Artisan::output())->toContain('--company');

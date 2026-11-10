@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Domain\Clients\Models\Client;
-use App\Domain\Projects\Enums\ProjectStatus;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,10 +16,10 @@ class ProjectFactory extends Factory
         return [
             'client_id' => Client::factory(),
             'company_id' => fn (array $attributes) => Client::query()->withoutGlobalScopes()->findOrFail($attributes['client_id'])->company_id,
-            'name' => fake()->unique()->catchPhrase(),
-            'code_prefix' => fake()->unique()->lexify('???????'),
-            'slug' => fn (array $attributes) => $attributes['code_prefix'],
-            'status' => ProjectStatus::Active,
+            'name' => fake()->catchPhrase(),
+            'code_prefix' => fake()->unique()->lexify('???'),
+            'type' => 'bag',
+            'status' => 'active',
         ];
     }
 }

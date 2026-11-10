@@ -1,4 +1,4 @@
-import type { ClientDetail, ComponentInput, DevelopersInput, FolderRef, Incident, PortalStatus, ProjectAdmin, ProjectCreateInput, ProjectInput } from '../api/types'
+import type { ClientDetail, ComponentInput, DevelopersInput, FolderRef, Incident, PortalStatus, ProjectInput } from '../api/types'
 import {
   clients, component, discordChannels, folderInventory, initialProjects, playinnIncidents, playinnSuggestions, projectRow, team, vulnsFor,
 } from './fixtures/portal'
@@ -26,31 +26,20 @@ export function mockPortalAdmin(overrides: Routes = {}) {
     'PUT portal-admin/projects/:id': ({ params, body }) => {
       const item = find(params.id)
       if (!item) return notFound
-      const { errors_token: _token, developers: devs, ...input } = body as ProjectInput
-      Object.assign(item, input, { discord_channel_id: input.discord_channel_id ?? null }, devs ? { developers: developers(devs) } : {})
-      return item
+      const { errors_token: _token, developers: devs, create_discord_channel: createChannel, ...input } = body as ProjectInput
+      let channel = input.discord_channel_id ?? null
+      // The bot creates the channel named after the project, as the backend does.
+      if (createChannel) {
+        channel = `156000000000000${String(item.id).padStart(4, '0')}`
+        state.channels.push({ id: channel, name: item.name.toLowerCase().replace(/\s+/g, '-'), kind: 'channel', category: 'Equipo BBG1', can_send: true })
+      }
+      Object.assign(item, input, { discord_channel_id: channel }, devs ? { developers: developers(devs) } : {})
+      return reply({ data: item, message: 'Proyecto guardado.' })
     },
     'GET portal-admin/clients/:id': ({ params }): ClientDetail | ReturnType<typeof reply> => {
       const client = clients.find((each) => each.id === Number(params.id))
       if (!client) return notFound
       return { client, users: [], projects: state.projects.filter((each) => each.client_id === client.id).map(projectRow) }
-    },
-    'POST portal-admin/clients/:id/projects': ({ params, body }) => {
-      const input = body as ProjectCreateInput
-      const id = state.nextId++
-      const client = clients.find((each) => each.id === Number(params.id))
-      let channel = input.discord_channel_id ?? null
-      if (input.create_discord_channel) {
-        channel = `156000000000000${String(id).padStart(4, '0')}`
-        state.channels.push({ id: channel, name: input.name.toLowerCase().replace(/\s+/g, '-'), kind: 'channel', category: 'Equipo BBG1', can_send: true })
-      }
-      const created: ProjectAdmin = {
-        ...state.projects[0]!, id, client_id: client?.id ?? 0, client_name: client?.name ?? '', name: input.name, slug: input.name.toLowerCase().replace(/\s+/g, '-'),
-        code_prefix: input.code_prefix, has_logo: false, primary_color: null, discord_channel_id: channel, components: [], folders: [],
-        developers: developers({ lead_user_id: input.lead_user_id ?? null, secondary_user_ids: [] }),
-      }
-      state.projects.push(created)
-      return reply({ status: 201, data: created, message: 'Proyecto creado.' })
     },
     'GET discord/channels': () => state.channels,
     'POST portal-admin/projects/:id/discord-test': reply({ message: 'Mensaje de prueba enviado.' }),

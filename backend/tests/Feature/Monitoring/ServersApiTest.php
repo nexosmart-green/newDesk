@@ -44,7 +44,7 @@ function serverInput(array $overrides = []): array
 }
 
 it('creates a server and never returns its token (CA-13.01)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
 
     $response = $this->actingAs($admin)->postJson(SERVERS_URL, serverInput(['ssh_port' => 1080]))
         ->assertCreated()
@@ -69,7 +69,7 @@ it('creates a server and never returns its token (CA-13.01)', function () {
 });
 
 it('validates like monitoreo, with its messages', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->actingAs($admin);
 
     $this->postJson(SERVERS_URL, ['name' => '', 'ip' => 'nope', 'ssh_port' => 70000, 'token' => 'short', 'tls_fingerprint' => 'xyz'])
@@ -90,7 +90,7 @@ it('validates like monitoreo, with its messages', function () {
 });
 
 it('lists servers with their metrics summary and shows every section (RF-13.03)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin, ['status' => 'online']);
     monitoredServer($admin, ['name' => 'apagado', 'enabled' => false]);
     $snapshot = fn (string $section, string $data) => ServerSnapshot::query()->insert([
@@ -128,7 +128,7 @@ it('lists servers with their metrics summary and shows every section (RF-13.03)'
 });
 
 it('asks for the token again when the IP, port or fingerprint change (CA-13.07)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin, ['status' => 'online']);
     $server->rememberPin('some-pin');
     $this->actingAs($admin);
@@ -152,7 +152,7 @@ it('asks for the token again when the IP, port or fingerprint change (CA-13.07)'
 });
 
 it('deletes a server with its snapshots', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin);
     ServerSnapshot::query()->insert(['server_id' => $server->id, 'section' => 'metrics', 'company_id' => $admin->company_id, 'fetched_at' => now()]);
 
@@ -164,7 +164,7 @@ it('deletes a server with its snapshots', function () {
 });
 
 it('lets monitoring.view read and monitoring.manage change (ADR-0002 §10)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin);
     $url = SERVERS_URL."/{$server->id}";
     $this->actingAs(developerOf($admin));
@@ -188,15 +188,15 @@ it('lets monitoring.view read and monitoring.manage change (ADR-0002 §10)', fun
 });
 
 it('hides servers of another company', function () {
-    $admin = provisionCompany('a@nexo.com');
-    $foreign = monitoredServer(provisionCompany('b@other.com'));
+    $admin = adminUser('a@nexo.com');
+    $foreign = monitoredServer(adminUser('b@other.com'));
 
     $this->actingAs($admin)->getJson(SERVERS_URL."/{$foreign->id}")->assertNotFound();
     $this->getJson(SERVERS_URL)->assertOk()->assertJsonCount(0, 'data');
 });
 
 it('queues a forced refresh for the poller and validates the section', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin);
     $this->actingAs($admin);
 
@@ -209,7 +209,7 @@ it('queues a forced refresh for the poller and validates the section', function 
 });
 
 it('marks the server live while its detail beats (CA-13.06)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin);
 
     $this->actingAs($admin)->postJson(SERVERS_URL."/{$server->id}/live")->assertOk();
@@ -220,7 +220,7 @@ it('marks the server live while its detail beats (CA-13.06)', function () {
 });
 
 it('serves metric series: raw up to 7 days, hourly beyond', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $server = monitoredServer($admin);
     $this->freezeTime();
     $point = ['company_id' => $admin->company_id, 'server_id' => $server->id, 'cpu' => 10, 'memory' => 60, 'swap' => 20, 'disk' => 65, 'load1' => 0.3, 'rx_bps' => 1000, 'tx_bps' => 500];
@@ -252,7 +252,7 @@ it('serves metric series: raw up to 7 days, hourly beyond', function () {
 });
 
 it('tests the connection and stores the pin', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->app->instance(AgentGateway::class, $agent = new FakeAgentGateway);
     $agent->sections['health'] = ['status' => 'ok', 'version' => 'v-test', 'hostname' => 'mail.reaquila.com'];
     $server = monitoredServer($admin);
@@ -267,7 +267,7 @@ it('tests the connection and stores the pin', function () {
 });
 
 it('refuses an agent whose certificate does not match before sending the token (CA-13.02)', function () {
-    $admin = provisionCompany();
+    $admin = adminUser();
     $this->app->instance(AgentGateway::class, $agent = new FakeAgentGateway);
     $server = monitoredServer($admin, ['tls_fingerprint' => str_repeat('0', 64)]);
 

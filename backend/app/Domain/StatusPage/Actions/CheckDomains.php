@@ -2,6 +2,7 @@
 
 namespace App\Domain\StatusPage\Actions;
 
+use App\Domain\Clients\Enums\ClientStatus;
 use App\Domain\Projects\Models\Project;
 use App\Domain\StatusPage\Notifications\StatusPageMail;
 use App\Domain\StatusPage\Queries\StatusPage;
@@ -28,7 +29,7 @@ final class CheckDomains
         $now = CarbonImmutable::now()->utc();
         $projects = Project::query()->withoutGlobalScope('company')->with(['client' => fn ($query) => $query->withoutGlobalScope('company')])
             ->whereNotNull('domain')->where('portal_active', true)
-            ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('active', true))
+            ->whereHas('client', fn ($clients) => $clients->withoutGlobalScope('company')->where('status', ClientStatus::Active))
             ->orderBy('id')->get();
 
         foreach ($projects as $project) {
@@ -75,7 +76,7 @@ final class CheckDomains
         $subject = $left < 0 ? "[AVISO] El dominio {$domain} está vencido" : "[AVISO] El dominio {$domain} vence en {$left} días";
         $panel = (string) config('newdesk.frontend_url');
         $html = sprintf('<div style="font-family:system-ui,sans-serif;font-size:15px;color:#111"><p><strong>%s</strong> (proyecto %s de %s) vence el <strong>%s</strong>.</p><p><a href="%s">Abrir el panel</a></p></div>',
-            e($domain), e($project->name), e($project->client->name), $expires->format('d/m/Y'), e($panel));
+            e($domain), e($project->name), e($project->client->displayName()), $expires->format('d/m/Y'), e($panel));
 
         Mail::to($recipient)->queue(new StatusPageMail($subject, $html));
         Project::withoutTimestamps(fn () => $project->forceFill(['domain_notice_level' => $level])->save());

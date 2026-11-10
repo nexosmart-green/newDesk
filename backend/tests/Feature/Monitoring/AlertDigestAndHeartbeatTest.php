@@ -27,7 +27,7 @@ beforeEach(function () {
     Mail::fake();
     Event::fake([AlertChanged::class]); // the digest only reads what the engine stored
     config(['newdesk.monitoring.notify' => true, 'newdesk.frontend_url' => 'https://x', 'newdesk.monitoring.digest_email_to' => 'x@y.com, z@y.com']);
-    $this->admin = provisionCompany();
+    $this->admin = adminUser();
 });
 
 it('finds the last 9 or 18 h cut, in Argentina (D-046)', function () {

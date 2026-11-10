@@ -41,7 +41,10 @@ Support       reportes de clientes, chat, roadmap                              (
 - `monitoring:poll` (supervisord `monitoring-poller`): daemon que consulta a cada `monitor-agent` por HTTPS con pin de clave pública (`app/Infrastructure/Agent/CurlAgentGateway`), guarda `monitoring_server_snapshots` y `monitoring_metrics_raw`, y emite por Reverb en `private-monitoring.{companyId}` (`server.status`, `snapshot`, `metrics`, `alert`).
 - Señales web → daemon por Cache (`PollerSignals`): recargar servers, refrescar sección, latido del modo en vivo (`POST /api/v1/monitoring/servers/{id}/live`), tick que mira `/health`.
 - API espejo del Go en `/api/v1/monitoring/*` (equipo) y `/api/v1/portal/*` (clientes). Front en `frontend/src/features/monitoreo` con la piel bajo `[data-skin="monitoreo"]`.
-- `monitoring:import` lee la base `monitoreo` (conexión `monitoreo_legacy`, sesión read-only) y conserva IDs.
+- `monitoring:import` lee la base `monitoreo` (conexión `monitoreo_legacy`, sesión read-only) y conserva IDs. Reusa los clientes y proyectos que newDesk ya tiene (`--dry-run` muestra las parejas, `--link=<slug>:<código>` las corrige).
+- Clientes y proyectos son los de RF-02/03: monitoreo solo agrega columnas al proyecto (`Project::STATUS_PAGE`) y los usuarios del portal (`users.client_id`, rol Cliente, `User::team()` los deja fuera del equipo).
+- Dos servidores MCP con el mismo token personal (Conexiones de IA): `/mcp` (`NewDeskServer`) y `/mcp/monitoreo` (`MonitoreoServer`, además pide `monitoring.view`), los dos detrás de `AuthorizeMcpToken`.
+- Frontend: una entrada "Monitoreo" en el sidebar del shell; adentro, el layout y la piel de monitoreo. `/portal` es un árbol aparte para usuarios cliente.
 
 ## Puntos de diseño críticos
 

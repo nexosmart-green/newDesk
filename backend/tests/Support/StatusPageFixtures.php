@@ -28,10 +28,10 @@ final class StatusPageFixtures
 
     public static function project(User $admin, string $slug = 'playinn', string $client = 'Playinn'): Project
     {
-        $owner = Client::query()->forCompany($admin->company_id)->firstOrCreate(['company_id' => $admin->company_id, 'name' => $client]);
+        $owner = Client::query()->forCompany($admin->company_id)->firstOrCreate(['company_id' => $admin->company_id, 'legal_name' => $client]);
 
         return Project::factory()->create(['company_id' => $admin->company_id, 'client_id' => $owner->id, 'name' => ucfirst($slug),
-            'slug' => $slug, 'code_prefix' => substr(str_replace('-', '', $slug), 0, 12)]);
+            'slug' => $slug, 'code_prefix' => substr(str_replace('-', '', $slug), 0, 10)]);
     }
 
     public static function saved(Project $project, array $attributes): Component

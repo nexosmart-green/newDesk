@@ -3,10 +3,12 @@
 use App\Domain\Clients\Models\Client;
 use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Models\User;
+use App\Domain\Projects\Actions\CreateProject;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\ActivityLog;
 use App\Domain\StatusPage\Models\Component;
 use App\Domain\StatusPage\Models\Period;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -40,19 +42,29 @@ function teamDeveloper(User $admin): User
     return User::factory()->forRole(roleNamed($admin, DefaultRoles::DEVELOPER))->create();
 }
 
+/** Clientes (RF-02) creates the client; monitoring reads it and manages its portal users (ADR-0002 §12). */
 function newClient(string $name): int
 {
-    return test()->postJson(STATUS_ADMIN.'/clients', ['name' => $name])->assertCreated()->json('data.id');
+    return Client::query()->create(['company_id' => auth()->user()->company_id, 'legal_name' => $name])->id;
 }
 
+/**
+ * Proyectos (RF-03) creates the project (and its slug); the monitoring form then sets whatever else was
+ * sent. Answers with the project as monitoring's admin shows it.
+ */
 function newProject(int $clientId, array $input): TestResponse
 {
-    return test()->postJson(STATUS_ADMIN."/clients/{$clientId}/projects", $input);
+    $project = app(CreateProject::class)(auth()->user(),
+        ['client_id' => $clientId, 'name' => $input['name'], 'code_prefix' => $input['code_prefix'], 'type' => 'bag']);
+    $path = STATUS_ADMIN."/projects/{$project->id}";
+    $extra = Arr::except($input, ['name', 'code_prefix']);
+
+    return $extra === [] ? test()->getJson($path) : test()->putJson($path, ['slug' => $project->slug, ...$extra]);
 }
 
 // httpapi/portal_test.go TestClientPortalFlow
 it('sets up a client portal and shows the client only its parts (RF-13.07, CA-13.13)', function () {
-    $admin = signIn(provisionCompany('admin@nexosmart.com.ar'));
+    $admin = signIn(adminUser('admin@nexosmart.com.ar'));
     Http::fake(['https://playinn.test/*' => Http::response('hola')]);
     // A server named and addressed like something a client must never see.
     $server = Fixtures::server($admin, 'srv-secreto', ['ip' => '203.0.113.9']);
@@ -62,17 +74,18 @@ it('sets up a client portal and shows the client only its parts (RF-13.07, CA-13
     $this->postJson(STATUS_ADMIN."/clients/{$clientId}/users", ['email' => 'Dueno@Playinn.com'])
         ->assertCreated()->assertJsonPath('message', 'Usuario creado.')
         ->assertJsonPath('data.email', 'dueno@playinn.com')->assertJsonPath('data.client.name', 'Playinn');
-    $projectId = newProject($clientId, ['name' => 'Playinn Café', 'code_prefix' => 'playinn'])
-        ->assertCreated()->assertJsonPath('message', 'Proyecto creado.')
+    $projectId = newProject($clientId, ['name' => 'Playinn Café', 'code_prefix' => 'playinn'])->assertOk()
         ->assertJsonPath('data.slug', 'playinn-cafe')->assertJsonPath('data.code_prefix', 'playinn')->assertJsonPath('data.active', true)
         ->json('data.id');
     $projectPath = STATUS_ADMIN."/projects/{$projectId}";
 
-    $this->putJson($projectPath, ['name' => 'Playinn', 'slug' => 'playinn', 'code_prefix' => 'playinn', 'primary_color' => '#E11D48',
+    // Name and code belong to Proyectos (RF-03): this form ignores them.
+    $this->putJson($projectPath, ['name' => 'Otro', 'slug' => 'playinn', 'code_prefix' => 'otro', 'primary_color' => '#E11D48',
         'domain' => 'Playinn.com', 'domain_expires_manual' => '2027-03-01', 'active' => true])
         ->assertOk()->assertJsonPath('message', 'Proyecto actualizado.')
         ->assertJsonPath('data.primary_color', '#e11d48')->assertJsonPath('data.domain', 'playinn.com')
-        ->assertJsonPath('data.domain_expires_manual', '2027-03-01');
+        ->assertJsonPath('data.domain_expires_manual', '2027-03-01')
+        ->assertJsonPath('data.name', 'Playinn Café')->assertJsonPath('data.code_prefix', 'playinn');
 
     $this->putJson("{$projectPath}/logo", ['content_type' => 'image/svg+xml', 'data_base64' => base64_encode('<svg/>')])
         ->assertUnprocessable()->assertJsonPath('errors.logo.0', 'El logo tiene que ser PNG, JPG o WebP.');
@@ -100,13 +113,13 @@ it('sets up a client portal and shows the client only its parts (RF-13.07, CA-13
     expect($this->getJson(STATUS_ADMIN.'/targets')->assertOk()->getContent())->toContain('"playinn-queue"');
 
     // Another client's project, to try to reach it from the first one.
-    newProject(newClient('Otro'), ['name' => 'Ajeno', 'slug' => 'ajeno', 'code_prefix' => 'ajeno'])->assertCreated();
+    newProject(newClient('Otro'), ['name' => 'Ajeno', 'slug' => 'ajeno', 'code_prefix' => 'ajeno'])->assertOk();
 
     // The team lists every project across clients, with its owner and logo (D-048).
     $rows = $this->getJson(STATUS_ADMIN.'/projects')->assertOk()->json('data');
     expect($rows)->toHaveCount(2)
         ->and($rows[0])->toMatchArray(['name' => 'Ajeno', 'client_name' => 'Otro', 'logo_url' => null])
-        ->and($rows[1])->toMatchArray(['name' => 'Playinn', 'client_name' => 'Playinn', 'components' => 2, 'status' => 'operational'])
+        ->and($rows[1])->toMatchArray(['name' => 'Playinn Café', 'client_name' => 'Playinn', 'components' => 2, 'status' => 'operational'])
         ->and($rows[1]['logo_url'])->toStartWith("api/portal-admin/projects/{$projectId}/logo?v=");
 
     // The client sees its project.
@@ -136,20 +149,24 @@ it('sets up a client portal and shows the client only its parts (RF-13.07, CA-13
     // Client users never show up among the team's users.
     expect($this->getJson('/api/v1/monitoring/users')->assertOk()->getContent())->not->toContain('dueno@playinn.com');
 
-    // Deactivating the client signs its users out.
-    $this->putJson(STATUS_ADMIN."/clients/{$clientId}", ['active' => false])->assertOk()->assertJsonPath('data.active', false);
+    // Deactivating the client (in Clientes, RF-02) signs its users out.
+    $this->putJson("/api/v1/clients/{$clientId}/status", ['status' => 'inactive'])->assertOk();
+    $this->getJson(STATUS_ADMIN."/clients/{$clientId}")->assertOk()->assertJsonPath('data.client.active', false);
     signIn($owner->fresh());
     $this->getJson(STATUS_PORTAL.'/projects')->assertUnauthorized();
 });
 
 it('lists clients with their counts and a client with its users and projects', function () {
-    signIn(provisionCompany());
+    signIn(adminUser());
     $clientId = newClient('Playinn');
     $this->postJson(STATUS_ADMIN."/clients/{$clientId}/users", ['email' => 'uno@playinn.com'])->assertCreated();
-    newProject($clientId, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->assertCreated();
+    newProject($clientId, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->assertOk();
+    // An internal project (no client) has no status page: monitoring never lists it.
+    $internal = app(CreateProject::class)(auth()->user(), ['name' => 'Interno', 'code_prefix' => 'interno', 'type' => 'internal']);
 
-    $this->postJson(STATUS_ADMIN.'/clients', ['name' => 'Playinn'])->assertUnprocessable()->assertJsonPath('errors.name.0', 'Ya hay un cliente con ese nombre.');
-    $this->postJson(STATUS_ADMIN.'/clients', ['name' => ''])->assertUnprocessable()->assertJsonPath('errors.name.0', 'El nombre es obligatorio (hasta 120 caracteres).');
+    $this->getJson(STATUS_ADMIN.'/projects')->assertOk()->assertJsonCount(1, 'data');
+    $this->getJson(STATUS_ADMIN."/projects/{$internal->id}")->assertNotFound();
+    $this->getJson(STATUS_ADMIN."/projects/{$internal->id}/preview")->assertNotFound();
     $this->getJson(STATUS_ADMIN.'/clients')->assertOk()->assertJsonPath('data.0', fn (array $row) => $row['name'] === 'Playinn' && $row['users'] === 1 && $row['projects'] === 1);
     $this->getJson(STATUS_ADMIN."/clients/{$clientId}")->assertOk()
         ->assertJsonPath('data.client.users', 1)->assertJsonPath('data.users.0.email', 'uno@playinn.com')
@@ -158,7 +175,7 @@ it('lists clients with their counts and a client with its users and projects', f
 });
 
 it('stores client users lowercased, refuses repeated addresses and manages them per client', function () {
-    $admin = signIn(provisionCompany());
+    $admin = signIn(adminUser());
     $clientId = newClient('Playinn');
     $otherId = newClient('Otro');
 
@@ -180,43 +197,40 @@ it('stores client users lowercased, refuses repeated addresses and manages them 
     expect(User::query()->find($userId))->toBeNull();
 });
 
-it('inactivates a client with projects instead of deleting it (CA-02.01)', function () {
-    signIn(provisionCompany());
+// ADR-0002 §12: the client is deleted in Clientes (RF-02), and its portal users go with it.
+it('deletes only a client without projects, with its portal users (CA-02.01)', function () {
+    signIn(adminUser());
     $withProjects = newClient('Playinn');
-    newProject($withProjects, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->assertCreated();
+    newProject($withProjects, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->assertOk();
     $empty = newClient('Vacío');
     $this->postJson(STATUS_ADMIN."/clients/{$empty}/users", ['email' => 'uno@vacio.com'])->assertCreated();
 
-    $this->deleteJson(STATUS_ADMIN."/clients/{$withProjects}")->assertUnprocessable()
-        ->assertJsonPath('message', 'Un cliente con proyectos no se borra: inactivalo.');
-    $this->putJson(STATUS_ADMIN."/clients/{$withProjects}", ['active' => false])->assertOk();
-    newProject($withProjects, ['name' => 'Otro', 'code_prefix' => 'otro'])->assertUnprocessable()
-        ->assertJsonPath('message', 'El cliente está inactivo: no admite proyectos nuevos.');
-    $this->deleteJson(STATUS_ADMIN."/clients/{$empty}")->assertOk()->assertJsonPath('message', 'Cliente eliminado.');
+    $this->deleteJson("/api/v1/clients/{$withProjects}")->assertUnprocessable()->assertJsonPath('data.code', 'client_has_projects');
+    $this->deleteJson("/api/v1/clients/{$empty}")->assertOk();
     expect(Client::query()->find($empty))->toBeNull()->and(User::query()->where('email', 'uno@vacio.com')->exists())->toBeFalse();
+    $this->getJson(STATUS_ADMIN.'/clients')->assertOk()->assertJsonCount(1, 'data');
 });
 
 it('derives the slug like monitoreo and reserves "login" for the portal', function () {
-    signIn(provisionCompany());
+    signIn(adminUser());
     $clientId = newClient('Playinn');
 
-    newProject($clientId, ['name' => 'Login', 'code_prefix' => 'login'])->assertCreated()->assertJsonPath('data.slug', 'login-2');
-    newProject($clientId, ['name' => 'Login', 'code_prefix' => 'login3'])->assertCreated()->assertJsonPath('data.slug', 'login-3');
+    // Every project created in Proyectos gets one (CreateProject), already off the reserved ones.
+    newProject($clientId, ['name' => 'Login', 'code_prefix' => 'login'])->assertOk()->assertJsonPath('data.slug', 'login-2');
+    newProject($clientId, ['name' => 'Login', 'code_prefix' => 'login3'])->assertOk()->assertJsonPath('data.slug', 'login-3');
     newProject($clientId, ['name' => 'Algo', 'slug' => 'login', 'code_prefix' => 'algo'])
         ->assertUnprocessable()->assertJsonPath('errors.slug.0', 'Ese identificador ya está en uso.');
-    $id = newProject($clientId, ['name' => 'Café Nueva Córdoba', 'code_prefix' => 'cafe'])->assertCreated()
+    $id = newProject($clientId, ['name' => 'Café Nueva Córdoba', 'code_prefix' => 'cafe'])->assertOk()
         ->assertJsonPath('data.slug', 'cafe-nueva-cordoba')->json('data.id');
-    $this->putJson(STATUS_ADMIN."/projects/{$id}", ['name' => 'Café', 'slug' => 'login', 'code_prefix' => 'cafe'])
+    $this->putJson(STATUS_ADMIN."/projects/{$id}", ['slug' => 'login'])
         ->assertUnprocessable()->assertJsonPath('errors.slug.0', 'Ese identificador ya está en uso.');
-    $this->putJson(STATUS_ADMIN."/projects/{$id}", ['name' => 'Café', 'slug' => 'login-2', 'code_prefix' => 'login'])
-        ->assertUnprocessable()->assertJsonPath('errors.slug.0', 'Ese identificador ya está en uso.')
-        ->assertJsonPath('errors.code_prefix.0', 'Ya hay un proyecto con ese código.');
-    newProject($clientId, ['name' => 'Sin código'])->assertUnprocessable()->assertJsonPath('errors.code_prefix.0', 'El código va en minúsculas, de 2 a 12 letras o números.');
+    $this->putJson(STATUS_ADMIN."/projects/{$id}", ['slug' => 'login-2'])
+        ->assertUnprocessable()->assertJsonPath('errors.slug.0', 'Ese identificador ya está en uso.');
 });
 
 // httpapi/destination_token_test.go (D-093 H3)
 it('keeps the errors token write-only and asks for it again when the URL moves', function () {
-    signIn(provisionCompany());
+    signIn(adminUser());
     $projectId = newProject(newClient('Playinn'), ['name' => 'Playinn', 'code_prefix' => 'playinn'])->json('data.id');
     $path = STATUS_ADMIN."/projects/{$projectId}";
     $form = fn (?string $url, ?string $token = null) => ['name' => 'Playinn', 'slug' => 'playinn', 'code_prefix' => 'playinn',
@@ -247,7 +261,7 @@ it('keeps the errors token write-only and asks for it again when the URL moves',
 
 // httpapi/vulnerabilities_test.go (D-053)
 it('assigns developers and shows each project its vulnerabilities', function () {
-    $admin = signIn(provisionCompany('admin@nexosmart.com.ar'));
+    $admin = signIn(adminUser('admin@nexosmart.com.ar'));
     $dev = User::factory()->forRole(roleNamed($admin, DefaultRoles::DEVELOPER))->create(['email' => 'dev@nexosmart.com.ar']);
     $server = Fixtures::server($admin, 'Servidor 5');
     Fixtures::snapshot($server, 'projects', Fixtures::fixture('reaquila', 'projects'));
@@ -300,7 +314,7 @@ it('assigns developers and shows each project its vulnerabilities', function () 
 
 // httpapi/portal_history_test.go TestIncidentsLastUpdateAndResponseTimes
 it('links folders, suggests from them and shows incidents with notes (D-042, D-044)', function () {
-    $admin = signIn(provisionCompany('admin@nexosmart.com.ar'));
+    $admin = signIn(adminUser('admin@nexosmart.com.ar'));
     $server = Fixtures::server($admin, 'clientes', ['ip' => '51.255.36.83']);
     foreach (['projects', 'sites', 'supervisor'] as $section) {
         Fixtures::snapshot($server, $section, Fixtures::fixture('clientes', $section));
@@ -368,7 +382,7 @@ it('links folders, suggests from them and shows incidents with notes (D-042, D-0
 
 // httpapi/component_owner_test.go (D-089)
 it('tells same-named pm2 apps apart by their user and keeps the one picked', function () {
-    $admin = signIn(provisionCompany());
+    $admin = signIn(adminUser());
     $server = Fixtures::server($admin, 'clientes');
     Fixtures::snapshot($server, 'pm2', ['daemons' => [
         ['user' => 'eve', 'processes' => [['name' => 'api-b', 'status' => 'online']]],
@@ -392,7 +406,7 @@ it('tells same-named pm2 apps apart by their user and keeps the one picked', fun
 });
 
 it('starts the state over and closes the open period when a component is reconfigured', function () {
-    $admin = signIn(provisionCompany());
+    $admin = signIn(adminUser());
     $component = Fixtures::saved(Fixtures::project($admin), ['url' => 'https://old.example/', 'status' => 'down', 'status_since' => now(), 'bad_streak' => 12]);
     $open = Period::query()->create(['company_id' => $admin->company_id, 'component_id' => $component->id, 'status' => 'down', 'started_at' => now()]);
 
@@ -405,21 +419,22 @@ it('starts the state over and closes the open period when a component is reconfi
 });
 
 it('lets monitoring.view read and only monitoring.manage change (ADR-0002 §10)', function () {
-    $admin = signIn(provisionCompany());
-    $projectId = newProject(newClient('Playinn'), ['name' => 'Playinn', 'code_prefix' => 'playinn'])->json('data.id');
+    $admin = signIn(adminUser());
+    $clientId = newClient('Playinn');
+    $projectId = newProject($clientId, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->json('data.id');
 
     signIn(teamDeveloper($admin));
     foreach (['/clients', '/projects', "/projects/{$projectId}", "/projects/{$projectId}/preview", "/projects/{$projectId}/incidents",
         "/projects/{$projectId}/suggestions", "/projects/{$projectId}/vulnerabilities", "/projects/{$projectId}/response-times", '/folders', '/targets'] as $read) {
         $this->getJson(STATUS_ADMIN.$read)->assertOk();
     }
-    $this->postJson(STATUS_ADMIN.'/clients', ['name' => 'X'])->assertForbidden();
-    $this->deleteJson(STATUS_ADMIN."/projects/{$projectId}")->assertForbidden();
+    $this->putJson(STATUS_ADMIN."/projects/{$projectId}", ['slug' => 'otro'])->assertForbidden();
+    $this->postJson(STATUS_ADMIN."/clients/{$clientId}/users", ['email' => 'x@y.com'])->assertForbidden();
     $this->getJson('/api/v1/monitoring/users')->assertForbidden();
 });
 
 it('lists the team users for the developer picker, paged like monitoreo', function () {
-    $admin = signIn(provisionCompany('admin@nexosmart.com.ar'));
+    $admin = signIn(adminUser('admin@nexosmart.com.ar'));
     $dev = User::factory()->forRole(roleNamed($admin, DefaultRoles::DEVELOPER))->create(['email' => 'dev@nexosmart.com.ar', 'discord_user_id' => '1403351571303104612']);
     $this->postJson(STATUS_ADMIN.'/clients/'.newClient('Playinn').'/users', ['email' => 'dueno@playinn.com'])->assertCreated();
 
@@ -431,7 +446,7 @@ it('lists the team users for the developer picker, paged like monitoreo', functi
 });
 
 it('answers 503 to Discord while there is no bot (Phase 7)', function () {
-    signIn(provisionCompany());
+    signIn(adminUser());
     $clientId = newClient('Playinn');
     $projectId = newProject($clientId, ['name' => 'Playinn', 'code_prefix' => 'playinn'])->json('data.id');
 
@@ -440,12 +455,12 @@ it('answers 503 to Discord while there is no bot (Phase 7)', function () {
     $this->postJson(STATUS_ADMIN."/projects/{$projectId}/discord-test")->assertStatus(503);
     newProject($clientId, ['name' => 'Otro', 'code_prefix' => 'otro', 'create_discord_channel' => true])
         ->assertUnprocessable()->assertJsonPath('errors.discord_channel_id.0', 'El bot de Discord no está configurado.');
-    newProject($clientId, ['name' => 'Otro', 'code_prefix' => 'otro', 'discord_channel_id' => '1427806155307745290'])
+    newProject($clientId, ['name' => 'Otro', 'code_prefix' => 'otro2', 'discord_channel_id' => '1427806155307745290'])
         ->assertUnprocessable()->assertJsonPath('errors.discord_channel_id.0', 'Elegí un canal de la lista.');
 });
 
 it('queues a PageSpeed measurement of a web component', function () {
-    $admin = signIn(provisionCompany());
+    $admin = signIn(adminUser());
     Http::fake(['*' => Http::response(['lighthouseResult' => ['categories' => ['performance' => ['score' => 0.5]]]])]);
     $component = Fixtures::saved(Fixtures::project($admin), ['url' => 'https://playinn.com/']);
 
@@ -454,20 +469,17 @@ it('queues a PageSpeed measurement of a web component', function () {
     expect(DB::table('status_pagespeed_runs')->where('component_id', $component->id)->pluck('score')->all())->toBe([50, 50]); // sync queue in tests
 });
 
-it('deletes a project with its components and its logo file', function () {
-    $admin = signIn(provisionCompany());
+// ADR-0002 §12 (asked by the user): a project is closed in Proyectos, never deleted from monitoring.
+it('has no way to delete a project from monitoring', function () {
+    signIn(adminUser());
     $projectId = newProject(newClient('Playinn'), ['name' => 'Playinn', 'code_prefix' => 'playinn'])->json('data.id');
-    $this->putJson(STATUS_ADMIN."/projects/{$projectId}/logo", ['content_type' => 'image/png', 'data_base64' => tinyPng()])->assertOk();
-    Fixtures::saved(Project::query()->findOrFail($projectId), ['url' => 'https://playinn.com/']);
-    expect(Storage::disk('local')->exists("status-page/logos/{$projectId}"))->toBeTrue();
 
-    $this->deleteJson(STATUS_ADMIN."/projects/{$projectId}")->assertOk()->assertJsonPath('message', 'Proyecto eliminado.');
-    expect(Project::query()->find($projectId))->toBeNull()->and(Component::query()->count())->toBe(0)
-        ->and(Storage::disk('local')->exists("status-page/logos/{$projectId}"))->toBeFalse();
+    $this->deleteJson(STATUS_ADMIN."/projects/{$projectId}")->assertStatus(405);
+    expect(Project::query()->find($projectId))->not->toBeNull();
 });
 
 it('shows a client only its projects and the incident notice once the server is down 10 minutes (D-051, CA-13.13)', function () {
-    $admin = signIn(provisionCompany());
+    $admin = signIn(adminUser());
     $project = Fixtures::project($admin);
     $server = Fixtures::server($admin);
     Fixtures::saved($project, ['kind' => 'supervisor', 'url' => null, 'server_id' => $server->id, 'target' => 'queue', 'status' => 'operational', 'phrase' => 'Funciona normalmente']);

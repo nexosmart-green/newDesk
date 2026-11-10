@@ -18,7 +18,7 @@ function roadmapIds(TestResponse $response): array
 // httpapi/roadmap_test.go TestRoadmapIsPersonal (D-064, D-066)
 it('keeps each developer roadmap in order and private to its owner (CA-13.19)', function () {
     Storage::fake('local');
-    $admin = provisionCompany('admin@nexosmart.com.ar');
+    $admin = adminUser('admin@nexosmart.com.ar');
     $dev = User::factory()->forRole(roleNamed($admin, DefaultRoles::DEVELOPER))->create(['email' => 'dev@nexosmart.com.ar']);
     $project = Fixtures::project($admin, 'acme', 'Acme');
     $owner = Reports::signIn(Reports::clientUser($project, 'dueno@acme.test'));

@@ -16,7 +16,7 @@ use Tests\Support\StatusPageFixtures as Fixtures;
 beforeEach(function () {
     Storage::fake('local');
     Event::fake([ReportChanged::class]);
-    $this->admin = provisionCompany('admin@nexosmart.com.ar');
+    $this->admin = adminUser('admin@nexosmart.com.ar');
     $this->project = Fixtures::project($this->admin);
     $this->owner = Reports::clientUser($this->project, 'dueno@playinn.com');
     Reports::signIn($this->owner);
@@ -88,7 +88,9 @@ it('chats inside a report: images, read marks, internal notes and reopening (D-0
     expect(chatAttention())->toBe(0);
     $this->get(Reports::url($messages[0]['images'][0]))->assertOk()->assertHeader('Content-Type', 'image/png');
 
-    // The team answers: at most 3 images, and the client never sees who wrote.
+    // The team answers: at most 3 images, and the client never sees who wrote. A second later than the client's
+    // last look (the clock is frozen in tests, TestCase), as it always is for real.
+    $this->travel(1)->seconds();
     Reports::message($this->teamPath, 'ok', array_fill(0, 4, Reports::png()))->assertUnprocessable()
         ->assertJsonPath('errors.images', ['Hasta 3 imágenes por mensaje.']);
     Reports::message($this->teamPath, 'Lo estamos viendo, gracias.', [Reports::png(), Reports::png()])->assertCreated()

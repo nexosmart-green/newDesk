@@ -1,48 +1,92 @@
+@import "@fontsource-variable/onest";
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Design tokens. Dark is the default (RNF-02: the team is used to dark). */
+/*
+ * Design tokens — palette taken from desk.nexosmart.es (the Worksuite NexoSmart uses today):
+ *   brand #309798 (its --header_color), live #f6beb6 (its button hover pink),
+ *   sidebar #171f29, light canvas #e8eef3, ink #28313c, muted #616e80/#99a5b5,
+ *   danger #d30000/#f27474, warning #fcbd01, success #28a745.
+ * Dark is the default (RNF-02). Every pair used for text was checked for WCAG AA (RNF-13).
+ */
 :root {
-  --color-bg: #0f1115;
-  --color-surface: #171a21;
-  --color-border: #2a2f3a;
-  --color-text: #e6e8ee;
-  --color-muted: #9aa3b2;
-  --color-accent: #4f8cff;
-  --color-danger: #ff6b6b;
-  --color-warning: #f5b942;
-  --color-success: #3ecf8e;
+  --color-bg: #1b222c;
+  --color-surface: #232b36;
+  --color-surface-2: #2b3441;
+  --color-border: #364151;
+  --color-text: #f3f5f7;
+  --color-muted: #99a5b5;
+  /* Teal readable as text/icon on dark surfaces (6.4:1 on bg). */
+  --color-accent: #56b9ba;
+  --color-brand: #309798;
+  /* Filled buttons: white text passes AA (5.1:1); plain #309798 would not (3.5:1). */
+  --color-brand-strong: #23797a;
+  /* "Happening now": running timer, unread notifications. */
+  --color-live: #f6beb6;
+  --color-on-live: #4a1d17;
+  --color-danger: #f27474;
+  --color-warning: #fcbd01;
+  --color-success: #4cc46a;
+
+  --color-sidebar: #171f29;
+  --color-sidebar-text: #c9d1dc;
+  --color-sidebar-muted: #7f8b9c;
+  --color-sidebar-hover: #222c38;
 }
 
 :root.light {
-  --color-bg: #f6f7f9;
+  --color-bg: #e8eef3;
   --color-surface: #ffffff;
-  --color-border: #dde1e7;
-  --color-text: #161a22;
-  --color-muted: #5b6474;
-  --color-accent: #2563eb;
-  --color-danger: #c62828;
-  --color-warning: #a16207;
-  --color-success: #15803d;
+  --color-surface-2: #f3f6f9;
+  --color-border: #d3dbe3;
+  --color-text: #28313c;
+  --color-muted: #56626f;
+  --color-accent: #1f7071;
+  --color-brand: #309798;
+  --color-brand-strong: #23797a;
+  --color-live: #f6beb6;
+  --color-on-live: #4a1d17;
+  --color-danger: #c41616;
+  --color-warning: #8a6500;
+  --color-success: #1e7e34;
+  /* The sidebar stays dark in light mode, like desk. */
 }
 
 @theme inline {
+  --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
   --color-border: var(--color-border);
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-accent: var(--color-accent);
+  --color-brand: var(--color-brand);
+  --color-brand-strong: var(--color-brand-strong);
+  --color-live: var(--color-live);
+  --color-on-live: var(--color-on-live);
   --color-danger: var(--color-danger);
   --color-warning: var(--color-warning);
   --color-success: var(--color-success);
+  --color-sidebar: var(--color-sidebar);
+  --color-sidebar-text: var(--color-sidebar-text);
+  --color-sidebar-muted: var(--color-sidebar-muted);
+  --color-sidebar-hover: var(--color-sidebar-hover);
+}
+
+html {
+  color-scheme: dark;
+}
+
+:root.light {
+  color-scheme: light;
 }
 
 /* Utilities that only the monitoring skin uses (features/monitoreo/skin.css defines the values under
-   [data-skin='monitoreo']). They live here because Tailwind generates utilities from this root only. */
+   [data-skin='monitoreo']). They live here because Tailwind generates utilities from this root only.
+   Tokens newDesk already has (surface-2…) are not redeclared here: the skin overrides them in its own scope. */
 @theme inline {
-  --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
@@ -63,7 +107,44 @@
 body {
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* The one recurring motion: a running timer breathes (respects reduced motion below). */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Timers and durations never jump width as digits change. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Monitoring's client portal keeps monitoreo's own Auto/Light/Dark (RF-13, difference 3). public/portal-theme.js sets

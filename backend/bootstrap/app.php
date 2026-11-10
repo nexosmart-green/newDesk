@@ -2,10 +2,15 @@
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Http\Middleware\EnsureClientUser;
+use App\Http\Middleware\EnsureModuleAccess;
 use App\Http\Middleware\EnsureTeamUser;
+use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\RejectMcpTokens;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
+use App\Support\PolicyDenialMessage;
+use App\Support\SafeRequestUrl;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -21,7 +26,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-$sensitiveInput = ['password', 'password_confirmation', 'current_password', 'token', 'secret', 'code'];
+$sensitiveInput = ['password', 'password_confirmation', 'current_password', 'token', 'secret', 'code', 'recovery_code', 'previous_comment'];
 
 $traceShort = fn (Throwable $e) => collect(array_slice($e->getTrace(), 0, 5))
     ->map(fn ($frame) => ($frame['class'] ?? '').($frame['type'] ?? '').($frame['function'] ?? '')
@@ -37,15 +42,22 @@ return Application::configure(basePath: dirname(__DIR__))
     // The SPA's Echo authorizes private channels with its Sanctum session: /api/v1/broadcasting/auth.
     ->withBroadcasting(__DIR__.'/../routes/channels.php', [
         'prefix' => 'api/v1',
-        'middleware' => ['api', 'auth:sanctum', 'active'],
+        // Personal tokens open only the MCP endpoints (RF-12): broadcasting stays session-only too.
+        'middleware' => ['api', 'auth:sanctum', 'active', RejectMcpTokens::class],
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        // API-only backend: guests get a 401 JSON, never a redirect to a non-existent login route.
+        $middleware->redirectGuestsTo(fn () => null);
+        // Nginx on the same host: trust it so $request->ip() (login, /errors and MCP limits) is the real client.
+        $middleware->trustProxies(at: ['127.0.0.1', '::1']);
         $middleware->append(RemoveStackHeaders::class);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'team' => EnsureTeamUser::class,
             'client' => EnsureClientUser::class,
+            'two-factor' => EnsureTwoFactorWhenRequired::class,
+            'module' => EnsureModuleAccess::class,
         ]);
         // Who may enter is decided before route-model binding: the wrong side gets 403, never a 404
         // that tells whether the record exists (CA-13.14).
@@ -73,7 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $context = [
                 'action' => $route ? $route->getActionName() : 'unknown',
                 'method' => $request->method(),
-                'url' => $request->fullUrl(),
+                'url' => SafeRequestUrl::of($request), // no path tokens in /api/errors
                 'user_id' => $request->user()?->id,
                 'company_id' => $request->user()?->company_id,
                 'ip' => $request->ip(),
@@ -98,8 +110,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'file' => $e->getFile().':'.$e->getLine(),
                 'trace_short' => $traceShort($e),
             ]);
-
-            return false;
+            // No `return false`: the default report (laravel.log) must still happen.
         });
 
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*', 'mcp', 'mcp/*') || $request->expectsJson());
@@ -116,8 +127,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof ValidationException => ApiResponse::error('Los datos enviados no son válidos.', 422, $e->errors()),
                 $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, null, ['code' => $e->ruleCode, ...$e->context]),
                 $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),
-                $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error('No tenés permiso para esta acción.', 403),
-                // A policy's denyAsNotFound() arrives as a plain 404 HttpException (CA-03.03).
+                // Policies may deny "as not found" (CA-03.03): never confirm a resource exists.
+                $e instanceof AuthorizationException && $e->status() === 404 => ApiResponse::error('No encontrado.', 404),
+                // A policy may explain the denial (Response::deny('…')); Laravel wraps it in AccessDeniedHttpException.
+                $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error(
+                    PolicyDenialMessage::of($e) ?? 'No tenés permiso para esta acción.',
+                    403,
+                ),
+                // A policy's denyAsNotFound() may also arrive as a plain 404 HttpException.
                 $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException,
                 $e instanceof HttpException && $e->getStatusCode() === 404 => ApiResponse::error('No encontrado.', 404),
                 $e instanceof HttpException => ApiResponse::error($e->getStatusCode() === 429 ? 'Demasiados intentos. Probá en un rato.' : ($e->getMessage() ?: 'Error'), $e->getStatusCode()),
