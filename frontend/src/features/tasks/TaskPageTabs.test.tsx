@@ -49,7 +49,8 @@ describe('TaskPage tabs', () => {
   it('shows who created it and when, the logged hours, category and labels', async () => {
     renderTask()
 
-    expect(await screen.findByText(/Creada por Juan Pérez el/)).toHaveTextContent('Creada por Juan Pérez el 09/11/2026 10:05')
+    // Profile timezone (Buenos Aires), not the machine's: CI runs in UTC. Waits for the current user to load.
+    await vi.waitFor(() => expect(screen.getByText(/Creada por Juan Pérez el/)).toHaveTextContent('Creada por Juan Pérez el 09/11/2026 10:05'))
     expect(screen.getAllByText('2h 30m').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Backend-API').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Cliente urgente').length).toBeGreaterThan(0)
