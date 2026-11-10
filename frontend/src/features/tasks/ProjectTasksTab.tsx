@@ -66,7 +66,7 @@ export function ProjectTasksTab() {
           Se muestran {tasks.data.data.length} de {tasks.data.meta.total} tareas: afiná los filtros para ver el resto.
         </p>
       )}
-      {creating && <CreateTaskDialog projectId={project.id} members={project.members} onClose={() => setCreating(false)} />}
+      {creating && <CreateTaskDialog project={project} onClose={() => setCreating(false)} />}
     </div>
   )
 }

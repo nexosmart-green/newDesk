@@ -9,7 +9,7 @@ import * as tasksApi from './tasksApi'
 describe('task form: optional dates and estimate', () => {
   it('"Nueva tarea" keeps them under a closed "Más opciones"; a cleared date is sent as null', async () => {
     const create = vi.spyOn(tasksApi, 'createTask').mockResolvedValue(buildTask({ code: 'bhn-3' }))
-    renderAt(<CreateTaskDialog projectId={9} members={[]} onClose={vi.fn()} />)
+    renderAt(<CreateTaskDialog project={{ id: 9, members: [] }} onClose={vi.fn()} />)
 
     const more = screen.getByRole('button', { name: /Más opciones/ })
     expect(more).toHaveAttribute('aria-expanded', 'false')

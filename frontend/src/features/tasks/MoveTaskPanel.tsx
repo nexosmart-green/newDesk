@@ -5,11 +5,9 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { SelectField } from '@/components/ui/SelectField'
 import { toast } from '@/components/ui/toast/toastStore'
-import { useProjects } from '@/features/projects/useProjects'
+import { ACTIVE_PROJECTS, useProjects } from '@/features/projects/useProjects'
 import type { Task } from './types'
 import { useMoveTask } from './useTasks'
-
-const ACTIVE_PROJECTS = { client_id: null, status: 'active', search: '', running_out: false, page: 1 } as const
 
 /**
  * RF-04.12: "me equivoqué de proyecto". The task, its hours, comments and the assignees who belong to the

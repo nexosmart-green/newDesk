@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as authApi from '@/features/auth/authApi'
+import * as projectsApi from '@/features/projects/projectsApi'
 import * as timerApi from '@/features/timer/timerApi'
-import { buildTask, buildTimerState, page, taskStatuses } from '@/test/fixtures'
+import { buildPerson, buildProject, buildTask, buildTimeEntry, buildTimerState, page, taskStatuses } from '@/test/fixtures'
 import { buildUser, renderAt } from '@/test/renderWithProviders'
 import { MyTasksPage } from './MyTasksPage'
 import * as tasksApi from './tasksApi'
@@ -67,5 +68,31 @@ describe('MyTasksPage', () => {
 
     await userEvent.click(await screen.findByLabelText('Solo vencidas'))
     expect(screen.getByLabelText('Solo vencidas')).toBeChecked()
+  })
+
+  // CA-04.07b
+  it('creates a task from here, in the project picked, and starts its timer', async () => {
+    const team = [buildPerson({ id: 1 }), buildPerson({ id: 2, first_name: 'Beto' })]
+    vi.spyOn(projectsApi, 'fetchProjects').mockResolvedValue(page([buildProject(), buildProject({ id: 10, name: 'Otro', code_prefix: 'otr' })]))
+    vi.spyOn(projectsApi, 'fetchProject').mockResolvedValue(buildProject({ members: team }))
+    const start = vi.spyOn(tasksApi, 'createAndStartTask').mockResolvedValue({
+      task: buildTask({ id: 2, code: 'bhn-2', title: 'Arreglar el login' }),
+      time_entry: buildTimeEntry(),
+      timer_error: null,
+    })
+    renderAs(1)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Nueva tarea' }))
+    expect(screen.getByRole('button', { name: 'Crear e iniciar' })).toBeDisabled() // no project yet
+    await userEvent.selectOptions(screen.getByLabelText('Proyecto'), 'Bahía Web (bhn)')
+    // The person is ticked: the new task lands in their list, with its ▶.
+    expect(await screen.findByLabelText('Ana García')).toBeChecked()
+    expect(screen.getByLabelText('Beto García')).not.toBeChecked()
+    await userEvent.type(screen.getByLabelText(/Título/), 'Arreglar el login')
+    await userEvent.click(screen.getByRole('button', { name: 'Crear e iniciar' }))
+
+    await vi.waitFor(() =>
+      expect(start).toHaveBeenCalledWith(9, expect.objectContaining({ title: 'Arreglar el login', assignee_ids: [1] }), undefined),
+    )
   })
 })

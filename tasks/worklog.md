@@ -56,3 +56,9 @@
 - Tests: el `TestCase` de main congela el reloj; un test de monitoreo tomaba un `Cache::lock` de 1 s sin soltarlo y colgaba la suite (corregido); el admin de los tests de monitoreo pasa a `adminUser()` (2FA obligatorio de main).
 - Falla en main sin la unión (no tocado, para el otro dev): `ReviewRegressionTest` "a person cannot move an old entry into the window by correcting it". `/health` sigue fallando local solo por falta de Redis.
 - `origin/main` avanzó a eaea73c (UI) durante la unión: va en una segunda unión.
+
+## 2026-11-10 — "Nueva tarea" desde Mis tareas (CA-04.07b)
+
+- Pedido del usuario: crear tareas desde Mis tareas eligiendo el proyecto y poder arrancar el cronómetro con ▶.
+- `CreateTaskDialog` recibe `project?`; sin proyecto muestra el selector (activos que la persona ve, uno solo viene elegido) y marca a la persona como asignada si es miembro. Reusa "▶ Crear e iniciar" de main. `MyTasksPage` suma el botón (módulo Proyectos). `ACTIVE_PROJECTS` pasa a `useProjects.ts` (lo usan también "Mover a otro proyecto").
+- Probado en vivo como colaborador: bhn-2 creada con el cronómetro corriendo en el header y ■ en la lista. Front 304 tests, typecheck, lint y build ok.

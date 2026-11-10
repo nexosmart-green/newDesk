@@ -16,16 +16,21 @@ export const projectsKey = ['projects'] as const
 const projectKey = (id: number) => [...projectsKey, 'detail', id] as const
 const activityKey = (id: number) => [...projectsKey, 'activity', id] as const
 
-export function useProjects(filters: ProjectFilters) {
+export function useProjects(filters: ProjectFilters, { enabled = true } = {}) {
   return useQuery({
     queryKey: [...projectsKey, 'list', filters],
     queryFn: () => fetchProjects(filters),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
+/** Active projects the person sees (first page): the pickers of "Mover a otro proyecto" and "Nueva tarea". */
+export const ACTIVE_PROJECTS = { client_id: null, status: 'active', search: '', running_out: false, page: 1 } as const
+
+/** `id` 0 = none chosen yet: nothing is fetched. */
 export function useProject(id: number) {
-  return useQuery({ queryKey: projectKey(id), queryFn: () => fetchProject(id) })
+  return useQuery({ queryKey: projectKey(id), queryFn: () => fetchProject(id), enabled: id > 0 })
 }
 
 export function useProjectActivity(id: number, page: number) {
