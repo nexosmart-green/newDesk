@@ -7,3 +7,7 @@ vendor/
 *.sql
 *.sql.gz
 dumps/
+
+# Local credentials for external systems (never commit)
+credenciales_*.env
+*.credentials.env
