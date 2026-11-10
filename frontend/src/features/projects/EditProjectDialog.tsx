@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { projectFormFrom, toSaveProjectInput, type ProjectForm } from './projectForm'
 import { ProjectFormFields } from './ProjectFormFields'
 import type { ProjectDetail } from './types'
@@ -19,7 +18,7 @@ export function EditProjectDialog({ project, onClose }: { project: ProjectDetail
   }
 
   return (
-    <Dialog title={`Editar ${project.name}`} onClose={onClose}>
+    <Dialog title={`Editar ${project.name}`} size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <ProjectFormFields
           form={form}
@@ -27,15 +26,14 @@ export function EditProjectDialog({ project, onClose }: { project: ProjectDetail
           error={mutation.error}
           onChange={(changes) => setForm({ ...form, ...changes })}
         />
-        <ErrorAlert error={mutation.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+          <Button type="submit" loading={mutation.isPending}>
+            Guardar cambios
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { AssigneeCheckboxes } from './AssigneeCheckboxes'
 import type { Task } from './types'
 import { useUpdateTaskAssignees } from './useTasks'
@@ -25,9 +25,8 @@ export function TaskAssigneesEditor({ task, members }: TaskAssigneesEditorProps)
           setSelected(ids)
         }}
       />
-      <ErrorAlert error={update.error} showFieldErrors />
-      {update.isSuccess && <SuccessNotice message="Asignación actualizada." />}
-      <Button variant="secondary" disabled={update.isPending} onClick={() => update.mutate(selected)}>
+      <FieldErrorsAlert error={update.error} />
+      <Button variant="secondary" loading={update.isPending} onClick={() => update.mutate(selected)}>
         Guardar asignados
       </Button>
     </div>

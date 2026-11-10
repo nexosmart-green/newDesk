@@ -43,7 +43,7 @@ export function HoursReportPage() {
       </div>
       <ReportPeriodPicker applied={report.data?.period} />
       {!report.data ? (
-        <PageState isPending={report.isPending} error={report.error} />
+        <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />
       ) : report.data.projects.length === 0 ? (
         <p className="text-sm text-muted">No hay proyectos activos ni horas en el período.</p>
       ) : (

@@ -21,7 +21,8 @@ export const emptyTaskForm: TaskFormValues = {
 }
 
 function hoursOf(seconds: number | null): string {
-  return seconds === null ? '' : String(Math.round((seconds / 3600) * 100) / 100)
+  // Decimal comma, like the person would type it ("1,5"); both separators are accepted back.
+  return seconds === null ? '' : String(Math.round((seconds / 3600) * 100) / 100).replace('.', ',')
 }
 
 export function taskFormValuesOf(task: Task): TaskFormValues {
@@ -33,6 +34,11 @@ export function taskFormValuesOf(task: Task): TaskFormValues {
     due_on: task.due_on ?? '',
     estimate_hours: hoursOf(task.estimate_seconds),
   }
+}
+
+/** Editing a task that already has dates or an estimate opens "Más opciones". */
+export function hasOptionalValues(values: TaskFormValues): boolean {
+  return values.starts_on !== '' || values.due_on !== '' || values.estimate_hours.trim() !== ''
 }
 
 export function estimateSecondsOf(hours: string): number | null {

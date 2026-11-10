@@ -32,7 +32,7 @@ export function ProjectsPage() {
       </div>
       <ProjectsFilters filters={filters} onChange={change} />
       {!projects.data ? (
-        <PageState isPending={projects.isPending} error={projects.error} />
+        <PageState isPending={projects.isPending} error={projects.error} shape="list" onRetry={() => void projects.refetch()} />
       ) : projects.data.data.length === 0 ? (
         <p className="text-sm text-muted">No hay proyectos que coincidan con la búsqueda.</p>
       ) : (

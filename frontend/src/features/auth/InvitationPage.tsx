@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { AuthCard } from '@/components/ui/AuthCard'
 import { Button } from '@/components/ui/Button'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { ApiError } from '@/lib/api'
 import { NewPasswordFields } from './NewPasswordFields'
 import { emptyNewPassword, type InvitationSummary } from './types'
@@ -15,7 +16,12 @@ export function InvitationPage() {
   if (invitation.isPending) {
     return (
       <AuthCard title="Invitación">
-        <p className="text-muted">Cargando…</p>
+        <div role="status" className="space-y-3">
+          <span className="sr-only">Cargando…</span>
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+        </div>
       </AuthCard>
     )
   }
@@ -65,8 +71,8 @@ function AcceptInvitationForm({ token, invitation }: { token: string; invitation
       <form onSubmit={handleSubmit} className="space-y-4">
         <NewPasswordFields value={passwords} onChange={setPasswords} error={mutation.error} />
         <ErrorAlert error={mutation.error} />
-        <Button type="submit" disabled={mutation.isPending} className="w-full">
-          {mutation.isPending ? 'Guardando…' : 'Crear cuenta'}
+        <Button type="submit" loading={mutation.isPending} className="w-full">
+          Crear cuenta
         </Button>
       </form>
     </AuthCard>

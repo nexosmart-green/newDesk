@@ -32,7 +32,7 @@ export function ProjectHoursTab() {
           </h2>
           {canAllocate && project.type === 'bag' && <Button onClick={() => setAllocating(true)}>Cargar horas</Button>}
         </div>
-        {hours.data ? <HoursBar bag={hours.data} /> : <PageState isPending={hours.isPending} error={hours.error} />}
+        {hours.data ? <HoursBar bag={hours.data} /> : <PageState isPending={hours.isPending} error={hours.error} shape="detail" onRetry={() => void hours.refetch()} />}
       </section>
       {canAllocate && <ExtensionRequestsPanel projectId={project.id} />}
       {hours.data && hours.data.has_cap && (

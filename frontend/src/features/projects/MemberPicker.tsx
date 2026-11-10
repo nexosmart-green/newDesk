@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { inputClassName } from '@/components/ui/TextField'
 import { emptyDirectoryFilters } from '@/features/people/types'
 import { usePeople } from '@/features/people/usePeople'
@@ -56,7 +57,13 @@ export function MemberPicker({ selected, onChange }: MemberPickerProps) {
         className={inputClassName}
       />
       <ul className="max-h-40 space-y-1 overflow-y-auto rounded border border-border p-2">
-        {people.isPending && <li className="text-sm text-muted">Cargando…</li>}
+        {people.isPending &&
+          [0, 1, 2].map((row) => (
+            <li key={row} className="py-1" aria-hidden="true">
+              <Skeleton className="h-4 w-2/3" />
+            </li>
+          ))}
+        {people.isPending && <li className="sr-only">Cargando…</li>}
         {people.data?.data.map((person) => (
           <li key={person.id}>
             <label className="flex items-center gap-2 text-sm">

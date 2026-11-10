@@ -1,8 +1,9 @@
-import { Square } from 'lucide-react'
+import { LoaderCircle, Square } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { formatClock } from '@/lib/duration'
 import { StopTimerDialog } from './StopTimerDialog'
+import { isProvisional } from './timerOptimistic'
 import { useElapsedSeconds } from './useElapsedSeconds'
 import { useTimerState, useTimerTabSync } from './useTimer'
 
@@ -16,6 +17,8 @@ export function GlobalTimer() {
   const elapsed = useElapsedSeconds(active?.elapsed_seconds ?? null, timer.dataUpdatedAt)
 
   if (!active) return null
+  // Just started (optimistic): stopping waits until the server confirms which entry it is.
+  const confirming = isProvisional(active)
 
   return (
     // The memorable piece of the shell: brand teal, with desk's pink as the "live" dot.
@@ -38,14 +41,21 @@ export function GlobalTimer() {
       <button
         type="button"
         onClick={() => setStoppingId(active.id)}
+        disabled={confirming}
+        aria-busy={confirming || undefined}
         aria-label={`Detener cronómetro de ${active.task.code}`}
         title="Detener"
-        className="grid size-9 place-items-center rounded-full bg-brand-strong text-white transition-colors hover:bg-danger focus-visible:outline-2 focus-visible:outline-accent"
+        // 36px visual inside a 44px hit area (the pill's padding absorbs the rest).
+        className="relative grid size-9 cursor-pointer place-items-center rounded-full bg-brand-strong text-white transition-colors before:absolute before:-inset-1 hover:bg-danger focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-progress disabled:hover:bg-brand-strong"
       >
-        <Square aria-hidden="true" className="size-3.5 fill-current" />
+        {confirming ? (
+          <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+        ) : (
+          <Square aria-hidden="true" className="size-3.5 fill-current" />
+        )}
       </button>
       {stoppingId === active.id && (
-        <StopTimerDialog entry={active} elapsedSeconds={elapsed} onClose={() => setStoppingId(null)} />
+        <StopTimerDialog entry={active} onClose={() => setStoppingId(null)} />
       )}
     </div>
   )

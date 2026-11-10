@@ -53,8 +53,8 @@ export function LoginPasswordForm({ onSubmit, isPending, error }: LoginPasswordF
       ) : (
         <ErrorAlert error={error} />
       )}
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Ingresando…' : 'Ingresar'}
+      <Button type="submit" loading={isPending} className="w-full">
+        Ingresar
       </Button>
       <p className="text-center text-sm">
         <Link to="/recuperar-contrasena" className="text-accent hover:underline">

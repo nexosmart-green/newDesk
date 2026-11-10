@@ -35,7 +35,7 @@ export function AiConnectionsTab() {
         </p>
       )}
       {!tokens.data ? (
-        <PageState isPending={tokens.isPending} error={tokens.error} />
+        <PageState isPending={tokens.isPending} error={tokens.error} onRetry={() => void tokens.refetch()} />
       ) : (
         <TokenList tokens={tokens.data.tokens} label="Mis tokens" />
       )}

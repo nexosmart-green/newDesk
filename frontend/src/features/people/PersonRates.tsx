@@ -11,7 +11,7 @@ export function PersonRates({ personId, canAdd }: { personId: number; canAdd: bo
   return (
     <div className="space-y-4">
       {!rates.data ? (
-        <PageState isPending={rates.isPending} error={rates.error} />
+        <PageState isPending={rates.isPending} error={rates.error} shape="table" onRetry={() => void rates.refetch()} />
       ) : rates.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no tiene tarifa cargada.</p>
       ) : (

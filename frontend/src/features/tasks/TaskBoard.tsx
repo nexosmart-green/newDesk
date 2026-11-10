@@ -1,6 +1,6 @@
 import { useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { boardColumns } from './boardColumns'
 import { overdueRowClassName, TaskAssigneeNames, TaskDue } from './TaskBits'
@@ -33,7 +33,7 @@ export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) 
 
   return (
     <div className="space-y-3">
-      <ErrorAlert error={updateStatus.error} showFieldErrors />
+      <FieldErrorsAlert error={updateStatus.error} />
       <div className="flex gap-3 overflow-x-auto pb-2">
         {boardColumns(statuses, filters).map((status) => {
           const cards = tasks.filter((task) => task.status?.id === status.id)

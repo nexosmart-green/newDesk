@@ -36,17 +36,31 @@ function renderHours(permissions: string[], requests: ExtensionRequest[] = []) {
 
 // Typing several fields is slow when the whole suite shares the CPU.
 describe('ProjectHoursTab', () => {
-  it('loads hours converting hours + minutes to seconds (RF-05.04)', async () => {
+  it('loads decimal hours as seconds: "2,5" → 9000 (RF-05.04), with a success toast', async () => {
     const allocate = vi.spyOn(hoursApi, 'allocateHours').mockResolvedValue(buildHourBag())
     renderHours(['hours.allocate'])
 
     await userEvent.click(await screen.findByRole('button', { name: 'Cargar horas' }))
-    await userEvent.type(screen.getByLabelText('Horas'), '2')
-    await userEvent.type(screen.getByLabelText('Minutos'), '30')
+    expect(screen.queryByLabelText('Minutos')).not.toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Horas'), '2,5')
+    expect(screen.getByText(/Se suman 2h 30m/)).toBeInTheDocument()
     await userEvent.type(screen.getByLabelText('Motivo'), 'Presupuesto #123')
     await userEvent.click(screen.getByRole('button', { name: 'Cargar' }))
 
     expect(allocate).toHaveBeenCalledWith(9, { seconds: 9000, reason: 'Presupuesto #123', reference: null })
+    expect(await screen.findByText('Horas cargadas en la bolsa.')).toBeInTheDocument()
+  })
+
+  it('corrects the bag with a negative amount', async () => {
+    const allocate = vi.spyOn(hoursApi, 'allocateHours').mockResolvedValue(buildHourBag())
+    renderHours(['hours.allocate'])
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Cargar horas' }))
+    await userEvent.type(screen.getByLabelText('Horas'), '-1.25')
+    await userEvent.type(screen.getByLabelText('Motivo'), 'Carga duplicada')
+    await userEvent.click(screen.getByRole('button', { name: 'Cargar' }))
+
+    expect(allocate).toHaveBeenCalledWith(9, { seconds: -4500, reason: 'Carga duplicada', reference: null })
   })
 
   it('hides "Cargar horas" without hours.allocate', async () => {

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { drawSquareCrop, exportSquareCrop, MAX_ZOOM, MIN_ZOOM } from './squareCrop'
 import { useUploadMyAvatar } from './useMyProfile'
 
@@ -41,7 +41,7 @@ export function AvatarCropDialog({ file, onClose }: { file: File; onClose: () =>
   }
 
   return (
-    <Dialog title="Recortar foto" onClose={onClose}>
+    <Dialog title="Recortar foto" description="Ajustá el zoom hasta que la cara quede centrada." onClose={onClose}>
       <div className="flex justify-center">
         <canvas
           ref={canvasRef}
@@ -73,15 +73,15 @@ export function AvatarCropDialog({ file, onClose }: { file: File; onClose: () =>
           {localError}
         </p>
       )}
-      <ErrorAlert error={upload.error} showFieldErrors />
-      <div className="flex justify-end gap-2">
+      <FieldErrorsAlert error={upload.error} />
+      <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
-        <Button disabled={!loaded || upload.isPending} onClick={() => void handleSave()}>
-          {upload.isPending ? 'Subiendo…' : 'Guardar foto'}
+        <Button disabled={!loaded} loading={upload.isPending} onClick={() => void handleSave()}>
+          Guardar foto
         </Button>
-      </div>
+      </DialogFooter>
     </Dialog>
   )
 }

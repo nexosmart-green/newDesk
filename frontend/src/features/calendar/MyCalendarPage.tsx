@@ -78,7 +78,7 @@ export function MyCalendarPage() {
         />
       )}
       {!calendar.data ? (
-        <PageState isPending={calendar.isPending} error={calendar.error} />
+        <PageState isPending={calendar.isPending} error={calendar.error} shape="table" onRetry={() => void calendar.refetch()} />
       ) : (
         <>
           <p className="text-xs text-muted">Horarios de turno en {calendar.data.timezone}.</p>

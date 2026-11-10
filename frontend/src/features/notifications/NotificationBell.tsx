@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { NotificationItem } from './NotificationItem'
 import type { AppNotification } from './types'
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from './useNotifications'
@@ -78,14 +79,22 @@ export function NotificationBell() {
         >
           <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
             <h2 className="text-sm font-semibold">Notificaciones</h2>
-            <Button variant="link" disabled={unread === 0 || markAll.isPending} onClick={() => markAll.mutate()}>
+            <Button variant="link" disabled={unread === 0} loading={markAll.isPending} onClick={() => markAll.mutate()}>
               Marcar todas como leídas
             </Button>
           </div>
-          {items.length === 0 ? (
-            <p className="px-3 py-4 text-sm text-muted">
-              {notifications.isPending ? 'Cargando…' : 'No tenés notificaciones.'}
-            </p>
+          {notifications.isPending ? (
+            <div role="status" className="space-y-4 px-3 py-4">
+              <span className="sr-only">Cargando…</span>
+              {[0, 1, 2].map((row) => (
+                <div key={row} className="space-y-2">
+                  <Skeleton className="h-4 w-4/5" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <p className="px-3 py-6 text-center text-sm text-muted">No tenés notificaciones.</p>
           ) : (
             <ul className="max-h-96 divide-y divide-border overflow-y-auto">
               {items.map((notification) => (

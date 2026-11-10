@@ -30,7 +30,11 @@ function useStoreProfile() {
 
 export function useUpdateMyProfile() {
   const storeProfile = useStoreProfile()
-  return useMutation({ mutationFn: (input: UpdateOwnProfileInput) => updateMyProfile(input), onSuccess: storeProfile })
+  return useMutation({
+    mutationFn: (input: UpdateOwnProfileInput) => updateMyProfile(input),
+    onSuccess: storeProfile,
+    meta: { successMessage: 'Perfil actualizado.' },
+  })
 }
 
 export function useUploadMyAvatar() {
@@ -38,6 +42,7 @@ export function useUploadMyAvatar() {
   return useMutation({
     mutationFn: ({ avatar, fileName }: { avatar: Blob; fileName: string }) => uploadMyAvatar(avatar, fileName),
     onSuccess: storeProfile,
+    meta: { successMessage: 'Foto actualizada.' },
   })
 }
 
@@ -46,5 +51,6 @@ export function useSaveMySkills() {
   return useMutation({
     mutationFn: (skills: { id: number; level: number }[]) => saveMySkills(skills),
     onSuccess: storeProfile,
+    meta: { successMessage: 'Habilidades guardadas.' },
   })
 }

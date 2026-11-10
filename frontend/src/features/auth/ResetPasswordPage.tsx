@@ -52,8 +52,8 @@ export function ResetPasswordPage() {
         />
         <NewPasswordFields value={passwords} onChange={setPasswords} error={mutation.error} />
         <ErrorAlert error={mutation.error} />
-        <Button type="submit" disabled={mutation.isPending} className="w-full">
-          {mutation.isPending ? 'Guardando…' : 'Guardar contraseña'}
+        <Button type="submit" loading={mutation.isPending} className="w-full">
+          Guardar contraseña
         </Button>
       </form>
     </AuthCard>

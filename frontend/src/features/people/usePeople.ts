@@ -8,6 +8,7 @@ import {
   reactivatePerson,
   updatePerson,
 } from './peopleApi'
+import { toast } from '@/components/ui/toast/toastStore'
 import type { AddRateInput, DirectoryFilters, PersonProfile, UpdateEmployeeInput } from './types'
 
 export const peopleKey = ['people'] as const
@@ -40,14 +41,21 @@ function useStorePerson(id: number) {
 
 export function useUpdatePerson(id: number) {
   const storePerson = useStorePerson(id)
-  return useMutation({ mutationFn: (input: UpdateEmployeeInput) => updatePerson(id, input), onSuccess: storePerson })
+  return useMutation({
+    mutationFn: (input: UpdateEmployeeInput) => updatePerson(id, input),
+    onSuccess: storePerson,
+    meta: { successMessage: 'Perfil actualizado.' },
+  })
 }
 
 export function useSetPersonActive(id: number) {
   const storePerson = useStorePerson(id)
   return useMutation({
     mutationFn: (active: boolean) => (active ? reactivatePerson(id) : deactivatePerson(id)),
-    onSuccess: () => storePerson(),
+    onSuccess: (_result, active) => {
+      toast.success(active ? 'Persona reactivada.' : 'Persona dada de baja.')
+      return storePerson()
+    },
   })
 }
 
@@ -60,5 +68,6 @@ export function useAddRate(personId: number) {
   return useMutation({
     mutationFn: (input: AddRateInput) => addRate(personId, input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ratesKey(personId) }),
+    meta: { successMessage: 'Tarifa registrada.' },
   })
 }

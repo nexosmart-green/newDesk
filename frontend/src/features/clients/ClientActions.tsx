@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { ApiError } from '@/lib/api'
 import { ClientFormDialog } from './ClientFormDialog'
 import type { Client } from './types'
@@ -31,7 +31,7 @@ export function ClientActions({ client }: { client: Client }) {
       </Button>
       <Button
         variant="secondary"
-        disabled={changeStatus.isPending}
+        loading={changeStatus.isPending}
         onClick={() => changeStatus.mutate(isActive ? 'inactive' : 'active')}
       >
         {isActive ? 'Inactivar' : 'Activar'}
@@ -39,7 +39,7 @@ export function ClientActions({ client }: { client: Client }) {
       <Button variant="danger" onClick={() => setOpen('delete')}>
         Borrar
       </Button>
-      <ErrorAlert error={changeStatus.error} showFieldErrors />
+      <FieldErrorsAlert error={changeStatus.error} />
       {open === 'edit' && <ClientFormDialog client={client} onClose={() => setOpen(null)} onSaved={() => setOpen(null)} />}
       {open === 'delete' && (
         <ConfirmDialog
@@ -52,10 +52,13 @@ export function ClientActions({ client }: { client: Client }) {
           onConfirm={() => remove.mutate(undefined, { onSuccess: () => navigate('/clientes', { replace: true }) })}
         >
           <p>El borrado es definitivo.</p>
+          {hasProjects && (
+            <p className="text-muted">Tiene proyectos, así que no se puede borrar.{isActive && ' Podés inactivarlo para que no se ofrezca en proyectos nuevos.'}</p>
+          )}
           {hasProjects && isActive && (
             <Button
               variant="secondary"
-              disabled={changeStatus.isPending}
+              loading={changeStatus.isPending}
               onClick={() => changeStatus.mutate('inactive', { onSuccess: closeDelete })}
             >
               Inactivar en su lugar

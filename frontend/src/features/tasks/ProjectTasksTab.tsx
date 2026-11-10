@@ -50,7 +50,12 @@ export function ProjectTasksTab() {
       </div>
       <TaskFiltersBar filters={filters} statuses={statuses.data ?? []} members={project.members} onChange={change} />
       {!tasks.data || !statuses.data ? (
-        <PageState isPending={tasks.isPending || statuses.isPending} error={tasks.error ?? statuses.error} />
+        <PageState
+          isPending={tasks.isPending || statuses.isPending}
+          error={tasks.error ?? statuses.error}
+          shape="list"
+          onRetry={() => void Promise.all([tasks.refetch(), statuses.refetch()])}
+        />
       ) : view === 'list' ? (
         <TaskList tasks={tasks.data.data} userId={userId} />
       ) : (

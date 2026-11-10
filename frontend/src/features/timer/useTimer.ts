@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { toast } from '@/components/ui/toast/toastStore'
+import { MODULES, useHasModule } from '@/features/auth/modules'
+import { formatDuration } from '@/lib/duration'
+import { toastTextOf } from '@/lib/errorText'
 import {
   completeEntryComment,
   correctTimeEntry,
@@ -9,18 +13,24 @@ import {
   startTimer,
   stopTimer,
 } from './timerApi'
+import { confirmStarted, optimisticStart, optimisticStop, rollback, timerKey, type StartingTask } from './timerOptimistic'
 import { broadcastTimerChanged, subscribeTimerChanged } from './timerSync'
 import type { CorrectEntryInput, ManualEntryInput } from './types'
 
-export const timerKey = ['timer'] as const
+export { timerKey }
 /** Everything a time entry can move: the header, project bags, the hours tab, Mi semana. */
 const timeDependentKeys = [timerKey, ['hours'], ['timesheet'], ['projects']] as const
 
 export const TIMER_POLL_MS = 30_000
 
-/** RF-05.03 / RNF-12: the server owns the timer; refetch on focus and every 30 s. */
+/** "0h 00m" reads like nothing was saved; under a minute says so. */
+const recordedText = (seconds: number) => (seconds < 60 ? 'menos de un minuto' : formatDuration(seconds))
+
+/** RF-05.03 / RNF-12: the server owns the timer; refetch on focus and every 30 s. Off without the time module. */
 export function useTimerState() {
+  const enabled = useHasModule(MODULES.time)
   return useQuery({
+    enabled,
     queryKey: timerKey,
     queryFn: fetchTimer,
     staleTime: 0,
@@ -47,23 +57,51 @@ export function useTimeDataChanged() {
   }
 }
 
+/**
+ * Optimistic: the header flips to the new task at once and rolls back if the server says no.
+ * The caller explains refusals (comment needed, no hours…), hence `silentError`.
+ */
 export function useStartTimer() {
+  const queryClient = useQueryClient()
   const changed = useTimeDataChanged()
   return useMutation({
-    mutationFn: ({ taskCode, previousComment }: { taskCode: string; previousComment?: string }) =>
-      startTimer(taskCode, previousComment),
-    onSuccess: changed,
+    meta: { silentError: true },
+    mutationFn: ({ task, previousComment }: { task: StartingTask; previousComment?: string }) =>
+      startTimer(task.code, previousComment),
+    onMutate: ({ task }) => optimisticStart(queryClient, task),
+    onError: (_error, _variables, snapshot) => rollback(queryClient, snapshot),
+    onSuccess: (entry) => {
+      confirmStarted(queryClient, entry)
+      return changed()
+    },
   })
 }
 
+/** Optimistic too: the stop dialog closes on send; a refusal brings the timer back with a toast. */
 export function useStopTimer() {
+  const queryClient = useQueryClient()
   const changed = useTimeDataChanged()
-  return useMutation({ mutationFn: (comment: string) => stopTimer(comment), onSuccess: changed })
+  return useMutation({
+    meta: { silentError: true },
+    mutationFn: (comment: string) => stopTimer(comment),
+    onMutate: () => optimisticStop(queryClient),
+    onError: (error, _comment, snapshot) => {
+      rollback(queryClient, snapshot)
+      const text = toastTextOf(error)
+      toast.error(text.message, { title: 'El cronómetro sigue corriendo' })
+    },
+    onSuccess: (entry) => {
+      toast.success(`Registraste ${recordedText(entry.elapsed_seconds)} en ${entry.task.code}.`, { title: 'Cronómetro detenido' })
+      return changed()
+    },
+  })
 }
 
 export function useCompleteEntryComment() {
   const changed = useTimeDataChanged()
   return useMutation({
+    // The comment dialog shows refusals inline (it stays open to fix the text).
+    meta: { successMessage: 'Comentario guardado.', silentError: true },
     mutationFn: ({ entryId, comment }: { entryId: number; comment: string }) => completeEntryComment(entryId, comment),
     onSuccess: changed,
   })
@@ -71,12 +109,18 @@ export function useCompleteEntryComment() {
 
 export function useLogManualTime(taskCode: string) {
   const changed = useTimeDataChanged()
-  return useMutation({ mutationFn: (input: ManualEntryInput) => logManualTime(taskCode, input), onSuccess: changed })
+  return useMutation({
+    // The form explains rule refusals itself (bag empty, outside the window) with the way out.
+    meta: { successMessage: 'Horas cargadas.', silentError: true },
+    mutationFn: (input: ManualEntryInput) => logManualTime(taskCode, input),
+    onSuccess: changed,
+  })
 }
 
 export function useCorrectTimeEntry() {
   const changed = useTimeDataChanged()
   return useMutation({
+    meta: { successMessage: 'Registro corregido.' },
     mutationFn: ({ entryId, input }: { entryId: number; input: CorrectEntryInput }) => correctTimeEntry(entryId, input),
     onSuccess: changed,
   })
@@ -84,5 +128,11 @@ export function useCorrectTimeEntry() {
 
 export function useDeleteTimeEntry() {
   const changed = useTimeDataChanged()
-  return useMutation({ mutationFn: (entryId: number) => deleteTimeEntry(entryId), onSuccess: changed })
+  return useMutation({
+    mutationFn: (entryId: number) => deleteTimeEntry(entryId),
+    onSuccess: (message) => {
+      toast.success(message ?? 'Registro borrado.')
+      return changed()
+    },
+  })
 }

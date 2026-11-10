@@ -46,7 +46,11 @@ export function useIssueCalendarFeed() {
 
 export function useRevokeCalendarFeed() {
   const refresh = useRefreshFeedStatus()
-  return useMutation({ mutationFn: revokeCalendarFeed, onSuccess: refresh })
+  return useMutation({
+    mutationFn: revokeCalendarFeed,
+    onSuccess: refresh,
+    meta: { successMessage: 'Suscripción revocada: la URL anterior ya no funciona.' },
+  })
 }
 
 /** Holidays show in every calendar and in the team grid. */
@@ -61,10 +65,10 @@ function useRefreshHolidays() {
 
 export function useCreateHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (input: HolidayInput) => createHoliday(input), onSuccess: refresh })
+  return useMutation({ mutationFn: (input: HolidayInput) => createHoliday(input), onSuccess: refresh, meta: { successMessage: 'Feriado guardado.' } })
 }
 
 export function useDeleteHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (id: number) => deleteHoliday(id), onSuccess: refresh })
+  return useMutation({ mutationFn: (id: number) => deleteHoliday(id), onSuccess: refresh, meta: { successMessage: 'Feriado borrado.' } })
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button } from './Button'
-import { Dialog } from './Dialog'
-import { ErrorAlert } from './ErrorAlert'
+import { Dialog, DialogFooter } from './Dialog'
+import { FieldErrorsAlert } from './ErrorAlert'
 
 interface ConfirmDialogProps {
   title: string
@@ -16,17 +16,18 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({ title, children, confirmLabel, pending, error, danger, onConfirm, onClose }: ConfirmDialogProps) {
   return (
-    <Dialog title={title} onClose={onClose}>
-      <div className="space-y-2 text-sm">{children}</div>
-      <ErrorAlert error={error} showFieldErrors />
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={onClose}>
+    <Dialog title={title} size="sm" onClose={onClose}>
+      <div className="space-y-2 text-sm leading-relaxed">{children}</div>
+      <FieldErrorsAlert error={error} />
+      <DialogFooter>
+        {/* Destructive confirmations start on Cancel so Enter never deletes by accident. */}
+        <Button variant="secondary" onClick={onClose} data-autofocus={danger ? true : undefined}>
           Cancelar
         </Button>
-        <Button variant={danger ? 'danger' : 'primary'} disabled={pending} onClick={onConfirm}>
-          {pending ? 'Procesando…' : confirmLabel}
+        <Button variant={danger ? 'danger' : 'primary'} loading={pending} onClick={onConfirm} data-autofocus={danger ? undefined : true}>
+          {confirmLabel}
         </Button>
-      </div>
+      </DialogFooter>
     </Dialog>
   )
 }

@@ -26,7 +26,7 @@ export function ShiftTemplatesPanel() {
         <Button onClick={() => setEditing({ template: null })}>Nueva plantilla</Button>
       </div>
       {!templates.data ? (
-        <PageState isPending={templates.isPending} error={templates.error} />
+        <PageState isPending={templates.isPending} error={templates.error} shape="list" onRetry={() => void templates.refetch()} />
       ) : templates.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay plantillas. Creá una (ej.: "Completo 09:00–18:00").</p>
       ) : (

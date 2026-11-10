@@ -1,6 +1,5 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { inputClassName, TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { CompanySettingsFields } from './CompanySettingsFields'
@@ -88,11 +87,9 @@ export function CompanyForm({ company, canEdit }: CompanyFormProps) {
         error={mutation.error}
         disabled={!canEdit}
       />
-      <ErrorAlert error={mutation.error} />
-      {mutation.isSuccess && <SuccessNotice message="Configuración guardada." />}
       {canEdit && (
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+        <Button type="submit" loading={mutation.isPending}>
+          Guardar cambios
         </Button>
       )}
     </form>

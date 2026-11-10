@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/components/ui/toast/toastStore'
 import { useTimeDataChanged } from '@/features/timer/useTimer'
 import {
   createAndStartTask,
@@ -62,22 +63,34 @@ function useRefreshTasks() {
 
 export function useCreateTask(projectId: number) {
   const refresh = useRefreshTasks()
-  return useMutation({ mutationFn: (input: SaveTaskInput) => createTask(projectId, input), onSuccess: () => refresh() })
+  return useMutation({
+    mutationFn: (input: SaveTaskInput) => createTask(projectId, input),
+    onSuccess: (task) => {
+      toast.success(`Tarea ${task.code} creada.`)
+      return refresh()
+    },
+  })
 }
 
 export function useCreateAndStartTask(projectId: number) {
   const refresh = useRefreshTasks()
   const timeChanged = useTimeDataChanged()
   return useMutation({
+    // The dialog asks for the running timer's comment and explains a timer that didn't start.
+    meta: { silentError: true },
     mutationFn: ({ input, previousComment }: { input: SaveTaskInput; previousComment?: string }) =>
       createAndStartTask(projectId, input, previousComment),
-    onSuccess: () => Promise.all([refresh(), timeChanged()]),
+    onSuccess: (result) => {
+      if (!result.timer_error) toast.success(`Tarea ${result.task.code} creada y cronómetro en marcha.`)
+      return Promise.all([refresh(), timeChanged()])
+    },
   })
 }
 
 export function useUpdateTask(code: string) {
   const refresh = useRefreshTasks()
   return useMutation({
+    meta: { successMessage: 'Tarea actualizada.' },
     mutationFn: (input: Partial<Omit<SaveTaskInput, 'assignee_ids'>>) => updateTask(code, input),
     onSuccess: refresh,
   })
@@ -89,19 +102,25 @@ export function useUpdateTaskStatus() {
   const timeChanged = useTimeDataChanged()
   return useMutation({
     mutationFn: ({ code, statusId }: { code: string; statusId: number }) => updateTaskStatus(code, statusId),
+    meta: { successMessage: 'Estado actualizado.' },
     onSuccess: (task) => Promise.all([refresh(task), timeChanged()]),
   })
 }
 
 export function useUpdateTaskAssignees(code: string) {
   const refresh = useRefreshTasks()
-  return useMutation({ mutationFn: (assigneeIds: number[]) => updateTaskAssignees(code, assigneeIds), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (assigneeIds: number[]) => updateTaskAssignees(code, assigneeIds),
+    meta: { successMessage: 'Asignación actualizada.' },
+    onSuccess: refresh,
+  })
 }
 
 export function usePostTaskComment(code: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (comment: NewComment) => postTaskComment(code, comment),
+    meta: { successMessage: 'Comentario publicado.' },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: commentsKey(code) }),
   })
 }

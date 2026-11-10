@@ -1,6 +1,9 @@
 import { Suspense, useCallback, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { DetailSkeleton } from '@/components/ui/Skeleton'
+import { MODULES, useHasModule } from '@/features/auth/modules'
 import { PendingCommentsBanner } from '@/features/timer/PendingCommentsBanner'
+import { FetchingBar } from './FetchingBar'
 import { readStoredJson, writeStoredJson } from '@/lib/storage'
 import { Header } from './Header'
 import { MobileDrawer } from './MobileDrawer'
@@ -15,6 +18,7 @@ export function AppLayout() {
   const { groups, footer } = useNavigation()
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
+  const hasTime = useHasModule(MODULES.time)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => readStoredJson(COLLAPSED_KEY) === true)
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
@@ -41,11 +45,13 @@ export function AppLayout() {
           title={sectionTitle(pathname, groups, footer)}
           theme={theme}
           onToggleTheme={toggleTheme}
+          showTimer={hasTime}
           onOpenMenu={() => setDrawerOpen(true)}
         />
-        <PendingCommentsBanner />
+        <FetchingBar />
+        {hasTime && <PendingCommentsBanner />}
         <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8">
-          <Suspense fallback={<p className="text-muted">Cargando…</p>}>
+          <Suspense fallback={<DetailSkeleton />}>
             <Outlet />
           </Suspense>
         </main>

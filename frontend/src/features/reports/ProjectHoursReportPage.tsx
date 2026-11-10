@@ -60,7 +60,7 @@ export function ProjectHoursReportPage() {
       <h1 className="text-lg font-semibold">{report.data ? `Horas de ${report.data.project.name}` : 'Horas del proyecto'}</h1>
       <ReportPeriodPicker applied={report.data?.period} />
       {!report.data ? (
-        <PageState isPending={report.isPending} error={report.error} />
+        <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />
       ) : (
         <>
           <div className="space-y-2 rounded-lg border border-border bg-surface p-4">

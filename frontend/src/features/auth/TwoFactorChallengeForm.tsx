@@ -61,8 +61,8 @@ export function TwoFactorChallengeForm({ onSubmit, onCancel, isPending, error }:
         />
       )}
       <ErrorAlert error={error} />
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Verificando…' : 'Verificar'}
+      <Button type="submit" loading={isPending} className="w-full">
+        Verificar
       </Button>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <Button variant="link" onClick={toggleMode}>

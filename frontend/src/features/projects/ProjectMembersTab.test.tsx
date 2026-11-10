@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as peopleApi from '@/features/people/peopleApi'
 import { ApiError } from '@/lib/api'
@@ -52,6 +52,7 @@ describe('ProjectMembersTab', () => {
     expect(await screen.findByText('Responsable')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Quitar a Ana García' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    // Business rules arrive as a toast (see lib/queryClient.ts), not as an inline alert.
+    expect(await within(screen.getByRole('region', { name: 'Avisos' })).findByText(message)).toBeInTheDocument()
   })
 })

@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { TextField } from '@/components/ui/TextField'
 import { CommentField } from '@/features/timer/CommentField'
 import { isValidComment, type CorrectEntryInput, type TimeEntry } from '@/features/timer/types'
@@ -34,7 +33,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
   }
 
   return (
-    <Dialog title={`Corregir registro de ${entry.task.code}`} onClose={onClose}>
+    <Dialog title={`Corregir registro de ${entry.task.code}`} description={entry.task.title} size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
           label="Fecha"
@@ -45,7 +44,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
           onChange={(event) => setRange({ ...range, date: event.target.value })}
           error={fieldErrorOf(correct.error, 'date')}
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr]">
           <TextField
             label="Desde"
             type="time"
@@ -64,15 +63,14 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
           />
         </div>
         <CommentField label="Comentario" value={comment} onChange={setComment} error={fieldErrorOf(correct.error, 'comment')} />
-        <ErrorAlert error={correct.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={correct.isPending || !isValidComment(comment)}>
-            {correct.isPending ? 'Guardando…' : 'Guardar'}
+          <Button type="submit" loading={correct.isPending} disabled={!isValidComment(comment)}>
+            Guardar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

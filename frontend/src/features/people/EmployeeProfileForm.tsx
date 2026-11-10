@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
@@ -85,10 +84,8 @@ export function EmployeeProfileForm({ person }: { person: PersonProfile }) {
         error={errorOf('about')}
         onChange={(event) => set('about', event.target.value)}
       />
-      <SuccessNotice message={mutation.isSuccess ? 'Perfil actualizado.' : null} />
-      <ErrorAlert error={mutation.error} />
-      <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+      <Button type="submit" loading={mutation.isPending}>
+        Guardar cambios
       </Button>
     </form>
   )

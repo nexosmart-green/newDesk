@@ -1,13 +1,9 @@
-/** R-5: hours + minutes typed by a person → integer seconds. Empty or invalid parts count as 0. */
-export function toSeconds(hours: string, minutes: string): number {
-  const wholeHours = Math.trunc(Number(hours) || 0)
-  const wholeMinutes = Math.trunc(Number(minutes) || 0)
-  return Math.max(0, wholeHours) * 3600 + Math.max(0, wholeMinutes) * 60
+/**
+ * R-5: hours typed by a person ("2,5", "2.5", "-1,25") → integer seconds. Comma or dot as decimal
+ * separator; `null` when it isn't a number. Minutes are never asked separately.
+ */
+export function hoursToSeconds(text: string): number | null {
+  const normalized = text.trim().replace(',', '.')
+  if (!/^-?(\d+(\.\d*)?|\.\d+)$/.test(normalized)) return null
+  return Math.round(Number(normalized) * 3600)
 }
-
-export interface DurationValue {
-  hours: string
-  minutes: string
-}
-
-export const emptyDuration: DurationValue = { hours: '', minutes: '' }

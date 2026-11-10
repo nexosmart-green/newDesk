@@ -27,8 +27,8 @@ export function DisableTwoFactorForm() {
         onChange={(event) => setPassword(event.target.value)}
       />
       <ErrorAlert error={mutation.error} />
-      <Button type="submit" variant="danger" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Desactivando…' : 'Desactivar verificación en dos pasos'}
+      <Button type="submit" variant="danger" loading={mutation.isPending}>
+        Desactivar verificación en dos pasos
       </Button>
     </form>
   )

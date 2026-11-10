@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { TemplateSelect } from './TemplateSelect'
 import { defaultTemplateValue, templateIdOf, type ShiftTemplate } from './types'
 
@@ -24,19 +24,19 @@ export function AssignCellsDialog({ cellCount, templates, pending, error, onSubm
   }
 
   return (
-    <Dialog title={cellCount === 1 ? 'Asignar turno' : `Asignar turno a ${cellCount} días`} onClose={onClose}>
+    <Dialog title={cellCount === 1 ? 'Asignar turno' : `Asignar turno a ${cellCount} días`} size="sm" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TemplateSelect templates={templates} value={value} onChange={setValue} />
         <p className="text-xs text-muted">Reemplaza el turno que ya tuvieran esos días.</p>
-        <ErrorAlert error={error} showFieldErrors />
-        <div className="flex justify-end gap-2">
+        <FieldErrorsAlert error={error} />
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pending}>
-            {pending ? 'Guardando…' : 'Aplicar'}
+          <Button type="submit" loading={pending}>
+            Aplicar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

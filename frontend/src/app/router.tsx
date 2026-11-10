@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth, SECURITY_PATH } from '@/features/auth/RequireAuth'
-import { MyTasksPage } from '@/features/tasks/MyTasksPage'
+import { HomePage } from './HomePage'
 
 /**
  * Each feature module adds its routes as children of the authenticated layout. Everything except
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { index: true, element: <MyTasksPage /> },
+          { index: true, element: <HomePage /> },
           {
             path: SECURITY_PATH,
             lazy: async () => ({ Component: (await import('@/features/security/SecurityPage')).SecurityPage }),

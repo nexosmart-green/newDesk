@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { SelectField } from '@/components/ui/SelectField'
 import {
   isClosedStatus,
@@ -43,11 +43,11 @@ export function ProjectStatusControl({ project }: { project: ProjectDetail }) {
             </option>
           ))}
         </SelectField>
-        <Button disabled={status === project.status || mutation.isPending} onClick={handleApply}>
+        <Button disabled={status === project.status} loading={mutation.isPending && !confirming} onClick={handleApply}>
           Cambiar estado
         </Button>
       </div>
-      {!confirming && <ErrorAlert error={mutation.error} showFieldErrors />}
+      {!confirming && <FieldErrorsAlert error={mutation.error} />}
       {confirming && (
         <ConfirmDialog
           title={`Marcar como ${projectStatusLabels[status].toLowerCase()}`}

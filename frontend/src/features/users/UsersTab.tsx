@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
+import { PageState } from '@/components/ui/PageState'
+import { toast } from '@/components/ui/toast/toastStore'
 import { useRoles } from '@/features/roles/useRoles'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { InviteUserDialog } from './InviteUserDialog'
@@ -15,7 +17,6 @@ export function UsersTab() {
   const [status, setStatus] = useState<UserStatus | ''>('')
   const [page, setPage] = useState(1)
   const [inviting, setInviting] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
   const debouncedSearch = useDebouncedValue(search)
 
   const users = useUsers({ search: debouncedSearch, status, page })
@@ -25,24 +26,23 @@ export function UsersTab() {
   const actionError = changeRole.error ?? resend.error
 
   function resetFeedback() {
-    setNotice(null)
     changeRole.reset()
     resend.reset()
   }
 
   function handleChangeRole(user: UserSummary, roleId: number) {
     resetFeedback()
-    changeRole.mutate({ userId: user.id, roleId }, { onSuccess: () => setNotice(`Rol de ${user.full_name} actualizado.`) })
+    changeRole.mutate({ userId: user.id, roleId }, { onSuccess: () => toast.success(`Rol de ${user.full_name} actualizado.`) })
   }
 
   function handleResend(user: UserSummary) {
     resetFeedback()
-    resend.mutate(user.id, { onSuccess: (message) => setNotice(message ?? `Invitación reenviada a ${user.email}.`) })
+    resend.mutate(user.id, { onSuccess: (message) => toast.success(message ?? `Invitación reenviada a ${user.email}.`) })
   }
 
   function handleInvited(user: UserSummary) {
     setInviting(false)
-    setNotice(`Invitación enviada a ${user.email}.`)
+    toast.success(`Invitación enviada a ${user.email}.`)
   }
 
   return (
@@ -64,12 +64,9 @@ export function UsersTab() {
           Invitar usuario
         </Button>
       </div>
-      <SuccessNotice message={notice} />
-      <ErrorAlert error={actionError} showFieldErrors />
-      {users.isPending ? (
-        <p className="text-muted">Cargando…</p>
-      ) : users.isError ? (
-        <ErrorAlert error={users.error} showFieldErrors />
+      <FieldErrorsAlert error={actionError} />
+      {!users.data ? (
+        <PageState isPending={users.isPending} error={users.error} shape="table" onRetry={() => void users.refetch()} />
       ) : users.data.data.length === 0 ? (
         <p className="text-sm text-muted">No hay usuarios que coincidan con la búsqueda.</p>
       ) : (

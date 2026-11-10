@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CopyableValue } from '@/components/ui/CopyButton'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { useCalendarFeedStatus, useIssueCalendarFeed, useRevokeCalendarFeed } from './useCalendar'
 
 /**
@@ -27,9 +27,9 @@ export function CalendarFeedPanel() {
             revoke.reset()
             issue.mutate()
           }}
-          disabled={issue.isPending}
+          loading={issue.isPending}
         >
-          {issue.isPending ? 'Generando…' : 'Suscribirme (iCal)'}
+          Suscribirme (iCal)
         </Button>
         {status.data === true && (
           <Button variant="secondary" onClick={() => setConfirmingRevoke(true)}>
@@ -37,8 +37,7 @@ export function CalendarFeedPanel() {
           </Button>
         )}
       </div>
-      <ErrorAlert error={issue.error} showFieldErrors />
-      {revoke.isSuccess && <SuccessNotice message="Suscripción revocada: la URL anterior ya no funciona." />}
+      <FieldErrorsAlert error={issue.error} />
       {issue.data && (
         <div className="space-y-2 text-sm">
           <p>Pegá esta URL en Google Calendar («Desde URL») o en el calendario del celular:</p>

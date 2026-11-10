@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/components/ui/toast/toastStore'
 import {
   addProjectMember,
   changeProjectStatus,
@@ -53,6 +54,7 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateProjectInput) => createProject(input),
+    meta: { successMessage: 'Proyecto creado.' },
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: projectsKey }),
@@ -63,20 +65,38 @@ export function useCreateProject() {
 
 export function useUpdateProject(id: number) {
   const refresh = useRefreshProject(id)
-  return useMutation({ mutationFn: (input: Partial<SaveProjectInput>) => updateProject(id, input), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (input: Partial<SaveProjectInput>) => updateProject(id, input),
+    meta: { successMessage: 'Proyecto actualizado.' },
+    onSuccess: refresh,
+  })
 }
 
 export function useChangeProjectStatus(id: number) {
   const refresh = useRefreshProject(id)
-  return useMutation({ mutationFn: (status: ProjectStatus) => changeProjectStatus(id, status), onSuccess: refresh })
+  return useMutation({
+    mutationFn: (status: ProjectStatus) => changeProjectStatus(id, status),
+    meta: { successMessage: 'Estado actualizado.' },
+    onSuccess: refresh,
+  })
 }
 
 export function useAddProjectMember(id: number) {
   const refresh = useRefreshProject(id)
-  return useMutation({ mutationFn: (userId: number) => addProjectMember(id, userId), onSuccess: () => refresh() })
+  return useMutation({
+    mutationFn: (userId: number) => addProjectMember(id, userId),
+    meta: { successMessage: 'Miembro agregado.' },
+    onSuccess: () => refresh(),
+  })
 }
 
 export function useRemoveProjectMember(id: number) {
   const refresh = useRefreshProject(id)
-  return useMutation({ mutationFn: (userId: number) => removeProjectMember(id, userId), onSuccess: () => refresh() })
+  return useMutation({
+    mutationFn: (userId: number) => removeProjectMember(id, userId),
+    onSuccess: (message) => {
+      toast.success(message ?? 'Miembro quitado.')
+      return refresh()
+    },
+  })
 }

@@ -37,7 +37,7 @@ export function ProjectEntries({ project }: { project: ProjectDetail }) {
       </h2>
       <EntryFilters project={project} filters={filters} onChange={change} />
       {!entries.data ? (
-        <PageState isPending={entries.isPending} error={entries.error} />
+        <PageState isPending={entries.isPending} error={entries.error} onRetry={() => void entries.refetch()} />
       ) : entries.data.data.length === 0 ? (
         <p className="text-sm text-muted">No hay registros con estos filtros.</p>
       ) : (

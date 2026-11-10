@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
@@ -28,7 +27,7 @@ export function TemplateFormDialog({ template, onClose }: TemplateFormDialogProp
   }
 
   return (
-    <Dialog title={template ? `Editar ${template.name}` : 'Nueva plantilla'} onClose={onClose}>
+    <Dialog title={template ? `Editar ${template.name}` : 'Nueva plantilla'} size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField label="Nombre" required maxLength={60} value={form.name} onChange={(event) => set({ name: event.target.value })} error={fieldErrorOf(save.error, 'name')} />
         <div className="grid grid-cols-2 gap-3">
@@ -46,15 +45,14 @@ export function TemplateFormDialog({ template, onClose }: TemplateFormDialogProp
           <TextField label="Color" type="color" className="[&_input]:h-10 [&_input]:p-1" value={form.color} onChange={(event) => set({ color: event.target.value })} error={fieldErrorOf(save.error, 'color')} />
         </div>
         <p className="text-xs text-muted">Si la salida es anterior a la entrada, el turno termina al día siguiente.</p>
-        <ErrorAlert error={save.error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={save.isPending || !form.name.trim()}>
-            {save.isPending ? 'Guardando…' : 'Guardar'}
+          <Button type="submit" disabled={!form.name.trim()} loading={save.isPending}>
+            Guardar
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

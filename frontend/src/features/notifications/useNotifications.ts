@@ -47,5 +47,6 @@ export function useUpdateNotificationPreferences() {
     mutationFn: (preferences: Pick<NotificationPreference, 'event' | 'email'>[]) =>
       updateNotificationPreferences(preferences),
     onSuccess: (preferences) => queryClient.setQueryData(preferencesKey, preferences),
+    meta: { successMessage: 'Preferencias guardadas.' },
   })
 }

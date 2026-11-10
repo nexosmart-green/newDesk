@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
-import { taskFormValuesOf, toSaveTaskInput, type TaskFormValues } from './taskForm'
+import { hasOptionalValues, taskFormValuesOf, toSaveTaskInput, type TaskFormValues } from './taskForm'
 import { TaskFormFields } from './TaskFormFields'
 import type { Task } from './types'
 import { useUpdateTask } from './useTasks'
@@ -21,16 +20,15 @@ export function TaskDetailsForm({ task }: { task: Task }) {
       <TaskFormFields
         values={values}
         error={update.error}
+        optionsOpen={hasOptionalValues(values)}
         onChange={(changes) => {
           update.reset()
           setValues((current) => ({ ...current, ...changes }))
         }}
       />
-      <ErrorAlert error={update.error} />
-      {update.isSuccess && <SuccessNotice message="Tarea actualizada." />}
       <div className="flex justify-end">
-        <Button type="submit" disabled={update.isPending}>
-          {update.isPending ? 'Guardando…' : 'Guardar cambios'}
+        <Button type="submit" loading={update.isPending}>
+          Guardar cambios
         </Button>
       </div>
     </form>

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { buildHourBag } from '@/test/fixtures'
-import { toSeconds } from './durationInput'
+import { hoursToSeconds } from './durationInput'
 import { HoursBar } from './HoursBar'
 import { bagLevelOf } from './types'
 
@@ -54,10 +54,19 @@ describe('HoursBar', () => {
   })
 })
 
-describe('toSeconds', () => {
-  it('converts hours and minutes to integer seconds', () => {
-    expect(toSeconds('2', '30')).toBe(9000)
-    expect(toSeconds('', '45')).toBe(2700)
-    expect(toSeconds('abc', '')).toBe(0)
+describe('hoursToSeconds', () => {
+  it('reads decimal hours with comma or dot as integer seconds', () => {
+    expect(hoursToSeconds('2,5')).toBe(9000)
+    expect(hoursToSeconds('2.5')).toBe(9000)
+    expect(hoursToSeconds(' 0,75 ')).toBe(2700)
+    expect(hoursToSeconds('-1,5')).toBe(-5400)
+    expect(hoursToSeconds('3')).toBe(10800)
+  })
+
+  it('rejects what is not a number', () => {
+    expect(hoursToSeconds('')).toBeNull()
+    expect(hoursToSeconds('abc')).toBeNull()
+    expect(hoursToSeconds('2h')).toBeNull()
+    expect(hoursToSeconds('1,2,3')).toBeNull()
   })
 })

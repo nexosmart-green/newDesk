@@ -23,7 +23,7 @@ export function PeopleDirectoryPage() {
       <h1 className="text-lg font-semibold">Personas</h1>
       <PeopleFilters filters={filters} canSeeInactive={canManageUsers} onChange={handleChange} />
       {!people.data ? (
-        <PageState isPending={people.isPending} error={people.error} />
+        <PageState isPending={people.isPending} error={people.error} shape="cards" onRetry={() => void people.refetch()} />
       ) : people.data.data.length === 0 ? (
         <p className="text-sm text-muted">No hay personas que coincidan con la búsqueda.</p>
       ) : (

@@ -30,7 +30,7 @@ export function ProfilePage() {
   const tab: ProfileTab = isProfileTab(requested) ? requested : 'datos'
   const setTab = (next: ProfileTab) => setSearchParams(next === 'datos' ? {} : { tab: next }, { replace: true })
 
-  if (!profile.data) return <PageState isPending={profile.isPending} error={profile.error} />
+  if (!profile.data) return <PageState isPending={profile.isPending} error={profile.error} shape="detail" onRetry={() => void profile.refetch()} />
   const person = profile.data
 
   return (

@@ -7,7 +7,7 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const inputClassName =
-  'w-full rounded border border-border bg-bg px-3 py-2 disabled:opacity-60 aria-[invalid=true]:border-danger'
+  'min-h-11 w-full rounded-lg border border-border bg-bg px-3 py-2 transition-colors hover:border-muted/60 focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent/40 disabled:opacity-60 aria-[invalid=true]:border-danger'
 
 export function TextField({ label, error, hint, className, ...inputProps }: TextFieldProps) {
   const id = useId()

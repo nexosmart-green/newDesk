@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog } from '@/components/ui/Dialog'
+import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { fieldErrorOf } from '@/lib/api'
 import { CommentField } from './CommentField'
@@ -29,19 +29,19 @@ export function CommentDialog({ title, children, submitLabel, pending, error, on
   }
 
   return (
-    <Dialog title={title} onClose={onClose}>
+    <Dialog title={title} size="md" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {children && <div className="space-y-1 text-sm">{children}</div>}
         <CommentField value={comment} onChange={setComment} error={fieldErrorOf(error, 'comment')} />
         <ErrorAlert error={error} />
-        <div className="flex justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={pending || !isValidComment(comment)}>
-            {pending ? 'Guardando…' : submitLabel}
+          <Button type="submit" loading={pending} disabled={!isValidComment(comment)}>
+            {submitLabel}
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Dialog>
   )

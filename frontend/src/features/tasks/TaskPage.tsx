@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { Link, useLocation, useParams } from 'react-router'
-import { ErrorAlert, SuccessNotice } from '@/components/ui/ErrorAlert'
+import { Link, useParams } from 'react-router'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
 import { useCan, useCurrentUser } from '@/features/auth/useAuth'
 import { useProject } from '@/features/projects/useProjects'
@@ -37,7 +37,7 @@ function StatusPanel({ task }: { task: Task }) {
         disabled={updateStatus.isPending}
         onChange={(statusId) => updateStatus.mutate({ code: task.code, statusId })}
       />
-      <ErrorAlert error={updateStatus.error} showFieldErrors />
+      <FieldErrorsAlert error={updateStatus.error} />
     </div>
   )
 }
@@ -59,7 +59,7 @@ export function TaskPage() {
       </section>
     )
   }
-  if (!task.data) return <PageState isPending={task.isPending} error={task.error} />
+  if (!task.data) return <PageState isPending={task.isPending} error={task.error} shape="detail" onRetry={() => void task.refetch()} />
   return <TaskView task={task.data} projectId={task.data.project?.id ?? 0} />
 }
 
@@ -69,7 +69,6 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
   const project = useProject(projectId)
   const members = project.data?.members ?? []
   const mine = isAssignedTo(current, userId)
-  const notice = (useLocation().state as { notice?: string } | null)?.notice
 
   return (
     <section className="max-w-3xl space-y-4">
@@ -78,7 +77,6 @@ function TaskView({ task: current, projectId }: { task: Task; projectId: number 
           ← {current.project.name}
         </Link>
       )}
-      <SuccessNotice message={notice} />
       <header className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           <p className="font-mono text-sm uppercase text-muted">{current.code}</p>

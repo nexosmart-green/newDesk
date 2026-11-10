@@ -20,10 +20,18 @@ function useStoreCompany() {
 
 export function useUpdateCompany() {
   const storeCompany = useStoreCompany()
-  return useMutation({ mutationFn: (input: UpdateCompanyInput) => updateCompany(input), onSuccess: storeCompany })
+  return useMutation({
+    mutationFn: (input: UpdateCompanyInput) => updateCompany(input),
+    onSuccess: storeCompany,
+    meta: { successMessage: 'Configuración guardada.' },
+  })
 }
 
 export function useUploadCompanyLogo() {
   const storeCompany = useStoreCompany()
-  return useMutation({ mutationFn: (logo: File) => uploadCompanyLogo(logo), onSuccess: storeCompany })
+  return useMutation({
+    mutationFn: (logo: File) => uploadCompanyLogo(logo),
+    onSuccess: storeCompany,
+    meta: { successMessage: 'Logo actualizado.' },
+  })
 }

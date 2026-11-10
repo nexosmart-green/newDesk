@@ -29,7 +29,7 @@ export function ClientPage() {
   if (client.error instanceof ApiError && client.error.status === 404) {
     return <h1 className="text-lg font-semibold">Cliente no encontrado</h1>
   }
-  if (!client.data) return <PageState isPending={client.isPending} error={client.error} />
+  if (!client.data) return <PageState isPending={client.isPending} error={client.error} shape="detail" onRetry={() => void client.refetch()} />
   const data = client.data
 
   return (

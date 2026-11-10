@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { ErrorAlert } from '@/components/ui/ErrorAlert'
+import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { SelectField } from '@/components/ui/SelectField'
+import { toast } from '@/components/ui/toast/toastStore'
 import { useProjects } from '@/features/projects/useProjects'
 import type { Task } from './types'
 import { useMoveTask } from './useTasks'
@@ -30,10 +31,8 @@ export function MoveTaskPanel({ task }: { task: Task }) {
       onSuccess: (result) => {
         setConfirming(false)
         const removed = result.unassigned.length > 0 ? ` Se quitaron de la tarea: ${result.unassigned.join(', ')}.` : ''
-        navigate(`/tareas/${result.task.code}`, {
-          replace: true,
-          state: { notice: `Ahora es ${result.task.code}. El código ${task.code} sigue funcionando.${removed}` },
-        })
+        toast.success(`Ahora es ${result.task.code}. El código ${task.code} sigue funcionando.${removed}`, { title: 'Tarea movida' })
+        navigate(`/tareas/${result.task.code}`, { replace: true })
       },
     })
   }
@@ -61,7 +60,7 @@ export function MoveTaskPanel({ task }: { task: Task }) {
           Mover tarea
         </Button>
       </div>
-      {!confirming && <ErrorAlert error={move.error} />}
+      {!confirming && <FieldErrorsAlert error={move.error} />}
       {confirming && destination && (
         <ConfirmDialog
           title="Mover tarea"

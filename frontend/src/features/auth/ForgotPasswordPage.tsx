@@ -33,8 +33,8 @@ export function ForgotPasswordPage() {
             onChange={(event) => setEmail(event.target.value)}
           />
           <ErrorAlert error={mutation.error} />
-          <Button type="submit" disabled={mutation.isPending} className="w-full">
-            {mutation.isPending ? 'Enviando…' : 'Enviar enlace'}
+          <Button type="submit" loading={mutation.isPending} className="w-full">
+            Enviar enlace
           </Button>
         </form>
       )}

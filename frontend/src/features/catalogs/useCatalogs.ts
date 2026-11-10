@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createCatalogItem, deleteCatalogItem, fetchCatalog, renameCatalogItem } from './catalogsApi'
+import { toast } from '@/components/ui/toast/toastStore'
 import type { CatalogType } from './types'
 
 export const catalogKey = (type: CatalogType) => ['catalogs', type] as const
@@ -21,7 +22,7 @@ function useInvalidateCatalog(type: CatalogType) {
 
 export function useCreateCatalogItem(type: CatalogType) {
   const invalidate = useInvalidateCatalog(type)
-  return useMutation({ mutationFn: (name: string) => createCatalogItem(type, name), onSuccess: invalidate })
+  return useMutation({ mutationFn: (name: string) => createCatalogItem(type, name), onSuccess: invalidate, meta: { successMessage: 'Agregado.' } })
 }
 
 export function useRenameCatalogItem(type: CatalogType) {
@@ -29,10 +30,17 @@ export function useRenameCatalogItem(type: CatalogType) {
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) => renameCatalogItem(type, id, name),
     onSuccess: invalidate,
+    meta: { successMessage: 'Actualizado.' },
   })
 }
 
 export function useDeleteCatalogItem(type: CatalogType) {
   const invalidate = useInvalidateCatalog(type)
-  return useMutation({ mutationFn: (id: number) => deleteCatalogItem(type, id), onSuccess: invalidate })
+  return useMutation({
+    mutationFn: (id: number) => deleteCatalogItem(type, id),
+    onSuccess: (message) => {
+      toast.success(message ?? 'Borrado.')
+      return invalidate()
+    },
+  })
 }
