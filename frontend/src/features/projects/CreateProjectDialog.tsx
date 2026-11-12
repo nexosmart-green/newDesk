@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { hasChanges } from '@/lib/formState'
 import { MemberPicker, type PickedMember } from './MemberPicker'
 import { emptyProjectForm, toSaveProjectInput, type ProjectForm } from './projectForm'
 import { ProjectFormFields } from './ProjectFormFields'
@@ -26,7 +27,7 @@ export function CreateProjectDialog({ onClose, onCreated }: CreateProjectDialogP
   }
 
   return (
-    <Dialog title="Nuevo proyecto" size="lg" onClose={onClose}>
+    <Dialog title="Nuevo proyecto" size="lg" dirty={hasChanges(emptyProjectForm, form) || members.length > 0} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <ProjectFormFields form={form} error={mutation.error} onChange={(changes) => setForm({ ...form, ...changes })} />
         <MemberPicker selected={members} onChange={setMembers} />

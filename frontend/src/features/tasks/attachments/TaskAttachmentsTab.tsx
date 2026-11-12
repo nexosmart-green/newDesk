@@ -75,7 +75,7 @@ export function TaskAttachmentsTab({ code }: { code: string }) {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Borrar archivo"
+          title={`¿Borrar «${deleting.name}»?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
@@ -86,9 +86,7 @@ export function TaskAttachmentsTab({ code }: { code: string }) {
             remove.reset()
           }}
         >
-          <p>
-            Se va a borrar «{deleting.name}» de la tarea para todos. No se puede recuperar.
-          </p>
+          <p>El archivo sale de la tarea para todos y no se puede recuperar.</p>
         </ConfirmDialog>
       )}
     </div>

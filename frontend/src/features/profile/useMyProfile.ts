@@ -26,7 +26,7 @@ export function useUpdateMyProfile() {
   return useMutation({
     mutationFn: (input: UpdateOwnProfileInput) => updateMyProfile(input),
     onSuccess: storeProfile,
-    meta: { successMessage: 'Perfil actualizado.' },
+    meta: { successMessage: 'Perfil guardado.' },
   })
 }
 
@@ -35,7 +35,7 @@ export function useUploadMyAvatar() {
   return useMutation({
     mutationFn: ({ avatar, fileName }: { avatar: Blob; fileName: string }) => uploadMyAvatar(avatar, fileName),
     onSuccess: storeProfile,
-    meta: { successMessage: 'Foto actualizada.' },
+    meta: { successMessage: 'Foto guardada.' },
   })
 }
 

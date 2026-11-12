@@ -10,6 +10,8 @@ import {
 } from './calendarApi'
 import { calendarFeedKey, calendarKey, holidaysKey, myCalendarKey, shiftsKey } from '@/lib/queryKeys'
 import { refreshQueries } from '@/lib/refreshQueries'
+import { toast } from '@/components/ui/toast/toastStore'
+import type { Holiday } from '@/features/shifts/types'
 import type { HolidayInput } from './types'
 
 export function useMyCalendar(from: string, to: string, enabled = true) {
@@ -61,10 +63,22 @@ function useRefreshHolidays() {
 
 export function useCreateHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (input: HolidayInput) => createHoliday(input), onSuccess: refresh, meta: { successMessage: 'Feriado guardado.' } })
+  return useMutation({
+    mutationFn: (input: HolidayInput) => createHoliday(input),
+    onSuccess: (_holiday, input) => {
+      toast.success(`Feriado «${input.name.trim()}» agregado.`)
+      return refresh()
+    },
+  })
 }
 
 export function useDeleteHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (id: number) => deleteHoliday(id), onSuccess: refresh, meta: { successMessage: 'Feriado borrado.' } })
+  return useMutation({
+    mutationFn: (holiday: Holiday) => deleteHoliday(holiday.id),
+    onSuccess: (_result, holiday) => {
+      toast.success(`Feriado «${holiday.name}» borrado.`)
+      return refresh()
+    },
+  })
 }

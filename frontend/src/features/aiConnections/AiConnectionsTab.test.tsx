@@ -64,7 +64,7 @@ describe('AiConnectionsTab', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Revocar Notebook' }))
     expect(revoke).not.toHaveBeenCalled()
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Revocar Notebook' })).getByRole('button', { name: 'Revocar' }))
+    await userEvent.click(within(screen.getByRole('dialog', { name: '¿Revocar «Notebook»?' })).getByRole('button', { name: 'Revocar' }))
 
     expect(revoke).toHaveBeenCalledWith(1)
   })

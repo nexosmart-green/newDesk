@@ -16,9 +16,10 @@ async function blobErrorOf(error: unknown): Promise<ApiError> {
   if (error instanceof AxiosError && error.response?.data instanceof Blob) {
     try {
       const body = JSON.parse(await error.response.data.text()) as Partial<ApiEnvelope<unknown>>
-      return new ApiError(error.response.status, body.message ?? 'Error inesperado', body.errors ?? {})
+      return new ApiError(error.response.status, body.message ?? '', body.errors ?? {})
     } catch {
-      return new ApiError(error.response.status, 'No se pudo generar el archivo.')
+      // Not JSON (an HTML error page): `errorTextOf` words it by status.
+      return new ApiError(error.response.status, '')
     }
   }
   return toApiError(error)

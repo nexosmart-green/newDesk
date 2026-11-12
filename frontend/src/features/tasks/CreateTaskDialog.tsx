@@ -8,6 +8,7 @@ import { CommentDialog } from '@/features/timer/CommentDialog'
 import { TimerBlockedNotice } from '@/features/timer/TimerBlockedNotice'
 import { timerRule } from '@/features/timer/types'
 import { ApiError } from '@/lib/api'
+import { hasChanges } from '@/lib/formState'
 import { AssigneeCheckboxes } from './AssigneeCheckboxes'
 import { emptyTaskForm, toSaveTaskInput, type TaskFormValues } from './taskForm'
 import { TaskFormFields } from './TaskFormFields'
@@ -76,15 +77,15 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
         </p>
         <TimerBlockedNotice code={timerError.code} message={timerError.message} projectId={projectId} />
         <DialogFooter>
-          <Link
-            to={`/tareas/${task.code}`}
-            className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium text-accent hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            Abrir {task.code}
-          </Link>
           <Button variant="secondary" onClick={onClose}>
             Cerrar
           </Button>
+          <Link
+            to={`/tareas/${task.code}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-strong px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Abrir {task.code}
+          </Link>
         </DialogFooter>
       </Dialog>
     )
@@ -111,7 +112,13 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
   const inlineError = createAndStart.error
 
   return (
-    <Dialog title="Nueva tarea" description="Solo el título es obligatorio." size="lg" onClose={onClose}>
+    <Dialog
+      title="Nueva tarea"
+      description="Solo el título es obligatorio."
+      size="lg"
+      dirty={hasChanges(emptyTaskForm, values) || assigneeIds.length > 0}
+      onClose={onClose}
+    >
       <form onSubmit={handleCreate} className="space-y-4">
         <TaskFormFields
           values={values}
@@ -130,7 +137,7 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
             Cancelar
           </Button>
           <Button type="submit" variant="secondary" loading={create.isPending} disabled={pending}>
-            Crear
+            Crear tarea
           </Button>
           <Button loading={createAndStart.isPending} disabled={pending} onClick={() => startWith()}>
             <Play aria-hidden="true" className="size-4 fill-current" />

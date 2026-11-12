@@ -36,16 +36,17 @@ class CatalogController extends Controller
     {
         $model = $save($request->user(), $catalog, $request->itemName(), $this->find($catalog, $item));
 
-        return ApiResponse::ok($model->only('id', 'name'), 'Actualizado.');
+        return ApiResponse::ok($model->only('id', 'name'), "Se guardó «{$model->name}».");
     }
 
     public function destroy(Request $request, CatalogType $catalog, int $item, DeleteCatalogItem $delete): JsonResponse
     {
         Gate::authorize(Permission::UsersManage->value);
 
-        $delete($request->user(), $catalog, $this->find($catalog, $item));
+        $model = $this->find($catalog, $item);
+        $delete($request->user(), $catalog, $model);
 
-        return ApiResponse::ok(message: 'Borrado.');
+        return ApiResponse::ok(message: "Se borró «{$model->name}».");
     }
 
     private function find(CatalogType $catalog, int $id): CatalogItem

@@ -56,7 +56,7 @@ export function TaskCategoriesPanel() {
             className={inputClassName}
           />
           <Button type="submit" loading={create.isPending} disabled={!name.trim()}>
-            Agregar
+            Crear categoría
           </Button>
         </div>
         {nameError && <p className="text-sm text-danger">{nameError}</p>}
@@ -119,7 +119,7 @@ function CategoryRow({ category }: { category: TaskCategory }) {
       {confirming && (
         <ConfirmDialog
           title={`¿Borrar «${category.name}»?`}
-          confirmLabel="Borrar categoría"
+          confirmLabel="Borrar"
           danger
           pending={remove.isPending}
           error={remove.error}

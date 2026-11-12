@@ -53,15 +53,15 @@ export function ShiftTemplatesPanel() {
       {editing && <TemplateFormDialog template={editing.template} onClose={() => setEditing(null)} />}
       {deleting && (
         <ConfirmDialog
-          title={`Borrar ${deleting.name}`}
+          title={`¿Borrar «${deleting.name}»?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
           error={remove.error}
-          onConfirm={() => remove.mutate(deleting.id, { onSuccess: closeDelete })}
+          onConfirm={() => remove.mutate(deleting, { onSuccess: closeDelete })}
           onClose={closeDelete}
         >
-          <p>Los días ya asignados con esta plantilla conservan su horario.</p>
+          <p>Deja de aparecer para asignar; los días ya asignados con esta plantilla conservan su horario.</p>
         </ConfirmDialog>
       )}
     </div>

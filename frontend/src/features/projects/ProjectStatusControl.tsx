@@ -8,6 +8,7 @@ import {
   isProjectStatus,
   projectStatuses,
   projectStatusLabels,
+  projectStatusVerbs,
   type ProjectDetail,
   type ProjectStatus,
 } from './types'
@@ -18,6 +19,9 @@ export function ProjectStatusControl({ project }: { project: ProjectDetail }) {
   const [status, setStatus] = useState<ProjectStatus>(project.status)
   const [confirming, setConfirming] = useState(false)
   const mutation = useChangeProjectStatus(project.id)
+  const reopening = isClosedStatus(project.status) && !isClosedStatus(status)
+  const verb = reopening ? 'Reabrir' : projectStatusVerbs[status].action
+  const actionLabel = status === project.status ? 'Cambiar estado' : `${verb} proyecto`
 
   function apply() {
     mutation.mutate(status, { onSettled: () => setConfirming(false) })
@@ -44,20 +48,26 @@ export function ProjectStatusControl({ project }: { project: ProjectDetail }) {
           ))}
         </SelectField>
         <Button disabled={status === project.status} loading={mutation.isPending && !confirming} onClick={handleApply}>
-          Cambiar estado
+          {actionLabel}
         </Button>
       </div>
       {!confirming && <FieldErrorsAlert error={mutation.error} />}
       {confirming && (
         <ConfirmDialog
-          title={`Marcar como ${projectStatusLabels[status].toLowerCase()}`}
-          confirmLabel="Confirmar"
+          title={`¿${verb} «${project.name}»?`}
+          confirmLabel={actionLabel}
+          // "Cancelar" next to "Cancelar proyecto" would read as the same thing.
+          cancelLabel="Volver"
+          danger
           pending={mutation.isPending}
           error={mutation.error}
           onClose={() => setConfirming(false)}
           onConfirm={apply}
         >
-          <p>El proyecto no va a admitir tareas nuevas ni cronómetros, y los que estén corriendo se detienen ahora.</p>
+          <p>
+            Los cronómetros que estén corriendo en este proyecto se detienen ahora, y no se van a poder crear tareas ni cargar horas
+            nuevas.
+          </p>
           <p>Reabrirlo después lo puede hacer solo un administrador.</p>
         </ConfirmDialog>
       )}

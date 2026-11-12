@@ -72,7 +72,7 @@ class CalendarController extends Controller
     {
         $revoke($request->user());
 
-        return ApiResponse::ok(message: 'Feed revocado.');
+        return ApiResponse::ok(message: 'Suscripción revocada: la URL anterior dejó de funcionar.');
     }
 
     /** Public, token-authenticated .ics: only the token owner's own data (CA-06.07). */

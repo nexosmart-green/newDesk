@@ -29,7 +29,7 @@ export function CommentDialog({ title, children, submitLabel, pending, error, on
   }
 
   return (
-    <Dialog title={title} size="md" onClose={onClose}>
+    <Dialog title={title} size="md" dirty={comment.trim() !== ''} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {children && <div className="space-y-1 text-sm">{children}</div>}
         <CommentField value={comment} onChange={setComment} error={fieldErrorOf(error, 'comment')} />

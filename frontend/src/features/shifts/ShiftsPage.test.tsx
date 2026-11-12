@@ -114,10 +114,12 @@ describe('ShiftsPage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Copiar semana anterior' }))
     expect(copy).not.toHaveBeenCalled()
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Copiar semana anterior' })).getByRole('button', { name: 'Copiar' }))
+    const confirm = screen.getByRole('dialog', { name: '¿Reemplazar con la semana anterior?' })
+    expect(within(confirm).getByText(/se les borran los que ya tienen cargados/)).toBeInTheDocument()
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Reemplazar con la semana anterior' }))
 
     expect(copy).toHaveBeenCalledWith('2026-11-02')
-    expect(await screen.findByText('Se copiaron 5 turnos.')).toBeInTheDocument()
+    expect(await screen.findByText('Semana reemplazada con 5 turnos de la semana anterior.')).toBeInTheDocument()
   })
 
   it('does not show the grid without shifts.manage', async () => {

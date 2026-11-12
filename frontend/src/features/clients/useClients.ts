@@ -36,8 +36,10 @@ export function useSaveClient(clientId: number | null) {
   const store = useStoreClient()
   return useMutation({
     mutationFn: (input: SaveClientInput) => (clientId === null ? createClient(input) : updateClient(clientId, input)),
-    onSuccess: store,
-    meta: { successMessage: clientId === null ? 'Cliente creado.' : 'Cliente actualizado.' },
+    onSuccess: (client) => {
+      toast.success(`Cliente «${client.display_name}» ${clientId === null ? 'creado' : 'guardado'}.`)
+      return store(client)
+    },
   })
 }
 
@@ -46,7 +48,7 @@ export function useChangeClientStatus(clientId: number) {
   return useMutation({
     mutationFn: (status: ClientStatus) => changeClientStatus(clientId, status),
     onSuccess: (client) => {
-      toast.success(client.status === 'active' ? 'Cliente activado.' : 'Cliente inactivado.')
+      toast.success(`Cliente «${client.display_name}» ${client.status === 'active' ? 'activado' : 'inactivado'}.`)
       return store(client)
     },
   })

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
-import { useId, useRef, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { Button } from './Button'
 import { useModalFocus } from './useModalFocus'
 
 type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
@@ -11,6 +12,11 @@ interface DialogProps {
   description?: ReactNode
   /** `md` (32rem) by default; forms with several fields use `lg`. */
   size?: DialogSize
+  /**
+   * The form has unsaved changes: Escape, the X and the backdrop ask before discarding them.
+   * The footer's own Cancelar still closes at once (that one is an explicit choice).
+   */
+  dirty?: boolean
   onClose: () => void
   children: ReactNode
 }
@@ -33,57 +39,79 @@ const phoneShape: Record<DialogSize, string> = {
 /**
  * The one modal primitive. Rendered through a portal on `document.body` so no ancestor (the header's
  * `backdrop-blur` creates a containing block for `fixed`) can clip it. Labelled, focus trapped,
- * Escape / X / scrim close it, focus returns to the trigger.
+ * Escape / X / scrim close it (asking first when `dirty`), focus returns to the trigger.
  */
-export function Dialog({ title, description, size = 'md', onClose, children }: DialogProps) {
+export function Dialog({ title, description, size = 'md', dirty = false, onClose, children }: DialogProps) {
   const titleId = useId()
   const descriptionId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
-  useModalFocus(panelRef, onClose)
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  const dismiss = () => (dirty ? setConfirmingDiscard(true) : onClose())
+  useModalFocus(panelRef, dismiss)
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 motion-safe:animate-[scrim-in_150ms_ease-out] sm:items-center sm:p-6"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
+    <>
       <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-        tabIndex={-1}
-        className={`flex w-full flex-col overflow-hidden border border-border bg-surface shadow-2xl outline-none motion-safe:animate-[dialog-in_180ms_cubic-bezier(0.2,0.8,0.2,1)] sm:h-auto sm:max-h-[min(88dvh,56rem)] sm:rounded-2xl ${phoneShape[size]} ${widths[size]}`}
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 motion-safe:animate-[scrim-in_150ms_ease-out] sm:items-center sm:p-6"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) dismiss()
+        }}
       >
-        <div className="flex items-start gap-3 border-b border-border px-5 py-3 sm:px-6">
-          <div className="min-w-0 flex-1 py-1.5">
-            <h2 id={titleId} className="text-lg font-semibold leading-snug tracking-tight">
-              {title}
-            </h2>
-            {description && (
-              <p id={descriptionId} className="mt-0.5 text-sm text-muted">
-                {description}
-              </p>
-            )}
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
+          tabIndex={-1}
+          className={`flex w-full flex-col overflow-hidden border border-border bg-surface shadow-2xl outline-none motion-safe:animate-[dialog-in_180ms_cubic-bezier(0.2,0.8,0.2,1)] sm:h-auto sm:max-h-[min(88dvh,56rem)] sm:rounded-2xl ${phoneShape[size]} ${widths[size]}`}
+        >
+          <div className="flex items-start gap-3 border-b border-border px-5 py-3 sm:px-6">
+            <div className="min-w-0 flex-1 py-1.5">
+              <h2 id={titleId} className="text-lg font-semibold leading-snug tracking-tight">
+                {title}
+              </h2>
+              {description && (
+                <p id={descriptionId} className="mt-0.5 text-sm text-muted">
+                  {description}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={dismiss}
+              aria-label="Cerrar"
+              data-focus-guard
+              className="-mr-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <X aria-hidden="true" className="size-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            data-focus-guard
-            className="-mr-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            <X aria-hidden="true" className="size-5" />
-          </button>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto [&>form]:flex [&>form]:flex-1 [&>form]:flex-col overscroll-contain px-5 pb-5 pt-4 sm:px-6 has-[[data-dialog-footer]]:pb-0">
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col space-y-4 overflow-y-auto [&>form]:flex [&>form]:flex-1 [&>form]:flex-col overscroll-contain px-5 pb-5 pt-4 sm:px-6 has-[[data-dialog-footer]]:pb-0">
+            {children}
+          </div>
         </div>
       </div>
-    </div>,
+      {confirmingDiscard && <DiscardChangesDialog onKeepEditing={() => setConfirmingDiscard(false)} onDiscard={onClose} />}
+    </>,
     document.body,
+  )
+}
+
+function DiscardChangesDialog({ onKeepEditing, onDiscard }: { onKeepEditing: () => void; onDiscard: () => void }) {
+  return (
+    <Dialog title="¿Descartar los cambios?" size="sm" onClose={onKeepEditing}>
+      <p className="text-sm leading-relaxed">Lo que cambiaste en este formulario todavía no se guardó y se va a perder.</p>
+      <DialogFooter>
+        {/* Keeping the work is the safe default: Enter never throws it away. */}
+        <Button variant="secondary" onClick={onKeepEditing} data-autofocus>
+          Seguir editando
+        </Button>
+        <Button variant="danger" onClick={onDiscard}>
+          Descartar
+        </Button>
+      </DialogFooter>
+    </Dialog>
   )
 }
 

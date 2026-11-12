@@ -141,7 +141,7 @@ describe('TaskAttachmentsTab', () => {
 
     pick(file('notas.txt', 'text/plain'))
 
-    expect(await screen.findAllByText('Revisá tu conexión a internet y probá de nuevo.')).not.toHaveLength(0)
+    expect(await screen.findAllByText('No se pudo llegar al servidor. Revisá la red y probá de nuevo.')).not.toHaveLength(0)
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar notas.txt' }))
 
     expect(await screen.findByText('«notas.txt» adjuntado.')).toBeInTheDocument()
@@ -174,7 +174,7 @@ describe('TaskAttachmentsTab', () => {
     renderTab()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Borrar pantalla.png' }))
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Borrar archivo' })).getByRole('button', { name: 'Borrar' }))
+    await userEvent.click(within(screen.getByRole('dialog', { name: '¿Borrar «pantalla.png»?' })).getByRole('button', { name: 'Borrar' }))
 
     expect(remove).toHaveBeenCalledWith('p1')
     expect(await screen.findByText('«pantalla.png» borrado.')).toBeInTheDocument()

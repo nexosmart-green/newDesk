@@ -47,6 +47,6 @@ class TaskCategoryController extends Controller
 
         $delete($request->user(), $taskCategory);
 
-        return ApiResponse::ok(message: "Categoría {$taskCategory->name} borrada.");
+        return ApiResponse::ok(message: "Categoría «{$taskCategory->name}» borrada.");
     }
 }

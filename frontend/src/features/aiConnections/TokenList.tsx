@@ -43,12 +43,12 @@ export function TokenList({ tokens, label }: { tokens: readonly AiToken[]; label
       </ul>
       {revoking && (
         <ConfirmDialog
-          title={`Revocar ${revoking.name}`}
+          title={`¿Revocar «${revoking.name}»?`}
           confirmLabel="Revocar"
           danger
           pending={revoke.isPending}
           error={revoke.error}
-          onConfirm={() => revoke.mutate(revoking.id, { onSuccess: close })}
+          onConfirm={() => revoke.mutate(revoking, { onSuccess: close })}
           onClose={close}
         >
           <p>Lo que use este token (Claude Code u otro cliente) deja de funcionar en el próximo pedido.</p>

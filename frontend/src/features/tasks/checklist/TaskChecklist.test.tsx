@@ -188,8 +188,8 @@ describe('TaskChecklist', () => {
     renderChecklist()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Borrar «Probar en Safari»' }))
-    const dialog = screen.getByRole('dialog', { name: 'Borrar subtarea' })
-    expect(within(dialog).getByText(/«Probar en Safari»/)).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: '¿Borrar «Probar en Safari»?' })
+    expect(within(dialog).getByText(/queda registrado en el historial/)).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Borrar' }))
 
     expect(remove).toHaveBeenCalledWith(2)

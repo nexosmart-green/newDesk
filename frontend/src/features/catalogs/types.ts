@@ -6,11 +6,30 @@ export interface CatalogItem {
   name: string
 }
 
-export const catalogLabels: Record<CatalogType, { title: string; singular: string }> = {
-  'job-titles': { title: 'Puestos', singular: 'puesto' },
-  areas: { title: 'Áreas', singular: 'área' },
-  'employment-types': { title: 'Tipos de empleo', singular: 'tipo de empleo' },
-  skills: { title: 'Habilidades', singular: 'habilidad' },
+interface CatalogLabels {
+  title: string
+  /** Capitalized, for the start of a toast: "Área «Diseño» guardada." */
+  item: string
+  /** "Nueva área" / "Nuevo puesto", "guardada" / "guardado". */
+  feminine: boolean
+}
+
+export const catalogLabels: Record<CatalogType, CatalogLabels> = {
+  'job-titles': { title: 'Puestos', item: 'Puesto', feminine: false },
+  areas: { title: 'Áreas', item: 'Área', feminine: true },
+  'employment-types': { title: 'Tipos de empleo', item: 'Tipo de empleo', feminine: false },
+  skills: { title: 'Habilidades', item: 'Habilidad', feminine: true },
+}
+
+/** "Área «Diseño» guardada." — the toast names the item and agrees with its gender. */
+export function catalogItemDone(type: CatalogType, name: string, participle: 'agregad' | 'guardad' | 'borrad'): string {
+  const labels = catalogLabels[type]
+  return `${labels.item} «${name}» ${participle}${labels.feminine ? 'a' : 'o'}.`
+}
+
+export function newCatalogItemLabel(type: CatalogType): string {
+  const labels = catalogLabels[type]
+  return `${labels.feminine ? 'Nueva' : 'Nuevo'} ${labels.item.toLowerCase()}`
 }
 
 export const catalogTypes = Object.keys(catalogLabels) as CatalogType[]

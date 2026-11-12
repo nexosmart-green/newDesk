@@ -75,7 +75,7 @@ describe('RoleEditor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar rol' }))
 
     expect(update).toHaveBeenCalledWith(7, { name: 'PM', permissions: ['module.time', 'projects.manage'] })
-    expect(await screen.findByText('Rol guardado.')).toBeInTheDocument()
+    expect(await screen.findByText('Rol «PM» guardado.')).toBeInTheDocument()
   })
 
   it('shows the system Admin with every module on, read-only', () => {
@@ -104,7 +104,7 @@ describe('RoleEditor', () => {
     renderEditor({ role: { ...role, users_count: 0 } })
 
     await userEvent.click(screen.getByRole('button', { name: 'Borrar rol' }))
-    expect(screen.getByRole('dialog', { name: '¿Borrar el rol PM?' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '¿Borrar «PM»?' })).toHaveTextContent('Nadie tiene este rol asignado')
     await userEvent.click(screen.getByRole('button', { name: 'Borrar' }))
 
     expect(remove).toHaveBeenCalledWith(7)

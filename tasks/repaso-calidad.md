@@ -36,12 +36,12 @@ modifica `feat/monitoreo` salvo que sea imprescindible (lista en `tasks/subtarea
 - [x] `lib/queryKeys.ts` único; semana/fechas a `lib/`; hooks de search params y tabs compartidos; `AsyncSelectField`; `PageState` con `skeleton`.
 
 ## F2 — Frontend: errores y modals
-- [ ] 422 de un campo que no está en pantalla → toast (hoy se pierde en silencio).
-- [ ] 401 en sesión (texto + login), 413, timeout, cuerpos HTML → mensajes claros.
-- [ ] Guard de cambios sin guardar en los diálogos con formulario; el fondo no cierra un formulario con cambios.
-- [ ] Tamaños: BulkAssign y Turno fijo → xl en 2 columnas (sin scroll dentro de scroll); EditEntry, Plantilla, Invitar → md.
-- [ ] Confirmaciones: estilo peligro + verbo real (estado de proyecto, copiar semana), títulos "¿Borrar «X»?" + botón "Borrar"; DeleteRole a ConfirmDialog; bloqueo del timer con acción.
-- [ ] Un verbo por acción: botón y toast iguales ("… guardado"), toasts de catálogos que nombran el ítem.
+- [x] 422 de un campo que no está en pantalla → toast (hoy se pierde en silencio).
+- [x] 401 en sesión (texto + login), 413, timeout, cuerpos HTML → mensajes claros.
+- [x] Guard de cambios sin guardar en los diálogos con formulario; el fondo no cierra un formulario con cambios.
+- [x] Tamaños: BulkAssign y Turno fijo → xl en 2 columnas (sin scroll dentro de scroll); EditEntry, Plantilla, Invitar → md.
+- [x] Confirmaciones: estilo peligro + verbo real (estado de proyecto, copiar semana), títulos "¿Borrar «X»?" + botón "Borrar"; DeleteRole a ConfirmDialog; bloqueo del timer con acción.
+- [x] Un verbo por acción: botón y toast iguales ("… guardado"), toasts de catálogos que nombran el ítem.
 
 ## F3 — Frontend: diseño sin lo genérico de IA
 Dirección: **"un registro de trabajo, no un dashboard SaaS"**. Lo único memorable: el **cronómetro en rosa** (#f6beb6 =
@@ -78,3 +78,10 @@ Cambios (orden de impacto):
 ## Cierre
 - [ ] Suites completas (back, front local + UTC), E2E, capturas desktop/mobile claro/oscuro, review independiente.
 - [ ] Commit/push `dev_green`, CI verde, merge a `main`.
+
+## Estado al cortar (2026-11-12, noche)
+- Hecho y pusheado en `dev_green` (NO en `main`): B1, B2, F1 (commit af37785, CI verde) + F2 y mensajes de éxito del backend que nombran el ítem (commit de cierre).
+- F2: suite local 262 tests (2 que fallaban por textos viejos ya corregidos y verdes). Falta re-confirmar `TZ=UTC npx vitest run` + `npm run build` (se cortó al parar) — el CI del push lo verifica.
+- Backend tests no corridos localmente desde los mensajes nuevos (MySQL caído por falta de RAM): los verifica el CI.
+- **Mañana:** revisar CI del último commit → F3 (rediseño, ver sección F3) → cierre (suites, E2E con MySQL levantado, capturas claro/oscuro/mobile, review independiente) → merge a `main`.
+- Entorno local: MySQL, Redis y servidores apagados por falta de memoria; Vitest limitado a 2 workers.

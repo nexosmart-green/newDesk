@@ -35,7 +35,7 @@ export function TaskLabelsPanel() {
       <div className="border-t border-border pt-3">
         <LabelForm
           key={formKey}
-          submitLabel="Agregar etiqueta"
+          submitLabel="Crear etiqueta"
           pending={create.isPending}
           error={create.error}
           onSubmit={(input) => create.mutate(input, { onSuccess: () => setFormKey((key) => key + 1) })}
@@ -129,7 +129,7 @@ function LabelRow({ label }: { label: TaskLabel }) {
       {confirming && (
         <ConfirmDialog
           title={`¿Borrar «${label.name}»?`}
-          confirmLabel="Borrar etiqueta"
+          confirmLabel="Borrar"
           danger
           pending={remove.isPending}
           error={remove.error}

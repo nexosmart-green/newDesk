@@ -13,7 +13,7 @@ import {
   removeProjectMember,
   updateProject,
 } from './projectsApi'
-import type { CreateProjectInput, ProjectDetail, ProjectFilters, ProjectStatus, SaveProjectInput } from './types'
+import { projectStatusVerbs, type CreateProjectInput, type ProjectDetail, type ProjectFilters, type ProjectStatus, type SaveProjectInput } from './types'
 
 export function useProjects(filters: ProjectFilters) {
   return useQuery({
@@ -76,8 +76,8 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateProjectInput) => createProject(input),
-    meta: { successMessage: 'Proyecto creado.' },
     onSuccess: (project) => {
+      toast.success(`Proyecto «${project.name}» creado.`)
       // The dialog opens the new project: it renders from here without a second request.
       queryClient.setQueryData(projectKey(project.id), project)
       return refreshQueries(queryClient, { later: [projectListsKey, ...clientsOf(project.client?.id ?? undefined)] })
@@ -89,8 +89,10 @@ export function useUpdateProject(id: number) {
   const store = useStoreProject(id)
   return useMutation({
     mutationFn: (input: Partial<SaveProjectInput>) => updateProject(id, input),
-    meta: { successMessage: 'Proyecto actualizado.' },
-    onSuccess: store,
+    onSuccess: (project: ProjectDetail) => {
+      toast.success(`Proyecto «${project.name}» guardado.`)
+      return store(project)
+    },
   })
 }
 
@@ -98,8 +100,10 @@ export function useChangeProjectStatus(id: number) {
   const store = useStoreProject(id)
   return useMutation({
     mutationFn: (status: ProjectStatus) => changeProjectStatus(id, status),
-    meta: { successMessage: 'Estado actualizado.' },
-    onSuccess: store,
+    onSuccess: (project: ProjectDetail, status) => {
+      toast.success(`Proyecto «${project.name}» ${projectStatusVerbs[status].done}.`)
+      return store(project)
+    },
   })
 }
 
@@ -107,8 +111,10 @@ export function useAddProjectMember(id: number) {
   const patchMembers = usePatchMembers(id)
   return useMutation({
     mutationFn: (userId: number) => addProjectMember(id, userId),
-    meta: { successMessage: 'Miembro agregado.' },
-    onSuccess: (person) => patchMembers((members) => [...members.filter((member) => member.id !== person.id), person]),
+    onSuccess: (person) => {
+      toast.success(`${person.full_name} ahora es miembro del proyecto.`)
+      return patchMembers((members) => [...members.filter((member) => member.id !== person.id), person])
+    },
   })
 }
 

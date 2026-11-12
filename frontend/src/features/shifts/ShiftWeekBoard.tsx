@@ -116,16 +116,17 @@ export function ShiftWeekBoard() {
       )}
       {dialog === 'copy' && (
         <ConfirmDialog
-          title="Copiar semana anterior"
-          confirmLabel="Copiar"
+          title="¿Reemplazar con la semana anterior?"
+          confirmLabel="Reemplazar con la semana anterior"
+          danger
           pending={copy.isPending}
           error={copy.error}
           onConfirm={confirmCopy}
           onClose={closeDialog}
         >
           <p>
-            La semana {weekLabel(week)} pasa a ser una copia de la anterior: a quienes tenían turnos se les reemplazan los de esta
-            semana.
+            A quienes tenían turnos la semana anterior se les borran los que ya tienen cargados en la semana {weekLabel(week)} y se
+            reemplazan por los de la anterior. No se puede deshacer.
           </p>
         </ConfirmDialog>
       )}

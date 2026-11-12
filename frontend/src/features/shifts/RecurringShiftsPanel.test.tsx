@@ -130,7 +130,7 @@ describe('RecurringShiftsPanel (RF-06.03)', () => {
     await openFixedShifts()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Borrar turno fijo de Ana García' }))
-    const dialog = screen.getByRole('dialog', { name: 'Borrar turno fijo de Ana García' })
+    const dialog = screen.getByRole('dialog', { name: '¿Borrar el turno fijo de Ana García?' })
     expect(within(dialog).getByText(/Los días hasta hoy quedan cargados/)).toBeInTheDocument()
     expect(remove).not.toHaveBeenCalled()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Borrar' }))

@@ -31,7 +31,10 @@ export function CreateTokenDialog({ onIssued, onClose }: CreateTokenDialogProps)
   }
 
   return (
-    <Dialog title="Generar token" description="Para usar newDesk desde Claude Code con los permisos de tu rol." onClose={onClose}>
+    <Dialog title="Generar token" description="Para usar newDesk desde Claude Code con los permisos de tu rol."
+      dirty={name.trim() !== ''}
+      onClose={onClose}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField
           label="Nombre"

@@ -46,8 +46,10 @@ export function useRenameTaskCategory() {
   const refresh = useRefresh(taskCategoriesKey)
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) => renameTaskCategory(id, name),
-    meta: { successMessage: 'Categoría actualizada.' },
-    onSuccess: () => refresh(true),
+    onSuccess: (_category, { name }) => {
+      toast.success(`Categoría «${name}» guardada.`)
+      return refresh(true)
+    },
   })
 }
 
@@ -77,8 +79,10 @@ export function useUpdateTaskLabel() {
   const refresh = useRefresh(taskLabelsKey)
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: LabelInput }) => updateTaskLabel(id, input),
-    meta: { successMessage: 'Etiqueta actualizada.' },
-    onSuccess: () => refresh(true),
+    onSuccess: (_label, { input }) => {
+      toast.success(`Etiqueta «${input.name}» guardada.`)
+      return refresh(true)
+    },
   })
 }
 

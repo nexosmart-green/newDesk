@@ -189,7 +189,7 @@ it('lets the uploader and projects.manage delete an attachment, not other member
     $this->actingAs($teammate)->deleteJson("/api/v1/task-attachments/{$first->uuid}")
         ->assertForbidden()->assertJsonPath('message', 'Solo quien subió el archivo o quien gestiona proyectos puede borrarlo.');
 
-    $this->actingAs($dev)->deleteJson("/api/v1/task-attachments/{$first->uuid}")->assertOk()->assertJsonPath('message', 'Borraste uno.pdf.');
+    $this->actingAs($dev)->deleteJson("/api/v1/task-attachments/{$first->uuid}")->assertOk()->assertJsonPath('message', '«uno.pdf» borrado.');
     $this->actingAs($manager)->deleteJson("/api/v1/task-attachments/{$second->uuid}")->assertOk();
 
     expect(TaskAttachment::query()->count())->toBe(0)

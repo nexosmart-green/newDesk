@@ -88,7 +88,7 @@ describe('ProjectHoursTab', () => {
     renderHours(['hours.allocate'], [pendingRequest])
 
     await userEvent.click(await screen.findByRole('button', { name: 'Rechazar' }))
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rechazar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Rechazar pedido' }))
 
     expect(reject).toHaveBeenCalledWith(4)
   })

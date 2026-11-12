@@ -157,9 +157,11 @@ export function useCreateAndStartTask(projectId: number) {
 export function useUpdateTask(code: string) {
   const refresh = useRefreshTasks()
   return useMutation({
-    meta: { successMessage: 'Tarea actualizada.' },
     mutationFn: (input: Partial<Omit<SaveTaskInput, 'assignee_ids'>>) => updateTask(code, input),
-    onSuccess: (task) => refresh({ task, catalogs: true }),
+    onSuccess: (task) => {
+      toast.success(`Tarea ${task.code} guardada.`)
+      return refresh({ task, catalogs: true })
+    },
   })
 }
 
@@ -167,8 +169,10 @@ export function useUpdateTaskAssignees(code: string) {
   const refresh = useRefreshTasks()
   return useMutation({
     mutationFn: (assigneeIds: number[]) => updateTaskAssignees(code, assigneeIds),
-    meta: { successMessage: 'Asignación actualizada.' },
-    onSuccess: (task) => refresh({ task }),
+    onSuccess: (task) => {
+      toast.success(`Asignados de ${task.code} guardados.`)
+      return refresh({ task })
+    },
   })
 }
 

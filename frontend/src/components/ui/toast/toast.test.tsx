@@ -47,26 +47,18 @@ describe('toasts', () => {
   })
 
   it('explains a network failure in plain words', async () => {
-    renderAt(<SaveButton fail={new ApiError(0, 'No se pudo conectar con el servidor')} />)
+    renderAt(<SaveButton fail={new ApiError(0, '')} />)
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
     expect(await screen.findByText('Sin conexión con el servidor')).toBeInTheDocument()
-    expect(screen.getByText('Revisá tu conexión a internet y probá de nuevo.')).toBeInTheDocument()
+    expect(screen.getByText('No se pudo llegar al servidor. Revisá la red y probá de nuevo.')).toBeInTheDocument()
   })
 
-  it('stays quiet for field errors and for mutations marked silentError', async () => {
-    const fieldError = new ApiError(422, 'Datos inválidos', { reason: ['El motivo es obligatorio.'] })
-    renderAt(
-      <>
-        <SaveButton fail={fieldError} />
-        <SaveButton fail={new ApiError(422, 'Contá qué hiciste.', {}, 'comment_required')} silent />
-      </>,
-    )
-    const [first, second] = screen.getAllByRole('button', { name: 'Guardar' })
-    await userEvent.click(first as HTMLElement)
-    await userEvent.click(second as HTMLElement)
+  it('stays quiet for mutations marked silentError (field errors: see lib/queryClient.test.tsx)', async () => {
+    renderAt(<SaveButton fail={new ApiError(422, 'Contá qué hiciste.', {}, 'comment_required')} silent />)
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
 
-    await new Promise((resolve) => setTimeout(resolve, 50))
+    await new Promise((resolve) => setTimeout(resolve, 150))
     expect(within(toastRegion()).queryAllByRole('listitem')).toHaveLength(0)
   })
 })

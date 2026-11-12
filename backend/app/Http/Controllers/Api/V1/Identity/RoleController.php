@@ -63,6 +63,6 @@ class RoleController extends Controller
 
         $deleteRole($request->user(), $role);
 
-        return ApiResponse::ok(message: 'Rol borrado.');
+        return ApiResponse::ok(message: "Rol «{$role->name}» borrado.");
     }
 }

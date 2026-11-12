@@ -71,6 +71,6 @@ class TaskAttachmentController extends Controller
 
         $delete($request->user(), $taskAttachment);
 
-        return ApiResponse::ok(message: "Borraste {$taskAttachment->original_name}.");
+        return ApiResponse::ok(message: "«{$taskAttachment->original_name}» borrado.");
     }
 }

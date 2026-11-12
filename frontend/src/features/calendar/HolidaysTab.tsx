@@ -77,17 +77,15 @@ export function HolidaysTab() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Borrar feriado"
+          title={`¿Borrar «${deleting.name}»?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
           error={remove.error}
-          onConfirm={() => remove.mutate(deleting.id, { onSuccess: closeDelete })}
+          onConfirm={() => remove.mutate(deleting, { onSuccess: closeDelete })}
           onClose={closeDelete}
         >
-          <p>
-            ¿Borrar «{deleting.name}» del {formatDate(deleting.date)}?
-          </p>
+          <p>El {formatDate(deleting.date)} vuelve a ser un día laborable en los turnos y en los calendarios.</p>
         </ConfirmDialog>
       )}
     </div>

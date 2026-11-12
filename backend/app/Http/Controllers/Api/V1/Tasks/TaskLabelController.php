@@ -47,6 +47,6 @@ class TaskLabelController extends Controller
 
         $delete($request->user(), $taskLabel);
 
-        return ApiResponse::ok(message: "Etiqueta {$taskLabel->name} borrada.");
+        return ApiResponse::ok(message: "Etiqueta «{$taskLabel->name}» borrada.");
     }
 }

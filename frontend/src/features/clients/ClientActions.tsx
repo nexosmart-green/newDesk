@@ -43,7 +43,7 @@ export function ClientActions({ client }: { client: Client }) {
       {open === 'edit' && <ClientFormDialog client={client} onClose={() => setOpen(null)} onSaved={() => setOpen(null)} />}
       {open === 'delete' && (
         <ConfirmDialog
-          title={`Borrar ${client.display_name}`}
+          title={`¿Borrar «${client.display_name}»?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
@@ -51,7 +51,7 @@ export function ClientActions({ client }: { client: Client }) {
           onClose={closeDelete}
           onConfirm={() => remove.mutate(undefined, { onSuccess: () => navigate('/clientes', { replace: true }) })}
         >
-          <p>El borrado es definitivo.</p>
+          <p>Se pierden sus datos fiscales, de contacto y las notas. No se puede deshacer.</p>
           {hasProjects && (
             <p className="text-muted">Tiene proyectos, así que no se puede borrar.{isActive && ' Podés inactivarlo para que no se ofrezca en proyectos nuevos.'}</p>
           )}

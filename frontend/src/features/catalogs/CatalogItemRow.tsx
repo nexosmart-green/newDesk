@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { inputClassName } from '@/components/ui/TextField'
 import type { CatalogItem, CatalogType } from './types'
@@ -7,6 +8,7 @@ import { useDeleteCatalogItem, useRenameCatalogItem } from './useCatalogs'
 
 export function CatalogItemRow({ type, item }: { type: CatalogType; item: CatalogItem }) {
   const [draft, setDraft] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const rename = useRenameCatalogItem(type)
   const remove = useDeleteCatalogItem(type)
 
@@ -14,6 +16,11 @@ export function CatalogItemRow({ type, item }: { type: CatalogType; item: Catalo
     event.preventDefault()
     if (draft === null || !draft.trim() || draft.trim() === item.name) return setDraft(null)
     rename.mutate({ id: item.id, name: draft.trim() }, { onSuccess: () => setDraft(null) })
+  }
+
+  function closeDelete() {
+    remove.reset()
+    setConfirmingDelete(false)
   }
 
   return (
@@ -25,13 +32,7 @@ export function CatalogItemRow({ type, item }: { type: CatalogType; item: Catalo
             <Button variant="link" aria-label={`Renombrar ${item.name}`} onClick={() => setDraft(item.name)}>
               Renombrar
             </Button>
-            <Button
-              variant="link"
-              className="text-danger"
-              aria-label={`Borrar ${item.name}`}
-              loading={remove.isPending}
-              onClick={() => remove.mutate(item.id)}
-            >
+            <Button variant="link" className="text-danger" aria-label={`Borrar ${item.name}`} onClick={() => setConfirmingDelete(true)}>
               Borrar
             </Button>
           </div>
@@ -54,7 +55,20 @@ export function CatalogItemRow({ type, item }: { type: CatalogType; item: Catalo
           </Button>
         </form>
       )}
-      <FieldErrorsAlert error={rename.error ?? remove.error} />
+      <FieldErrorsAlert error={rename.error} />
+      {confirmingDelete && (
+        <ConfirmDialog
+          title={`¿Borrar «${item.name}»?`}
+          confirmLabel="Borrar"
+          danger
+          pending={remove.isPending}
+          error={remove.error}
+          onConfirm={() => remove.mutate(item, { onSuccess: closeDelete })}
+          onClose={closeDelete}
+        >
+          <p>Deja de aparecer para elegir en los perfiles. Si alguna persona lo tiene asignado, no se borra: reasignala primero.</p>
+        </ConfirmDialog>
+      )}
     </li>
   )
 }

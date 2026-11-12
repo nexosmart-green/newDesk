@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createAiToken, fetchCompanyAiTokens, fetchMyAiTokens, revokeAiToken } from './aiConnectionsApi'
 import { aiTokensKey } from '@/lib/queryKeys'
-import type { CreateTokenInput } from './types'
+import { toast } from '@/components/ui/toast/toastStore'
+import type { AiToken, CreateTokenInput } from './types'
 
 export function useMyAiTokens() {
   return useQuery({ queryKey: [...aiTokensKey, 'mine'], queryFn: fetchMyAiTokens })
@@ -25,8 +26,10 @@ export function useCreateAiToken() {
 export function useRevokeAiToken() {
   const refresh = useRefreshTokens()
   return useMutation({
-    mutationFn: (id: number) => revokeAiToken(id),
-    onSuccess: refresh,
-    meta: { successMessage: 'Token revocado.' },
+    mutationFn: (token: AiToken) => revokeAiToken(token.id),
+    onSuccess: (_result, token) => {
+      toast.success(`Token «${token.name}» revocado.`)
+      return refresh()
+    },
   })
 }

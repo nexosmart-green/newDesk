@@ -35,7 +35,7 @@ describe('Configuración → Catálogos (tareas)', () => {
     expect(within(list).getByText('3 tareas')).toBeInTheDocument()
 
     await userEvent.type(screen.getByLabelText('Nueva categoría'), 'Ticket')
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Crear categoría' }))
     expect(create).toHaveBeenCalledWith('Ticket')
     expect(await screen.findByText('Categoría «Ticket» creada.')).toBeInTheDocument()
 
@@ -48,7 +48,7 @@ describe('Configuración → Catálogos (tareas)', () => {
     await userEvent.click(within(list).getByRole('button', { name: 'Borrar Diseño' }))
     const dialog = await screen.findByRole('dialog', { name: '¿Borrar «Diseño»?' })
     expect(within(dialog).getByText(/Ninguna tarea la usa/)).toBeInTheDocument()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Borrar categoría' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Borrar' }))
     expect(remove).toHaveBeenCalledWith(2)
   })
 
@@ -59,7 +59,7 @@ describe('Configuración → Catálogos (tareas)', () => {
     renderSettings(['projects.manage'])
 
     await userEvent.type(await screen.findByLabelText('Nueva categoría'), 'Diseño')
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Crear categoría' }))
 
     expect(await screen.findByText('Ya existe la categoría Diseño.')).toBeInTheDocument()
   })
@@ -70,7 +70,7 @@ describe('Configuración → Catálogos (tareas)', () => {
 
     await userEvent.type(await screen.findByLabelText('Nueva etiqueta'), 'QA')
     await userEvent.click(screen.getByLabelText('Color #8b5cf6'))
-    await userEvent.click(screen.getByRole('button', { name: 'Agregar etiqueta' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Crear etiqueta' }))
 
     expect(create).toHaveBeenCalledWith({ name: 'QA', color: '#8b5cf6' })
   })

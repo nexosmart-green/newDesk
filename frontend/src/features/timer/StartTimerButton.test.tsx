@@ -88,6 +88,24 @@ describe('StartTimerButton', () => {
     expect(await within(dialog).findByText('Pedido de ampliación enviado.')).toBeInTheDocument()
   })
 
+  it('blocked by an entry without comment offers "Completar comentario" right there (RF-05.17)', async () => {
+    const cut = buildTimeEntry({ id: 33, task: { id: 12, code: 'bhn-12', title: 'Maquetar home' } })
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState({ pending_comments: [cut] }))
+    vi.spyOn(timerApi, 'startTimer').mockRejectedValue(new ApiError(422, 'Completá el comentario pendiente antes de iniciar otro.', {}, 'comment_pending'))
+    const complete = vi.spyOn(timerApi, 'completeEntryComment').mockResolvedValue(cut)
+    renderButton()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar cronómetro en bhn-60' }))
+    const blocked = await screen.findByRole('dialog', { name: 'No se pudo iniciar el cronómetro' })
+    await userEvent.click(within(blocked).getByRole('button', { name: 'Completar comentario' }))
+
+    const prompt = await screen.findByRole('dialog', { name: 'Completá el comentario' })
+    await userEvent.type(within(prompt).getByRole('textbox'), previousComment)
+    await userEvent.click(within(prompt).getByRole('button', { name: 'Guardar comentario' }))
+
+    expect(complete).toHaveBeenCalledWith(33, previousComment)
+  })
+
   it('on a project already out of hours says so before any click and asks for an extension (RF-05.05)', async () => {
     vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
     const start = vi.spyOn(timerApi, 'startTimer')

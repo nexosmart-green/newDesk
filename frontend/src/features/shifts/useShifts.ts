@@ -12,7 +12,7 @@ import {
 } from './shiftsApi'
 import { calendarKey, shiftGridKey, shiftsKey, shiftTemplatesKey } from '@/lib/queryKeys'
 import { refreshQueries } from '@/lib/refreshQueries'
-import type { AssignShiftsInput, ShiftCellsInput, ShiftTemplateInput } from './types'
+import type { AssignShiftsInput, ShiftCellsInput, ShiftTemplate, ShiftTemplateInput } from './types'
 
 export const daysLabel = (count: number) => (count === 1 ? '1 día' : `${count} días`)
 const assigned = (cells: number) => toast.success(`Listo: ${daysLabel(cells)} actualizados.`)
@@ -69,7 +69,7 @@ export function useCopyPreviousWeek() {
     mutationFn: (weekStart: string) => copyPreviousWeek(weekStart),
     onSuccess: (copied) => {
       if (copied === 0) toast.info('La semana anterior no tenía turnos.')
-      else toast.success(`Se copiaron ${copied} turnos.`)
+      else toast.success(`Semana reemplazada con ${copied === 1 ? '1 turno' : `${copied} turnos`} de la semana anterior.`)
       return refresh()
     },
   })
@@ -80,16 +80,20 @@ export function useSaveShiftTemplate() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number | null; input: ShiftTemplateInput }) =>
       id === null ? createShiftTemplate(input) : updateShiftTemplate(id, input),
-    meta: { successMessage: 'Plantilla guardada.' },
-    onSuccess: refresh,
+    onSuccess: (_template, { id, input }) => {
+      toast.success(`Plantilla «${input.name}» ${id === null ? 'creada' : 'guardada'}.`)
+      return refresh()
+    },
   })
 }
 
 export function useDeleteShiftTemplate() {
   const refresh = useRefreshTemplates()
   return useMutation({
-    mutationFn: (id: number) => deleteShiftTemplate(id),
-    meta: { successMessage: 'Plantilla borrada.' },
-    onSuccess: refresh,
+    mutationFn: (template: ShiftTemplate) => deleteShiftTemplate(template.id),
+    onSuccess: (_result, template) => {
+      toast.success(`Plantilla «${template.name}» borrada.`)
+      return refresh()
+    },
   })
 }

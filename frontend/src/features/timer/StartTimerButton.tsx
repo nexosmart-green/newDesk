@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { ApiError } from '@/lib/api'
+import { errorTextOf } from '@/lib/errorText'
 import { timerKey } from '@/lib/queryKeys'
 import { CommentDialog } from './CommentDialog'
+import { PendingCommentDialog } from './PendingCommentDialog'
+import { toPendingSummary } from './pendingEntry'
 import { RequestExtensionButton } from './RequestExtensionButton'
 import { StopTimerDialog } from './StopTimerDialog'
 import { fetchTimer } from './timerApi'
@@ -41,6 +44,21 @@ function StopRunningDialog({ onClose }: { onClose: () => void }) {
   const active = useTimerState().data?.active
   return active ? <StopTimerDialog entry={active} onClose={onClose} /> : null
 }
+
+/** A start blocked by an automatically cut entry: complete its comment right here (RF-05.17). */
+function CompletePendingDialog({ onClose }: { onClose: () => void }) {
+  const pending = useTimerState().data?.pending_comments ?? []
+  const current = pending[0]
+  if (!current) return null
+  return (
+    <PendingCommentDialog
+      entry={toPendingSummary(current)}
+      position={pending.length > 1 ? `Registro 1 de ${pending.length}` : undefined}
+      onDone={() => pending.length <= 1 && onClose()}
+      onClose={onClose}
+    />
+  )
+}
 const asksForComment = (error: ApiError) =>
   error.code === timerRule.previousCommentRequired || error.code === timerRule.commentRequired || error.hasFieldErrors()
 
@@ -56,6 +74,7 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   const [askingPrevious, setAskingPrevious] = useState(false)
   const [blocked, setBlocked] = useState<ApiError | null>(null)
   const [stoppingId, setStoppingId] = useState<number | null>(null)
+  const [completingPending, setCompletingPending] = useState(false)
   const runningHere = active !== null && sameCode(active.code, task.code)
   const projectId = task.project?.id
 
@@ -132,14 +151,25 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
       )}
       {blocked && (
         <Dialog title="No se pudo iniciar el cronómetro" size="sm" onClose={() => setBlocked(null)}>
-          <TimerBlockedNotice code={blocked.code} message={blocked.message} projectId={projectId} />
+          <TimerBlockedNotice code={blocked.code} message={errorTextOf(blocked).message} projectId={projectId} />
           <DialogFooter>
             <Button variant="secondary" onClick={() => setBlocked(null)}>
               Cerrar
             </Button>
+            {blocked.code === timerRule.commentPending && (
+              <Button
+                onClick={() => {
+                  setBlocked(null)
+                  setCompletingPending(true)
+                }}
+              >
+                Completar comentario
+              </Button>
+            )}
           </DialogFooter>
         </Dialog>
       )}
+      {completingPending && <CompletePendingDialog onClose={() => setCompletingPending(false)} />}
       {active && stoppingId === active.id && <StopRunningDialog onClose={() => setStoppingId(null)} />}
     </>
   )

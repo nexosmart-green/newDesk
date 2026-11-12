@@ -22,9 +22,11 @@ function useInvalidateRoles() {
 export function useSaveRole(roleId: number | null) {
   const invalidateRoles = useInvalidateRoles()
   return useMutation({
-    meta: { successMessage: roleId === null ? 'Rol creado.' : 'Rol guardado.' },
     mutationFn: (input: SaveRoleInput) => (roleId === null ? createRole(input) : updateRole(roleId, input)),
-    onSuccess: invalidateRoles,
+    onSuccess: (role) => {
+      toast.success(`Rol «${role.name}» ${roleId === null ? 'creado' : 'guardado'}.`)
+      return invalidateRoles()
+    },
   })
 }
 

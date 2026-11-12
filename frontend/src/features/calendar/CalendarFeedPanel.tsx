@@ -52,8 +52,8 @@ export function CalendarFeedPanel() {
       )}
       {confirmingRevoke && (
         <ConfirmDialog
-          title="Revocar suscripción"
-          confirmLabel="Revocar"
+          title="¿Revocar la suscripción?"
+          confirmLabel="Revocar suscripción"
           danger
           pending={revoke.isPending}
           error={revoke.error}
@@ -67,7 +67,7 @@ export function CalendarFeedPanel() {
           }
           onClose={closeRevoke}
         >
-          <p>Los calendarios suscriptos a tu URL dejan de actualizarse.</p>
+          <p>Tu URL del calendario deja de funcionar: Google Calendar o el celular dejan de recibir tus turnos. Para volver a verlos, suscribite de nuevo.</p>
         </ConfirmDialog>
       )}
     </section>

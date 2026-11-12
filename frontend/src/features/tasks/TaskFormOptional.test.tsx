@@ -22,7 +22,7 @@ describe('task form: optional dates and estimate', () => {
     expect(due).toHaveValue('2026-12-01')
     await userEvent.click(screen.getByRole('button', { name: 'Quitar vencimiento' }))
     expect(due).toHaveValue('')
-    await userEvent.click(screen.getByRole('button', { name: 'Crear' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Crear tarea' }))
 
     expect(create).toHaveBeenCalledWith(9, expect.objectContaining({ starts_on: null, due_on: null, estimate_seconds: null }))
     expect(await screen.findByText('Tarea bhn-3 creada.')).toBeInTheDocument()
@@ -40,6 +40,6 @@ describe('task form: optional dates and estimate', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
     expect(update).toHaveBeenCalledWith(task.code, expect.objectContaining({ due_on: null, estimate_seconds: null }))
-    expect(await screen.findByText('Tarea actualizada.')).toBeInTheDocument()
+    expect(await screen.findByText(`Tarea ${task.code} guardada.`)).toBeInTheDocument()
   })
 })

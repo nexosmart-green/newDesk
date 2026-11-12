@@ -71,7 +71,7 @@ export function TaskChecklist({ task }: { task: Task }) {
       </p>
       {deleting && (
         <ConfirmDialog
-          title="Borrar subtarea"
+          title={`¿Borrar «${deleting.text}»?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
@@ -82,9 +82,7 @@ export function TaskChecklist({ task }: { task: Task }) {
             remove.reset()
           }}
         >
-          <p>
-            Se va a borrar «{deleting.text}» de esta tarea. Queda registrado en el historial.
-          </p>
+          <p>La subtarea sale de esta tarea para todos. El borrado queda registrado en el historial.</p>
         </ConfirmDialog>
       )}
     </Panel>

@@ -46,7 +46,7 @@ class TimeEntryController extends Controller
 
         $delete($request->user(), $timeEntry);
 
-        return ApiResponse::ok(message: 'Registro borrado.');
+        return ApiResponse::ok(message: "Registro de {$timeEntry->task->code} borrado: sus horas vuelven a la bolsa.");
     }
 
     /** RF-05.17 */

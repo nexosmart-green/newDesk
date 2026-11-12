@@ -32,6 +32,6 @@ class ProjectMemberController extends Controller
 
         $removeMember($request->user(), $project, $user);
 
-        return ApiResponse::ok(message: 'Miembro quitado.');
+        return ApiResponse::ok(message: "{$user->fullName()} ya no es miembro de {$project->name}.");
     }
 }

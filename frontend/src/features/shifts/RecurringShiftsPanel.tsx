@@ -168,7 +168,7 @@ export function RecurringShiftsPanel({ onGoToTemplates }: RecurringShiftsPanelPr
       {dialog?.kind === 'end' && <EndRecurrenceDialog recurrence={dialog.recurrence} today={today} onClose={close} />}
       {dialog?.kind === 'delete' && (
         <ConfirmDialog
-          title={`Borrar turno fijo de ${dialog.recurrence.user.full_name}`}
+          title={`¿Borrar el turno fijo de ${dialog.recurrence.user.full_name}?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}

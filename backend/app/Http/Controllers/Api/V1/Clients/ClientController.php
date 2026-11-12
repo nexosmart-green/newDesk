@@ -60,6 +60,6 @@ class ClientController extends Controller
 
         $delete($request->user(), $client);
 
-        return ApiResponse::ok(message: 'Cliente borrado.');
+        return ApiResponse::ok(message: "Cliente «{$client->displayName()}» borrado.");
     }
 }

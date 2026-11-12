@@ -43,7 +43,7 @@ describe('entry times use the profile timezone, not the browser one', () => {
 
     await userEvent.clear(screen.getByLabelText('Desde'))
     await userEvent.type(screen.getByLabelText('Desde'), '08:00')
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Corregir registro' }))
 
     expect(correct).toHaveBeenCalledWith(300, { date: '2026-11-10', from: '08:00', to: '10:30', comment: 'Revisé el formulario de login' })
   })

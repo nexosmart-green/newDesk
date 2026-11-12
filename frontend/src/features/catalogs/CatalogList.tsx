@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { inputClassName } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { CatalogItemRow } from './CatalogItemRow'
-import { catalogLabels, type CatalogType } from './types'
+import { catalogLabels, newCatalogItemLabel, type CatalogType } from './types'
 import { useCatalog, useCreateCatalogItem } from './useCatalogs'
 
 export function CatalogList({ type }: { type: CatalogType }) {
@@ -42,13 +42,13 @@ export function CatalogList({ type }: { type: CatalogType }) {
       )}
       <form onSubmit={handleSubmit} className="space-y-1" noValidate>
         <label htmlFor={inputId} className="sr-only">
-          Nuevo {labels.singular}
+          {newCatalogItemLabel(type)}
         </label>
         <div className="flex gap-2">
           <input
             id={inputId}
             value={name}
-            placeholder={`Nuevo ${labels.singular}`}
+            placeholder={newCatalogItemLabel(type)}
             maxLength={80}
             aria-invalid={nameError ? true : undefined}
             onChange={(event) => setName(event.target.value)}

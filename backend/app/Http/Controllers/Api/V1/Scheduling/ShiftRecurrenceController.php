@@ -63,7 +63,7 @@ class ShiftRecurrenceController extends Controller
 
         return ApiResponse::ok(
             ['recurrence' => ShiftRecurrenceResource::make($recurrence)->resolve($request), 'removed' => $removed],
-            'Turno fijo finalizado.'.($removed > 0 ? ' Se quitaron '.$this->days($removed).' posteriores.' : ''),
+            "Turno fijo de {$recurrence->user->fullName()} finalizado.".($removed > 0 ? ' Se quitaron '.$this->days($removed).' posteriores.' : ''),
         );
     }
 
@@ -74,7 +74,7 @@ class ShiftRecurrenceController extends Controller
 
         return ApiResponse::ok(
             ['removed' => $removed],
-            'Turno fijo borrado.'.($removed > 0 ? ' Se quitaron '.$this->days($removed).' futuros; los anteriores quedan cargados.' : ''),
+            "Turno fijo de {$shiftRecurrence->user->fullName()} borrado.".($removed > 0 ? ' Se quitaron '.$this->days($removed).' futuros; los anteriores quedan cargados.' : ''),
         );
     }
 

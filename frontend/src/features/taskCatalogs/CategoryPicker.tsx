@@ -73,7 +73,7 @@ export function CategoryPicker({ value, onChange, error, current }: CategoryPick
             className={inputClassName}
           />
           <Button onClick={submit} loading={create.isPending} disabled={!name.trim()}>
-            Crear
+            Crear categoría
           </Button>
           <Button variant="ghost" onClick={cancel}>
             Cancelar

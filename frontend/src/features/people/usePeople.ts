@@ -36,8 +36,10 @@ export function useUpdatePerson(id: number) {
   const storePerson = useStorePerson(id)
   return useMutation({
     mutationFn: (input: UpdateEmployeeInput) => updatePerson(id, input),
-    onSuccess: storePerson,
-    meta: { successMessage: 'Perfil actualizado.' },
+    onSuccess: (profile) => {
+      toast.success(`Perfil de ${profile.full_name} guardado.`)
+      return storePerson(profile)
+    },
   })
 }
 
@@ -45,8 +47,8 @@ export function useSetPersonActive(id: number) {
   const storePerson = useStorePerson(id)
   return useMutation({
     mutationFn: (active: boolean) => (active ? reactivatePerson(id) : deactivatePerson(id)),
-    onSuccess: (_result, active) => {
-      toast.success(active ? 'Persona reactivada.' : 'Persona dada de baja.')
+    onSuccess: (person, active) => {
+      toast.success(active ? `Reactivaste a ${person.full_name}.` : `Diste de baja a ${person.full_name}.`)
       return storePerson()
     },
   })

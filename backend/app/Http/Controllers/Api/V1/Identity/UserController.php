@@ -47,6 +47,6 @@ class UserController extends Controller
 
         $resendInvitation($request->user(), $user);
 
-        return ApiResponse::ok(message: 'Invitación reenviada.');
+        return ApiResponse::ok(message: "Invitación reenviada a {$user->email}.");
     }
 }

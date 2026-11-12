@@ -10,6 +10,14 @@ export const projectStatusLabels: Record<ProjectStatus, string> = {
   cancelled: 'Cancelado',
 }
 
+/** One verb per status change, shared by the button, its confirm and its toast. */
+export const projectStatusVerbs: Record<ProjectStatus, { action: string; done: string }> = {
+  active: { action: 'Reactivar', done: 'reactivado' },
+  paused: { action: 'Pausar', done: 'pausado' },
+  finished: { action: 'Finalizar', done: 'finalizado' },
+  cancelled: { action: 'Cancelar', done: 'cancelado' },
+}
+
 export const projectStatuses = Object.keys(projectStatusLabels) as ProjectStatus[]
 
 /** RF-03.08: closed projects accept no new tasks nor timers. */

@@ -85,7 +85,7 @@ describe('MyCalendarPage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Revocar suscripción' }))
     expect(revoke).not.toHaveBeenCalled()
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revocar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revocar suscripción' }))
     expect(revoke).toHaveBeenCalled()
     expect(await screen.findByText(/Suscripción revocada/)).toBeInTheDocument()
     await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Revocar suscripción' })).not.toBeInTheDocument())
