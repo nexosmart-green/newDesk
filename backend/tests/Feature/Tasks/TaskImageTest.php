@@ -84,3 +84,27 @@ it('moves the description images with the task so the destination members still 
 
     $this->actingAs($dev)->get($url)->assertOk();
 });
+
+it('moves the images pasted in comments with the task too, and markdown comments keep their mentions', function () {
+    $admin = adminUser();
+    $dev = userWithRole($admin);
+    $teammate = userWithRole($admin);
+    ['project' => $from, 'task' => $task] = bagProject($admin, [$dev, $teammate], 3600, 'aaa');
+    ['project' => $to] = bagProject($admin, [$dev], 3600, 'bbb');
+    $upload = fn () => $this->actingAs($dev)->post("/api/v1/projects/{$from->id}/task-images", ['image' => UploadedFile::fake()->image('c.png')], ['Accept' => 'application/json'])
+        ->assertCreated()->json('data.url');
+    $inComment = $upload();
+    $unrelated = $upload();
+
+    $this->actingAs($dev)->postJson("/api/v1/tasks/{$task->code}/comments", [
+        'body' => "**Listo** el fix, @Equipo:\n\n- paso 1\n- paso 2\n\n![captura]({$inComment})",
+        'mentioned_user_ids' => [$teammate->id],
+    ])->assertCreated()
+        ->assertJsonPath('data.body', "**Listo** el fix, @Equipo:\n\n- paso 1\n- paso 2\n\n![captura]({$inComment})")
+        ->assertJsonPath('data.mentions.0.id', $teammate->id);
+
+    $this->actingAs($admin)->putJson("/api/v1/tasks/{$task->code}/project", ['project_id' => $to->id])->assertOk();
+
+    expect(TaskImage::query()->withoutGlobalScopes()->where('uuid', basename($inComment))->value('project_id'))->toBe($to->id)
+        ->and(TaskImage::query()->withoutGlobalScopes()->where('uuid', basename($unrelated))->value('project_id'))->toBe($from->id);
+});

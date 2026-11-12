@@ -1,38 +1,39 @@
-import { useState, type FormEvent } from 'react'
-import { Button } from '@/components/ui/Button'
-import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
+import { MessageSquare } from 'lucide-react'
+import { MarkdownView } from '@/components/ui/Markdown'
 import { PageState } from '@/components/ui/PageState'
 import { formatDateTime } from '@/lib/dates'
-import { mentionedIdsIn, type Mentionable } from './mentions'
-import { MentionTextarea } from './MentionTextarea'
-import { usePostTaskComment, useTaskComments } from './useTasks'
+import { CommentComposer } from './comments/CommentComposer'
+import type { Mentionable } from './mentions'
+import type { TaskComment } from './types'
+import { useTaskComments } from './useTasks'
 
 interface TaskCommentsProps {
   code: string
+  /** Pasted images are stored in the task's project. */
+  projectId: number | undefined
   members: Mentionable[]
 }
 
-/** RF-04.06: comments with @mentions (the backend notifies the mentioned people). */
-export function TaskComments({ code, members }: TaskCommentsProps) {
-  const comments = useTaskComments(code)
-  const post = usePostTaskComment(code)
-  const [body, setBody] = useState('')
-  const [picked, setPicked] = useState<Mentionable[]>([])
+function CommentItem({ comment }: { comment: TaskComment }) {
+  return (
+    <li className="space-y-1.5 rounded-lg border border-border bg-surface p-3">
+      <p className="text-xs text-muted">
+        <span className="font-medium text-text">{comment.author.full_name}</span>
+        {comment.created_at && (
+          <>
+            {' · '}
+            <time dateTime={comment.created_at}>{formatDateTime(comment.created_at)}</time>
+          </>
+        )}
+      </p>
+      <MarkdownView source={comment.body} breaks highlights={comment.mentions.map((person) => `@${person.full_name}`)} className="text-sm" />
+    </li>
+  )
+}
 
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    const text = body.trim()
-    if (!text) return
-    post.mutate(
-      { body: text, mentioned_user_ids: mentionedIdsIn(text, picked) },
-      {
-        onSuccess: () => {
-          setBody('')
-          setPicked([])
-        },
-      },
-    )
-  }
+/** RF-04.06: comments in markdown with @mentions (the backend notifies the mentioned people). */
+export function TaskComments({ code, projectId, members }: TaskCommentsProps) {
+  const comments = useTaskComments(code)
 
   return (
     <section aria-labelledby="task-comments-title" className="space-y-3">
@@ -42,35 +43,18 @@ export function TaskComments({ code, members }: TaskCommentsProps) {
       {!comments.data ? (
         <PageState isPending={comments.isPending} error={comments.error} shape="list" onRetry={() => void comments.refetch()} />
       ) : comments.data.data.length === 0 ? (
-        <p className="text-sm text-muted">Todavía no hay comentarios.</p>
+        <div className="flex items-start gap-3 rounded-lg border border-dashed border-border p-3">
+          <MessageSquare aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
+          <p className="text-sm text-muted">Todavía no hay comentarios. Escribí el primero abajo; con @ avisás a alguien del proyecto.</p>
+        </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3" aria-label="Comentarios de la tarea">
           {comments.data.data.map((comment) => (
-            <li key={comment.id} className="rounded border border-border bg-surface p-3">
-              <p className="text-xs text-muted">
-                <span className="font-medium text-text">{comment.author.full_name}</span>
-                {comment.created_at && ` · ${formatDateTime(comment.created_at)}`}
-              </p>
-              <p className="whitespace-pre-line text-sm">{comment.body}</p>
-            </li>
+            <CommentItem key={comment.id} comment={comment} />
           ))}
         </ul>
       )}
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <MentionTextarea
-          label="Nuevo comentario"
-          value={body}
-          members={members}
-          onChange={setBody}
-          onMention={(member) => setPicked((current) => [...current, member])}
-        />
-        <FieldErrorsAlert error={post.error} />
-        <div className="flex justify-end">
-          <Button type="submit" disabled={!body.trim()} loading={post.isPending}>
-            Comentar
-          </Button>
-        </div>
-      </form>
+      <CommentComposer code={code} projectId={projectId} members={members} />
     </section>
   )
 }

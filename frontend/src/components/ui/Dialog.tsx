@@ -1,7 +1,7 @@
 import { X } from 'lucide-react'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { useDialogStack } from './useDialogStack'
+import { useModalFocus } from './useModalFocus'
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -30,13 +30,6 @@ const phoneShape: Record<DialogSize, string> = {
   xl: 'h-dvh',
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
-function focusablesOf(panel: HTMLElement): HTMLElement[] {
-  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((element) => !element.hasAttribute('data-focus-guard'))
-}
-
 /**
  * The one modal primitive. Rendered through a portal on `document.body` so no ancestor (the header's
  * `backdrop-blur` creates a containing block for `fixed`) can clip it. Labelled, focus trapped,
@@ -46,49 +39,7 @@ export function Dialog({ title, description, size = 'md', onClose, children }: D
   const titleId = useId()
   const descriptionId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
-  const isTopmost = useDialogStack()
-  const onCloseRef = useRef(onClose)
-  useEffect(() => {
-    onCloseRef.current = onClose
-  })
-
-  useEffect(() => {
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const panel = panelRef.current
-    const firstField =
-      panel?.querySelector<HTMLElement>('[data-autofocus]') ??
-      panel?.querySelector<HTMLElement>('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])')
-    ;(firstField ?? panel)?.focus()
-    return () => {
-      if (previouslyFocused?.isConnected) previouslyFocused.focus()
-    }
-  }, [])
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (!isTopmost() || !panelRef.current) return
-      if (event.key === 'Escape') {
-        event.stopPropagation()
-        onCloseRef.current()
-        return
-      }
-      if (event.key !== 'Tab') return
-      const focusables = focusablesOf(panelRef.current)
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      if (!first || !last) return event.preventDefault()
-      const active = document.activeElement
-      if (event.shiftKey && (active === first || !panelRef.current.contains(active))) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && (active === last || !panelRef.current.contains(active))) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [isTopmost])
+  useModalFocus(panelRef, onClose)
 
   return createPortal(
     <div

@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react'
+import { Clock, ListChecks, Paperclip } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { formatDuration } from '@/lib/duration'
@@ -46,6 +46,36 @@ export function TaskLoggedHours({ task }: { task: Task }) {
       <span className="tabular">{formatDuration(task.logged_seconds)}</span>
       {task.estimate_seconds !== null && <span className="tabular">/ {formatDuration(task.estimate_seconds)}</span>}
       {over && <span className="sr-only">(supera la estimación)</span>}
+    </span>
+  )
+}
+
+/** RF-04.08 "3/5" on rows and cards; green with the words when every step is done. */
+export function TaskChecklistBadge({ task }: { task: Task }) {
+  const progress = task.checklist_progress
+  if (!progress || progress.total === 0) return null
+  const complete = progress.done === progress.total
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs ${complete ? 'font-medium text-success' : 'text-muted'}`}>
+      <ListChecks aria-hidden="true" className="size-3.5" strokeWidth={1.75} />
+      <span className="sr-only">Subtareas hechas:</span>
+      <span className="tabular">
+        {progress.done}/{progress.total}
+      </span>
+      {complete && <span className="sr-only">(completas)</span>}
+    </span>
+  )
+}
+
+/** RF-04.09: the clip with how many files the task has (nothing when none). */
+export function TaskAttachmentsBadge({ task }: { task: Task }) {
+  const count = task.attachments_count ?? 0
+  if (count === 0) return null
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted" title={count === 1 ? '1 archivo adjunto' : `${count} archivos adjuntos`}>
+      <Paperclip aria-hidden="true" className="size-3.5" strokeWidth={1.75} />
+      <span className="tabular">{count}</span>
+      <span className="sr-only">{count === 1 ? 'archivo adjunto' : 'archivos adjuntos'}</span>
     </span>
   )
 }

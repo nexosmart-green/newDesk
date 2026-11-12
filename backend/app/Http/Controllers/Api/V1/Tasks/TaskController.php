@@ -60,7 +60,9 @@ class TaskController extends Controller
     {
         Gate::authorize('view', $task);
 
-        return ApiResponse::ok(TaskResource::make($task->load([...Task::RESOURCE_RELATIONS, 'creator'])));
+        $task->load([...Task::RESOURCE_RELATIONS, 'creator', 'checklistItems.doneBy'])->loadCount('attachments');
+
+        return ApiResponse::ok(TaskResource::make($task));
     }
 
     public function update(SaveTaskRequest $request, Task $task, UpdateTask $updateTask): JsonResponse

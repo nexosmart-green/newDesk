@@ -15,7 +15,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('get_task')]
-#[Description('Detalle de una tarea por código (ej. "bhn-60"), con descripción y comentarios.')]
+#[Description('Detalle de una tarea por código (ej. "bhn-60"), con descripción, subtareas (checklist) y comentarios.')]
 #[IsReadOnly]
 class GetTask extends NewDeskTool
 {
@@ -34,6 +34,7 @@ class GetTask extends NewDeskTool
         return $this->json([
             ...McpPresenter::task($task),
             'description' => $task->description,
+            'checklist' => McpPresenter::checklist($task),
             'comments' => $task->comments()->with('author')->oldest('id')->limit(100)->get()
                 ->map(fn (TaskComment $comment) => [
                     'author' => $comment->author->fullName(),

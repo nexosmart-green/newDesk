@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Tasks\TaskAttachmentController;
 use App\Http\Controllers\Api\V1\Tasks\TaskCategoryController;
+use App\Http\Controllers\Api\V1\Tasks\TaskChecklistController;
 use App\Http\Controllers\Api\V1\Tasks\TaskCommentController;
 use App\Http\Controllers\Api\V1\Tasks\TaskController;
 use App\Http\Controllers\Api\V1\Tasks\TaskImageController;
@@ -41,4 +43,16 @@ Route::middleware('module:projects')->group(function () {
 
     Route::post('/projects/{project}/task-images', [TaskImageController::class, 'store']);
     Route::get('/task-images/{taskImage:uuid}', [TaskImageController::class, 'show']);
+
+    // RF-04.08: checklist ("subtareas").
+    Route::post('/tasks/{task}/checklist', [TaskChecklistController::class, 'store']);
+    Route::put('/tasks/{task}/checklist/order', [TaskChecklistController::class, 'reorder']);
+    Route::put('/checklist-items/{checklistItem}', [TaskChecklistController::class, 'update']);
+    Route::delete('/checklist-items/{checklistItem}', [TaskChecklistController::class, 'destroy']);
+
+    // RF-04.09: attachments.
+    Route::get('/tasks/{task}/attachments', [TaskAttachmentController::class, 'index']);
+    Route::post('/tasks/{task}/attachments', [TaskAttachmentController::class, 'store'])->middleware('throttle:task-attachments');
+    Route::get('/task-attachments/{taskAttachment:uuid}', [TaskAttachmentController::class, 'show']);
+    Route::delete('/task-attachments/{taskAttachment:uuid}', [TaskAttachmentController::class, 'destroy']);
 });

@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as authApi from '@/features/auth/authApi'
+import * as attachmentsApi from './attachments/attachmentsApi'
 import * as projectsApi from '@/features/projects/projectsApi'
 import * as timerApi from '@/features/timer/timerApi'
 import { buildProject, buildTask, buildTimerState, page, taskStatuses } from '@/test/fixtures'
@@ -18,6 +19,7 @@ const detailed = buildTask({
   labels: [{ id: 7, name: 'Cliente urgente', color: '#f27474' }],
   created_by: { id: 2, full_name: 'Juan Pérez' },
   created_at: '2026-11-09T13:05:00+00:00',
+  attachments_count: 2,
 })
 
 function entry(overrides: Partial<TaskTimeEntry> = {}): TaskTimeEntry {
@@ -54,7 +56,22 @@ describe('TaskPage tabs', () => {
     expect(screen.getAllByText('2h 30m').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Backend-API').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Cliente urgente').length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Detalle', 'Comentarios', 'Horas', 'Historial'])
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Detalle', 'Comentarios', 'Archivos2', 'Horas', 'Historial'])
+  })
+
+  it('shows the checklist under the description and opens the files tab from the URL', async () => {
+    vi.spyOn(attachmentsApi, 'fetchTaskAttachments').mockResolvedValue([])
+    renderTask({
+      ...detailed,
+      checklist: [{ id: 1, text: 'Revisar el login', position: 1, done: true, done_at: null, done_by: null }],
+      checklist_progress: { done: 1, total: 1 },
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Subtareas' })).toBeInTheDocument()
+    expect(screen.getByText('1 de 1')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: /Archivos/ }))
+    expect(await screen.findByText('Todavía no hay archivos')).toBeInTheDocument()
   })
 
   it('renders the description as safe markdown: links in a new tab, images by their authenticated URL', async () => {

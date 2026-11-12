@@ -4,7 +4,7 @@ import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { boardColumns } from './boardColumns'
 import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
-import { overdueRowClassName, TaskAssigneeNames, TaskDue, TaskLoggedHours } from './TaskBits'
+import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours } from './TaskBits'
 import { TaskStatusSelect } from './TaskStatusSelect'
 import { isAssignedTo, type Task, type TaskFilters, type TaskStatus } from './types'
 import { useUpdateTaskStatus } from './useTasks'
@@ -73,6 +73,8 @@ export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) 
                       <TaskAssigneeNames task={task} />
                       <TaskDue task={task} />
                       <TaskLoggedHours task={task} />
+                      <TaskChecklistBadge task={task} />
+                      <TaskAttachmentsBadge task={task} />
                     </div>
                     <div className="flex items-center gap-2">
                       <TaskStatusSelect

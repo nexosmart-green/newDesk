@@ -10,8 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Task row (list/board). Detail (`tasks.show`) adds description (markdown) and who/when created it.
- * Eager load Task::RESOURCE_RELATIONS (and `withLoggedSeconds()` in lists) before using it.
+ * Task row (list/board). Detail (`tasks.show`) adds description (markdown), checklist and who/when created it.
+ * Eager load Task::RESOURCE_RELATIONS (and `withLoggedSeconds()->withBadgeCounts()` in lists) before using it;
+ * the detail also loads `creator` and `checklistItems.doneBy`.
  *
  * @mixin Task
  */
@@ -51,7 +52,10 @@ class TaskResource extends JsonResource
                 'full_name' => $user->fullName(),
                 'avatar' => ReplaceAvatar::urls($user->avatar_path),
             ])->values()),
+            'checklist_progress' => $this->resource->checklistProgress(),
+            'attachments_count' => $this->resource->attachmentsCount(),
             'description' => $this->when($isDetail, $this->description),
+            'checklist' => $this->when($isDetail, fn () => TaskChecklistItemResource::collection($this->checklistItems)),
             'created_by' => $this->when($isDetail, fn () => $this->creator
                 ? ['id' => $this->creator->id, 'full_name' => $this->creator->fullName()]
                 : null),

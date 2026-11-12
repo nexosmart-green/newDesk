@@ -67,6 +67,7 @@ final class HomeDashboard
             'due_today' => $mine()->where('tasks.due_on', $date)->count(),
             'due_soon' => $mine()->where('tasks.due_on', '>=', $date)
                 ->withLoggedSeconds()
+                ->withBadgeCounts()
                 ->with(Task::RESOURCE_RELATIONS)
                 ->orderBy('tasks.due_on')
                 ->orderBy('tasks.id')

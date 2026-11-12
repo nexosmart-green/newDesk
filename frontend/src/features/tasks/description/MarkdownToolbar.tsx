@@ -25,13 +25,16 @@ interface MarkdownToolbarProps {
   onCommand: (command: MarkdownCommand) => void
   onPickImage: () => void
   canUpload: boolean
+  /** A shorter bar (comments) shows only these. */
+  commands?: MarkdownCommand[]
 }
 
 /** Icon buttons with their name (and shortcut) as label and tooltip. Mouse down keeps the textarea selection. */
-export function MarkdownToolbar({ onCommand, onPickImage, canUpload }: MarkdownToolbarProps) {
+export function MarkdownToolbar({ onCommand, onPickImage, canUpload, commands }: MarkdownToolbarProps) {
+  const shown = commands ? actions.filter((action) => commands.includes(action.command)) : actions
   return (
     <div role="toolbar" aria-label="Formato" className="flex flex-wrap items-center gap-0.5">
-      {actions.map(({ command, label, icon: Icon, shortcut }) => {
+      {shown.map(({ command, label, icon: Icon, shortcut }) => {
         const name = shortcut ? `${label} (${shortcut})` : label
         return (
           <button

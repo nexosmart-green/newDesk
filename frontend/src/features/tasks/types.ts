@@ -72,6 +72,40 @@ export interface Task {
   description?: string | null
   created_by?: { id: number; full_name: string } | null
   created_at?: string
+  /** RF-04.08, lists and detail: "3/5" on the row. */
+  checklist_progress?: ChecklistProgress
+  /** Only in the task detail, ordered by `position`. */
+  checklist?: ChecklistItem[]
+  /** RF-04.09, lists and detail: the clip on the row. */
+  attachments_count?: number
+}
+
+export interface ChecklistProgress {
+  done: number
+  total: number
+}
+
+export interface ChecklistItem {
+  id: number
+  text: string
+  position: number
+  done: boolean
+  done_at: string | null
+  done_by: { id: number; full_name: string } | null
+}
+
+export interface TaskAttachment {
+  id: number
+  uuid: string
+  name: string
+  mime: string
+  size: number
+  /** Relative, same-origin (session cookie): images and PDF open inline, the rest downloads. */
+  url: string
+  is_image: boolean
+  uploaded_by: { id: number; full_name: string } | null
+  created_at: string
+  can_delete: boolean
 }
 
 /** RF-04.05. Empty `status_ids` + `include_closed: false` = every non-closed status (default). */

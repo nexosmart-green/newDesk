@@ -10,6 +10,7 @@ import type {
   TaskStatus,
   TaskTimeEntriesPage,
 } from './types'
+import { percentReporter } from './uploads/percentReporter'
 
 /** The board needs every card of the project at once; the backend caps it at 200. */
 export const TASKS_PER_PAGE = 200
@@ -110,11 +111,7 @@ export async function uploadTaskImage(projectId: number, file: File, onProgress:
   const body = new FormData()
   body.append('image', file)
   const result = await dataOf(
-    api.post<ApiEnvelope<{ url: string }>>(`/projects/${projectId}/task-images`, body, {
-      onUploadProgress: (event) => {
-        if (event.total) onProgress(Math.round((event.loaded / event.total) * 100))
-      },
-    }),
+    api.post<ApiEnvelope<{ url: string }>>(`/projects/${projectId}/task-images`, body, { onUploadProgress: percentReporter(onProgress) }),
   )
   return result.url
 }

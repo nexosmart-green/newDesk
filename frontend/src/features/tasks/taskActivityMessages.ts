@@ -67,6 +67,12 @@ function textOf(values: Record<string, unknown> | null, key: string): string {
   return plain(values?.[key])
 }
 
+/** Checklist and attachment events carry the item's text / file name in `after` (or `before` when removed). */
+function subjectOf(entry: ActivityEntry, key: string): string {
+  const value = entry.after?.[key] ?? entry.before?.[key]
+  return plain(value)
+}
+
 /** One sentence per entry of the task's history. Unknown events still read as something. */
 export function describeTaskActivity(entry: ActivityEntry): string {
   const actor = entry.actor?.full_name ?? 'El sistema'
@@ -90,6 +96,20 @@ export function describeTaskActivity(entry: ActivityEntry): string {
       return `${actor} movió la tarea al proyecto «${textOf(entry.after, 'project')}»`
     case 'task.moved_in':
       return `${actor} trajo la tarea desde el proyecto «${textOf(entry.after, 'project')}»`
+    case 'checklist.added':
+      return `${actor} agregó la subtarea «${subjectOf(entry, 'text')}»`
+    case 'checklist.checked':
+      return `${actor} tildó la subtarea «${subjectOf(entry, 'text')}»`
+    case 'checklist.unchecked':
+      return `${actor} destildó la subtarea «${subjectOf(entry, 'text')}»`
+    case 'checklist.renamed':
+      return `${actor} renombró la subtarea «${textOf(entry.before, 'text')}» a «${textOf(entry.after, 'text')}»`
+    case 'checklist.removed':
+      return `${actor} borró la subtarea «${subjectOf(entry, 'text')}»`
+    case 'attachment.added':
+      return `${actor} adjuntó «${subjectOf(entry, 'name')}»`
+    case 'attachment.removed':
+      return `${actor} borró el archivo «${subjectOf(entry, 'name')}»`
     default:
       return `${actor} registró «${entry.event}»`
   }

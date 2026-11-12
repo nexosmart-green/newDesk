@@ -1,13 +1,5 @@
-import { useState } from 'react'
-import { toast } from '@/components/ui/toast/toastStore'
-import { toastTextOf } from '@/lib/errorText'
 import { uploadTaskImage } from '../tasksApi'
-
-export interface ImageUpload {
-  id: number
-  name: string
-  percent: number
-}
+import { useUploadQueue } from '../uploads/useUploadQueue'
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
@@ -21,34 +13,12 @@ export function imageProblem(file: File): string | null {
   return null
 }
 
-let nextUploadId = 1
-
-/** Pasted/dropped images: one upload per file, each with its own progress. */
+/** Pasted/dropped markdown images, stored per project: each upload resolves with its relative URL. */
 export function useImageUploads(projectId: number | undefined) {
-  const [uploads, setUploads] = useState<ImageUpload[]>([])
-  const patch = (id: number, percent: number) =>
-    setUploads((current) => current.map((item) => (item.id === id ? { ...item, percent } : item)))
-
-  /** Resolves with the image URL, or null when it was refused (already explained with a toast). */
-  async function upload(file: File, id: number): Promise<string | null> {
-    const problem = imageProblem(file)
-    if (problem) {
-      toast.error(problem, { title: 'No se pudo subir la imagen' })
-      return null
-    }
-    if (!projectId) return null
-    setUploads((current) => [...current, { id, name: file.name || 'imagen', percent: 0 }])
-    try {
-      const url = await uploadTaskImage(projectId, file, (percent) => patch(id, percent))
-      return url
-    } catch (error) {
-      const text = toastTextOf(error)
-      toast.error(text.message, { title: 'No se pudo subir la imagen' })
-      return null
-    } finally {
-      setUploads((current) => current.filter((item) => item.id !== id))
-    }
-  }
-
-  return { uploads, upload, nextId: () => nextUploadId++, canUpload: Boolean(projectId) }
+  const queue = useUploadQueue<string>({
+    validate: imageProblem,
+    send: (file, onProgress) => uploadTaskImage(projectId ?? 0, file, onProgress),
+    failureTitle: 'No se pudo subir la imagen',
+  })
+  return { uploads: queue.items, start: queue.start, canUpload: Boolean(projectId) }
 }

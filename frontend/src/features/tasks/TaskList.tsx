@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
-import { overdueRowClassName, TaskAssigneeNames, TaskDue, TaskLoggedHours, TaskStatusLabel } from './TaskBits'
+import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours, TaskStatusLabel } from './TaskBits'
 import { isAssignedTo, type Task } from './types'
 
 interface TaskListProps {
@@ -38,6 +38,8 @@ export function TaskList({ tasks, userId, showProject = false, empty }: TaskList
               <TaskAssigneeNames task={task} />
               <TaskDue task={task} />
               <TaskLoggedHours task={task} />
+              <TaskChecklistBadge task={task} />
+              <TaskAttachmentsBadge task={task} />
             </div>
             <LabelChips labels={task.labels} />
           </div>

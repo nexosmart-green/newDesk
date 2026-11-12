@@ -24,6 +24,7 @@ final class TaskList
     {
         $query = Task::query()
             ->withLoggedSeconds()
+            ->withBadgeCounts()
             ->with(['status', 'assignees', 'category', 'labels', 'project:id,company_id,name,code_prefix,status,type,allocated_seconds,consumed_seconds'])
             ->when($project, fn (Builder $q) => $q->where('tasks.project_id', $project->id))
             ->when(! $project, fn (Builder $q) => $q->visibleTo($viewer))

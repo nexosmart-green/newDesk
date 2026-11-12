@@ -21,7 +21,7 @@ import {
 import type { NewComment, SaveTaskInput, Task, TaskFilters } from './types'
 
 export const tasksKey = ['tasks'] as const
-const taskKey = (code: string) => [...tasksKey, 'detail', code.toLowerCase()] as const
+export const taskKey = (code: string) => [...tasksKey, 'detail', code.toLowerCase()] as const
 const commentsKey = (code: string) => [...taskKey(code), 'comments'] as const
 /** Counters and "próximas a vencer" of the Panel read task rows too. */
 export const dashboardKey = ['dashboard'] as const
@@ -80,7 +80,7 @@ export function useTaskComments(code: string) {
 }
 
 /** Lists, board, detail and the Panel share the task rows; the activity log changes too. */
-function useRefreshTasks() {
+export function useRefreshTasks() {
   const queryClient = useQueryClient()
   return (task?: Task) => {
     if (task) queryClient.setQueryData<Task>(taskKey(task.code), (current) => ({ ...current, ...task }))

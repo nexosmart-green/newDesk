@@ -11,6 +11,7 @@ import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { ApiError } from '@/lib/api'
 import { formatInstant } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
+import { TaskAttachmentsTab } from './attachments/TaskAttachmentsTab'
 import { TaskDue, TaskStatusLabel } from './TaskBits'
 import { TaskComments } from './TaskComments'
 import { TaskDetailTab } from './TaskDetailTab'
@@ -19,11 +20,12 @@ import { TaskHoursTab } from './TaskHoursTab'
 import { isAssignedTo, type Task } from './types'
 import { useTask } from './useTasks'
 
-type TaskTab = 'detalle' | 'comentarios' | 'horas' | 'historial'
+type TaskTab = 'detalle' | 'comentarios' | 'archivos' | 'horas' | 'historial'
 
 const allTabs: TabItem<TaskTab>[] = [
   { id: 'detalle', label: 'Detalle' },
   { id: 'comentarios', label: 'Comentarios' },
+  { id: 'archivos', label: 'Archivos' },
   { id: 'horas', label: 'Horas' },
   { id: 'historial', label: 'Historial' },
 ]
@@ -73,7 +75,9 @@ function TaskView({ task }: { task: Task }) {
   const project = useProject(task.project?.id ?? 0)
   const members = project.data?.members ?? []
   const mine = isAssignedTo(task, userId)
-  const tabs = hasTime ? allTabs : allTabs.filter((tab) => tab.id !== 'horas')
+  const tabs = (hasTime ? allTabs : allTabs.filter((tab) => tab.id !== 'horas')).map((tab) =>
+    tab.id === 'archivos' ? { ...tab, count: task.attachments_count } : tab,
+  )
   const { selected, select } = useTaskTab(tabs)
 
   return (
@@ -87,7 +91,8 @@ function TaskView({ task }: { task: Task }) {
       <TaskHeader task={task} showLogged={hasTime} timer={mine ? <StartTimerButton task={task} /> : null} />
       <Tabs label="Secciones de la tarea" tabs={tabs} selected={selected} onSelect={select}>
         {selected === 'detalle' && <TaskDetailTab task={task} members={members} membersLoaded={Boolean(project.data)} />}
-        {selected === 'comentarios' && <TaskComments code={task.code} members={members} />}
+        {selected === 'comentarios' && <TaskComments code={task.code} projectId={task.project?.id} members={members} />}
+        {selected === 'archivos' && <TaskAttachmentsTab code={task.code} />}
         {selected === 'horas' && <TaskHoursTab task={task} canLog={mine} />}
         {selected === 'historial' && <TaskHistoryTab code={task.code} />}
       </Tabs>

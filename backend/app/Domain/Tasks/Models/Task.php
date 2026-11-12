@@ -103,6 +103,18 @@ class Task extends Model
         return $this->hasMany(TaskComment::class);
     }
 
+    /** @return HasMany<TaskChecklistItem, $this> */
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(TaskChecklistItem::class)->orderBy('position')->orderBy('id');
+    }
+
+    /** @return HasMany<TaskAttachment, $this> */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TaskAttachment::class);
+    }
+
     public function isAssignedTo(User $user): bool
     {
         return $this->assignees()->whereKey($user->id)->exists();
@@ -132,6 +144,42 @@ class Task extends Model
         return (int) TimeEntry::query()->forCompany($this->company_id)
             ->where('task_id', $this->id)
             ->sum(TimeEntry::elapsedSecondsExpression());
+    }
+
+    /**
+     * "3/5" badge of the checklist. Lists bring the counts in the same query (scopeWithBadgeCounts),
+     * the detail counts its loaded items and a lone task asks the database.
+     *
+     * @return array{done: int, total: int}
+     */
+    public function checklistProgress(): array
+    {
+        if (array_key_exists('checklist_total', $this->attributes)) {
+            return ['done' => (int) $this->attributes['checklist_done'], 'total' => (int) $this->attributes['checklist_total']];
+        }
+
+        $items = $this->relationLoaded('checklistItems') ? $this->checklistItems : $this->checklistItems()->get(['id', 'done_at']);
+
+        return ['done' => $items->whereNotNull('done_at')->count(), 'total' => $items->count()];
+    }
+
+    public function attachmentsCount(): int
+    {
+        if (array_key_exists('attachments_count', $this->attributes)) {
+            return (int) $this->attributes['attachments_count'];
+        }
+
+        return $this->attachments()->count();
+    }
+
+    /** Checklist progress and attachment count for list rows, without one query per task. */
+    public function scopeWithBadgeCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'checklistItems as checklist_total',
+            'checklistItems as checklist_done' => fn (Builder $items) => $items->whereNotNull('done_at'),
+            'attachments',
+        ]);
     }
 
     /** By current code or by a code it had before moving projects (RF-04.12). Case-insensitive. */

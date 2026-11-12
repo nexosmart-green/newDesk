@@ -9,24 +9,14 @@ import type { PersonSummary } from '@/features/people/types'
 import { LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { formatDate } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
+import { TaskChecklist } from './checklist/TaskChecklist'
 import { MoveTaskPanel } from './MoveTaskPanel'
 import { TaskAssigneesEditor } from './TaskAssigneesEditor'
 import { TaskDetailsForm } from './TaskDetailsForm'
+import { Panel } from './TaskPanel'
 import { TaskStatusSelect } from './TaskStatusSelect'
 import { taskPriorityLabels, type Task } from './types'
 import { useTaskStatuses, useUpdateTaskStatus } from './useTasks'
-
-export function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
-      <div className="flex min-h-9 items-center justify-between gap-2">
-        <h2 className="font-semibold">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  )
-}
 
 interface TaskDetailTabProps {
   task: Task
@@ -68,6 +58,7 @@ export function TaskDetailTab({ task, members, membersLoaded }: TaskDetailTabPro
             )}
           </Panel>
         )}
+        <TaskChecklist task={task} />
         <Panel title="Mover a otro proyecto">
           <MoveTaskPanel key={task.id} task={task} />
         </Panel>

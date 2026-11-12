@@ -6,12 +6,12 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\TaskImage;
-use finfo;
+use App\Domain\Tasks\Support\UploadedFileType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 /**
- * Image pasted or dropped into a task description. The type comes from the file contents (never the
+ * Image pasted or dropped into a task description or comment. The type comes from the file contents (never the
  * name the browser sent) and it is stored on the private disk, served only through TaskImageController.
  */
 final class StoreTaskImage
@@ -24,15 +24,11 @@ final class StoreTaskImage
         'image/gif' => 'gif',
     ];
 
-    private const IPHONE_FORMATS = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
-
     public function __invoke(User $actor, Project $project, UploadedFile $image): TaskImage
     {
-        $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($image->getRealPath());
-        $isIphoneFormat = in_array($mime, self::IPHONE_FORMATS, true)
-            || in_array(mb_strtolower($image->getClientOriginalExtension()), ['heic', 'heif'], true);
+        $mime = UploadedFileType::sniff($image);
 
-        if ($isIphoneFormat) {
+        if (UploadedFileType::isIphonePhoto($image, $mime)) {
             throw new BusinessRuleViolation('Convertí la imagen a JPG o PNG.', 'task_image_heic');
         }
         if (! isset(self::ALLOWED[$mime])) {

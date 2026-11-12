@@ -1,5 +1,8 @@
-import Markdown, { type Components } from 'react-markdown'
+import { useMemo } from 'react'
+import Markdown, { type Components, type Options } from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
+import { remarkHighlight } from './remarkHighlight'
 
 /**
  * Rendering is safe by construction: react-markdown builds React elements (no raw HTML — no
@@ -21,10 +24,30 @@ const components: Components = {
     ),
 }
 
-export function MarkdownView({ source, className = '' }: { source: string; className?: string }) {
+const HIGHLIGHT_CLASS = ['rounded', 'bg-brand/15', 'px-1', 'font-medium', 'text-accent']
+
+interface MarkdownViewProps {
+  source: string
+  className?: string
+  /** Chat-like text (comments): a single line break is a break, not a space. */
+  breaks?: boolean
+  /** Exact phrases to stand out, such as `@Ana García` in a comment. */
+  highlights?: string[]
+}
+
+export function MarkdownView({ source, className = '', breaks = false, highlights = [] }: MarkdownViewProps) {
+  const highlightKey = highlights.join('\u0000')
+  const plugins = useMemo<NonNullable<Options['remarkPlugins']>>(
+    () => [
+      remarkGfm,
+      ...(breaks ? [remarkBreaks] : []),
+      ...(highlightKey ? [remarkHighlight({ phrases: highlightKey.split('\u0000'), className: HIGHLIGHT_CLASS })] : []),
+    ],
+    [breaks, highlightKey],
+  )
   return (
     <div className={`markdown ${className}`}>
-      <Markdown remarkPlugins={[remarkGfm]} components={components}>
+      <Markdown remarkPlugins={plugins} components={components}>
         {source}
       </Markdown>
     </div>

@@ -1,22 +1,26 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent, type RefObject, type TextareaHTMLAttributes } from 'react'
 import { inputClassName } from '@/components/ui/TextField'
 import { mentionQueryAt, type Mentionable } from './mentions'
 
-interface MentionTextareaProps {
-  label: string
+type NativeProps = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange' | 'role'>
+
+interface MentionTextareaProps extends NativeProps {
+  id: string
   value: string
   members: Mentionable[]
   onChange: (value: string) => void
   onMention: (member: Mentionable) => void
+  textareaRef: RefObject<HTMLTextAreaElement | null>
 }
 
 const MAX_SUGGESTIONS = 6
 
-/** RF-04.06 comment box: typing `@` suggests project members (arrows + Enter, or click). */
-export function MentionTextarea({ label, value, members, onChange, onMention }: MentionTextareaProps) {
-  const id = useId()
+/**
+ * RF-04.06 comment box: typing `@` suggests project members (arrows + Enter, or click). The label and
+ * the frame are the caller's; keys the suggestions don't use go on to the caller's `onKeyDown`.
+ */
+export function MentionTextarea({ id, value, members, onChange, onMention, textareaRef, onKeyDown, className, ...native }: MentionTextareaProps) {
   const listId = `${id}-mentions`
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [caret, setCaret] = useState(0)
   const [active, setActive] = useState(0)
   const [dismissed, setDismissed] = useState(false)
@@ -40,30 +44,29 @@ export function MentionTextarea({ label, value, members, onChange, onMention }: 
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (!open) return
     const chosen = suggestions[activeIndex]
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    if (open && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
       event.preventDefault()
       const step = event.key === 'ArrowDown' ? 1 : -1
       setActive((activeIndex + step + suggestions.length) % suggestions.length)
-    } else if ((event.key === 'Enter' || event.key === 'Tab') && chosen) {
+    } else if (open && (event.key === 'Enter' || event.key === 'Tab') && chosen && !event.ctrlKey && !event.metaKey) {
       event.preventDefault()
       pick(chosen)
-    } else if (event.key === 'Escape') {
+    } else if (open && event.key === 'Escape') {
       event.stopPropagation()
       setDismissed(true)
+    } else {
+      onKeyDown?.(event)
     }
   }
 
   return (
-    <div className="relative space-y-1">
-      <label htmlFor={id} className="block text-sm text-muted">
-        {label}
-      </label>
+    <div className="relative">
       <textarea
         ref={textareaRef}
         id={id}
         rows={3}
+        {...native}
         value={value}
         role="combobox"
         aria-expanded={open}
@@ -77,9 +80,15 @@ export function MentionTextarea({ label, value, members, onChange, onMention }: 
         }}
         onSelect={(event) => setCaret(event.currentTarget.selectionStart)}
         onKeyDown={handleKeyDown}
-        className={inputClassName}
+        className={className ?? inputClassName}
       />
-      <ul id={listId} role="listbox" aria-label="Mencionar a" hidden={!open} className="rounded border border-border bg-surface p-1 shadow">
+      <ul
+        id={listId}
+        role="listbox"
+        aria-label="Mencionar a"
+        hidden={!open}
+        className="absolute inset-x-2 top-full z-20 mt-1 max-w-xs rounded-lg border border-border bg-surface p-1 shadow-lg"
+      >
         {suggestions.map((member, index) => (
           <li
             key={member.id}
@@ -90,13 +99,12 @@ export function MentionTextarea({ label, value, members, onChange, onMention }: 
               event.preventDefault()
               pick(member)
             }}
-            className={`cursor-pointer rounded px-2 py-1 text-sm ${index === activeIndex ? 'bg-accent text-white' : ''}`}
+            className={`cursor-pointer rounded-md px-2 py-1.5 text-sm ${index === activeIndex ? 'bg-brand-strong text-white' : 'hover:bg-surface-2'}`}
           >
             {member.full_name}
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted">Escribí @ para mencionar a alguien del proyecto.</p>
     </div>
   )
 }

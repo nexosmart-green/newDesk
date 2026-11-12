@@ -34,6 +34,17 @@ final class McpPresenter
         ];
     }
 
+    /**
+     * RF-04.08: numbered as the UI shows it, so the model can refer to "el ítem 3".
+     *
+     * @return list<array{n: int, text: string, done: bool}>
+     */
+    public static function checklist(Task $task): array
+    {
+        return $task->checklistItems()->get(['id', 'text', 'done_at'])->values()
+            ->map(fn ($item, int $index) => ['n' => $index + 1, 'text' => $item->text, 'done' => $item->isDone()])->all();
+    }
+
     /** @return array<string, mixed> */
     public static function project(Project $project): array
     {

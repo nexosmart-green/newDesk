@@ -93,6 +93,9 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
 
+        // RF-04.09: up to 20 MB each, so a runaway client cannot fill the disk.
+        RateLimiter::for('task-attachments', fn (Request $request) => Limit::perMinute(30)->by('attachments|'.($request->user()?->id ?: $request->ip())));
+
         // NexoSmart standard: at most one e-mail per second (Resend).
         RateLimiter::for('mail', fn () => Limit::perSecond(1));
     }

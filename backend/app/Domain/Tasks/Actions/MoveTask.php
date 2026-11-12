@@ -54,7 +54,7 @@ final class MoveTask
 
             $task->forceFill(['project_id' => $to->id, 'number' => $to->task_sequence, 'code' => $newCode])->save();
             $unassigned = $this->keepOnlyDestinationMembers($task, $to);
-            $this->moveDescriptionImages($task, $from, $to);
+            $this->moveReferencedImages($task, $from, $to);
 
             $details = ['from' => $oldCode, 'to' => $newCode, 'seconds' => $seconds, 'unassigned' => $unassigned];
             ($this->recordActivity)('task.moved_out', $task, $actor, after: [...$details, 'project' => $to->name], projectId: $from->id);
@@ -65,17 +65,19 @@ final class MoveTask
     }
 
     /**
-     * Images are authorized by their project: the ones this description shows travel with the task,
-     * or the destination's members would get broken images.
+     * Images are authorized by their project: the ones the description and the comments show travel with
+     * the task, or the destination's members would get broken images. Attachments hang from the task itself.
      */
-    private function moveDescriptionImages(Task $task, Project $from, Project $to): void
+    private function moveReferencedImages(Task $task, Project $from, Project $to): void
     {
-        preg_match_all('#/api/v1/task-images/([0-9a-f-]{36})#i', (string) $task->description, $matches);
+        $texts = $task->comments()->pluck('body')->push((string) $task->description)->implode("\n");
+        preg_match_all('#/api/v1/task-images/([0-9a-f-]{36})#i', $texts, $matches);
         if ($matches[1] === []) {
             return;
         }
 
-        TaskImage::query()->where('project_id', $from->id)->whereIn('uuid', $matches[1])->update(['project_id' => $to->id]);
+        TaskImage::query()->forCompany($task->company_id)->where('project_id', $from->id)
+            ->whereIn('uuid', array_unique($matches[1]))->update(['project_id' => $to->id]);
     }
 
     /** @return list<string> names removed because they are not active members of the destination */

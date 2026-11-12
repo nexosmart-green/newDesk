@@ -12,6 +12,8 @@ Checklist para levantar newDesk en staging/producción y hacer la carga inicial.
 | Supervisord | **nunca crontab** (RNF-11) |
 | Nginx | `backend/public` como root; SPA (`frontend/dist`) servida aparte o en el mismo host bajo `/` con fallback a `index.html` |
 | HTTPS | obligatorio (`APP_URL=https://…`, `URL::forceHttps()` en prod) |
+| Subidas | adjuntos de tareas hasta 20 MB (RF-04.09): `upload_max_filesize = 21M` y `post_max_size = 22M` en php.ini, `client_max_body_size 22m;` en Nginx. Sin esto el usuario ve un 413 en vez del mensaje claro. |
+| Disco | `storage/app/private` guarda imágenes de descripciones y adjuntos: incluirlo en los backups (§7). |
 
 ## 2. Backend
 
