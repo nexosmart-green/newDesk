@@ -101,5 +101,7 @@ export interface CorrectEntryInput {
   date?: string
   from?: string
   to?: string
+  /** Another task of the owner, possibly in another project. */
+  task_id?: number
   comment: string
 }

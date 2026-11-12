@@ -42,6 +42,7 @@ export const router = createBrowserRouter([
             path: '/mi-semana',
             lazy: async () => ({ Component: (await import('@/features/timesheet/MyWeekPage')).MyWeekPage }),
           },
+          { path: '/mis-horas', lazy: async () => ({ Component: (await import('@/features/hours/MyHoursPage')).MyHoursPage }) },
           { path: '/tareas/:code', lazy: async () => ({ Component: (await import('@/features/tasks/TaskPage')).TaskPage }) },
           {
             path: '/personas',

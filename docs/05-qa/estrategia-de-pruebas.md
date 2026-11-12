@@ -38,6 +38,7 @@
 | QA-16 | 6 repartos iguales del mismo día graban una sola vez; caché = ledger | CA-05.19i |
 | QA-17 | Reparto en negativo con un ▶ corriendo, cortes y otros ▶ arrancando a la vez: el ▶ previo guarda su tiempo entero, no arranca ninguno nuevo, reconcile ok | CA-05.19f/g |
 | QA-18 | Orden de locks: reparto con tarea nueva + ▶ que cambian de proyecto + alta de tareas en paralelo, sin deadlocks y con códigos correlativos | R-6, CA-04.01 |
+| QA-19 | Correcciones que mueven registros A→B y B→A a la vez, con ▶ arrancando y cortes por minuto en los dos proyectos: sin deadlocks, ninguna bolsa pasa su tope por un movimiento, reconcile ok; dos movimientos hacia una bolsa con lugar para uno: entra uno solo (procesos reales) | R-7, CA-05.20d/e |
 
 ## QC de datos post-migración
 

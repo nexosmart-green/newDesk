@@ -24,7 +24,7 @@ Identity      usuarios, roles, perfil, catálogos (puestos, áreas, habilidades)
 Clients       clientes y contactos
 Projects      proyectos, miembros, actividad
 Tasks         tareas, estados, comentarios, adjuntos, secuencia de códigos
-TimeTracking  timers, registros, bolsa de horas (asignaciones), cortes, reloj del día (RF-05.19)   ⭐
+TimeTracking  timers, registros, bolsa de horas (asignaciones), cortes, reloj del día (RF-05.19), Mis horas (RF-05.20)   ⭐
 Scheduling    turnos, plantillas, feriados, feed iCal
 Attendance    marcas crudas, mapeo, jornadas           (R2)
 Leaves        licencias                                (R2)

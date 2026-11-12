@@ -1,4 +1,4 @@
-import type { HourBag } from '@/features/hours/types'
+import type { EntryPage, HourBag } from '@/features/hours/types'
 import type { Task, TaskStatus } from '@/features/tasks/types'
 import type { DayClock, TimeEntry, TimerState } from '@/features/timer/types'
 import type { Client } from '@/features/clients/types'
@@ -8,6 +8,12 @@ import type { Paginated } from '@/lib/api'
 
 export function page<T>(data: T[]): Paginated<T> {
   return { data, meta: { current_page: 1, last_page: 1, per_page: 50, total: data.length } }
+}
+
+/** An entry list page; `editable_since` null = no correction limit for the viewer. */
+export function entryPage(entries: TimeEntry[], editable_since: string | null = null): EntryPage {
+  const { data, meta } = page(entries)
+  return { data, meta: { ...meta, editable_since } }
 }
 
 export function buildPerson(overrides: Partial<PersonSummary> = {}): PersonSummary {

@@ -50,7 +50,7 @@ it('a person cannot move an old entry into the window by correcting it (RF-05.15
     ])->assertUnprocessable()->assertJsonPath('data.code', 'outside_manual_window');
 });
 
-it('only time.manage deletes entries; people cannot erase their auto-cut pending ones (RF-05.15/17)', function () {
+it('people explain an auto-cut entry before erasing it; time.manage deletes it anyway (RF-05.15/17)', function () {
     $admin = adminUser();
     $dev = userWithRole($admin);
     ['task' => $task] = bagProject($admin, [$dev], 10 * 3600);
@@ -59,6 +59,6 @@ it('only time.manage deletes entries; people cannot erase their auto-cut pending
     app(AutoStopTimers::class)->forTask($task);
     $id = TimeEntry::query()->value('id');
 
-    $this->actingAs($dev)->deleteJson("/api/v1/time-entries/{$id}")->assertForbidden();
+    $this->actingAs($dev)->deleteJson("/api/v1/time-entries/{$id}")->assertUnprocessable()->assertJsonPath('data.code', 'comment_pending');
     $this->actingAs($admin)->deleteJson("/api/v1/time-entries/{$id}")->assertOk();
 });

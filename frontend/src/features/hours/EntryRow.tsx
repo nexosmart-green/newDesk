@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -9,13 +10,18 @@ import { formatEntryRange } from './entryTimes'
 interface EntryRowProps {
   entry: TimeEntry
   canChange: boolean
+  /** RF-05.15: older than this viewer's correction window; only an admin can fix it now. */
+  locked: boolean
+  /** Across projects ("Mis horas") the project says more than the person. */
+  showProject?: boolean
   onEdit: () => void
   onDelete: () => void
 }
 
 /** One worked stretch with its comment: what the client's hours went to (RF-05.18). */
-export function EntryRow({ entry, canChange, onEdit, onDelete }: EntryRowProps) {
+export function EntryRow({ entry, canChange, locked, showProject = false, onEdit, onDelete }: EntryRowProps) {
   const timeZone = useProfileTimeZone()
+  const editable = canChange && !locked
   return (
     <li className="grid gap-2 p-3 sm:grid-cols-[1fr_auto] sm:items-start">
       <div className="space-y-1 text-sm">
@@ -26,7 +32,7 @@ export function EntryRow({ entry, canChange, onEdit, onDelete }: EntryRowProps) 
           {entry.is_running && <Badge tone="accent">En curso</Badge>}
         </p>
         <p>
-          {entry.user.full_name} ·{' '}
+          {showProject ? entry.project.name : entry.user.full_name} ·{' '}
           <Link to={`/tareas/${entry.task.code}`} className="font-mono uppercase text-accent">
             {entry.task.code}
           </Link>{' '}
@@ -38,7 +44,7 @@ export function EntryRow({ entry, canChange, onEdit, onDelete }: EntryRowProps) 
           entry.comment && <p className="whitespace-pre-line text-muted">{entry.comment}</p>
         )}
       </div>
-      {canChange && (
+      {editable && (
         <div className="flex gap-2">
           <Button
             variant="secondary"
@@ -54,8 +60,14 @@ export function EntryRow({ entry, canChange, onEdit, onDelete }: EntryRowProps) 
           </Button>
         </div>
       )}
-      {canChange && entry.is_running && (
+      {editable && entry.is_running && (
         <p className="text-xs text-muted sm:col-span-2">Está en curso: se puede corregir cuando se detenga.</p>
+      )}
+      {canChange && locked && (
+        <p className="flex items-center gap-1.5 text-xs text-muted sm:col-span-2">
+          <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+          Pasaron más días de los permitidos: pedile a un administrador que lo corrija.
+        </p>
       )}
     </li>
   )

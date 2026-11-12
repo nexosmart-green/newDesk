@@ -96,6 +96,16 @@ class TimeEntry extends Model
         return $query->whereNull($query->qualifyColumn('ended_at'));
     }
 
+    /** Entries that started on the local days $from..$to (Y-m-d, inclusive, either may be null) of $timezone. */
+    public function scopeStartedOnLocalDays(Builder $query, ?string $from, ?string $to, string $timezone): Builder
+    {
+        $column = $query->qualifyColumn('started_at');
+
+        return $query
+            ->when($from, fn (Builder $q, string $day) => $q->where($column, '>=', Carbon::createFromFormat('!Y-m-d', $day, $timezone)->utc()))
+            ->when($to, fn (Builder $q, string $day) => $q->where($column, '<', Carbon::createFromFormat('!Y-m-d', $day, $timezone)->addDay()->utc()));
+    }
+
     public static function isValidComment(?string $comment): bool
     {
         return $comment !== null && mb_strlen(trim($comment)) >= self::MIN_COMMENT_LENGTH;

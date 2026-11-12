@@ -1,3 +1,6 @@
+import type { TimeEntry } from '@/features/timer/types'
+import type { Paginated } from '@/lib/api'
+
 /** Read model of a project's hour bag (RF-05 "Conceptos"), integer seconds (R-5). */
 export interface HourBag {
   has_cap: boolean
@@ -47,6 +50,20 @@ export interface ProjectEntryFilters {
 }
 
 export const emptyProjectEntryFilters: ProjectEntryFilters = { user_id: null, task_id: null, from: '', to: '', page: 1 }
+
+/** "Mis horas": `user_id` null = me; another person needs `time.manage`. */
+export interface MyEntryFilters {
+  user_id: number | null
+  project_id: number | null
+  from: string
+  to: string
+  page: number
+}
+
+export const emptyMyEntryFilters: MyEntryFilters = { user_id: null, project_id: null, from: '', to: '', page: 1 }
+
+/** RF-05.15: entries started before `editable_since` are out of this viewer's window; null = no limit. */
+export type EntryPage = Paginated<TimeEntry, { editable_since: string | null }>
 
 export type BagLevel = 'ok' | 'warning' | 'exhausted'
 

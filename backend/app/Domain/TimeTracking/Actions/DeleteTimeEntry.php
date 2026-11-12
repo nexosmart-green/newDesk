@@ -2,6 +2,7 @@
 
 namespace App\Domain\TimeTracking\Actions;
 
+use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
@@ -12,7 +13,8 @@ use App\Domain\TimeTracking\Support\ManualEntryWindow;
 use Illuminate\Support\Facades\DB;
 
 /**
- * RF-05.15: soft delete, hours return to the bag, the deletion stays in Actividad.
+ * RF-05.15: Admin deletes anyone's entries, a person their own within the window. Soft delete,
+ * hours return to the bag, the deletion stays in Actividad.
  */
 final class DeleteTimeEntry
 {
@@ -26,6 +28,10 @@ final class DeleteTimeEntry
     {
         if ($entry->isRunning()) {
             throw new BusinessRuleViolation('Detené el cronómetro antes de borrar el registro.', 'entry_running');
+        }
+        // RF-05.17: an auto-cut entry is explained before its owner may erase it (deleting is no way around the comment).
+        if ($entry->comment_pending && ! $actor->hasPermission(Permission::TimeManage)) {
+            throw new BusinessRuleViolation('Completá el comentario pendiente antes de borrar el registro.', 'comment_pending');
         }
         $this->window->assertAllows($actor, $entry->started_at);
 

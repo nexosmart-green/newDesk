@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Clock,
   FolderKanban,
+  History,
   Settings,
   Users,
   type LucideIcon,
@@ -58,6 +59,7 @@ export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
         items: visible([
           hasProjects && { to: '/', label: 'Mis tareas', icon: CheckSquare, exact: true },
           hasTime && { to: '/mi-semana', label: 'Mi semana', icon: Clock },
+          hasTime && { to: '/mis-horas', label: 'Mis horas', icon: History },
           hasCalendar && { to: '/calendario', label: 'Calendario', icon: CalendarDays },
         ]),
       },

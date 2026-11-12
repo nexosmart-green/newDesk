@@ -70,3 +70,10 @@
 - Backend: tabla `day_clocks` (UNIQUE `unsplit_user_id`, invariante 7), `StartDayClock` / `StopDayClock` (+ `overdue` en `timers:cut`) / `SplitDayClock` (una transacción: día → proyectos por id → `CreateTask` como savepoint → `uncapped` → entries `source=day_clock`), `TimerRules::assertOpen` / `assertNoDayClock` (en `StartTimer` dentro del lock y en `CreateAndStartTask` antes de crear), `HourBagOverdrawn` → `HoursOverdrawnNotification` a Admin + líder, `day_clock` en `/me/timer`, `whoami` y `get_active_timer`.
 - MariaDB local (explicit_defaults_for_timestamp=OFF) le ponía ON UPDATE CURRENT_TIMESTAMP implícito al primer TIMESTAMP de la tabla: actualizar un registro corriendo le pisaba `started_at`. Arreglado en `day_clocks` y `time_entries` con un default explícito (migración `000400`). En MySQL 8 no pasaba; si producción es MariaDB, revisar otras tablas.
 - Tests: `DayClockTest` (8, CA-05.19a–i) y `DayClockConcurrencyTest` (QA-15..18 con procesos reales).
+
+## 2026-11-12 — Mis horas (RF-05.20)
+
+- Pedido: un lugar para ver todos mis registros de horas y corregirlos. Decisiones del usuario: se mantiene la ventana de días (las viejas con candado), corregir también cambia tarea y proyecto, cada uno borra lo suyo con la misma ventana, el admin elige la persona.
+- Backend: `GET /time-entries` (mis registros de todos los proyectos, `user_id` solo con `time.manage`, `meta.editable_since`); `CorrectTimeEntry` acepta `task` y mueve el registro entre bolsas (R-7: los dos proyectos por id y después el registro; la destino absorbe todo el tiempo; actividad en los dos); `TimeEntryPolicy::delete` = dueño o `time.manage`; el dueño no borra un registro con comentario pendiente (`comment_pending`, mantiene RF-05.17). Scope `TimeEntry::startedOnLocalDays` arregla también el filtro de fechas de la pestaña Horas, que comparaba texto contra UTC.
+- Frontend: página `/mis-horas` ("Mi trabajo"), `EntryList` compartida con la pestaña Horas, candado por `editable_since`, Proyecto y Tarea en "Corregir registro".
+- Tests: `MyHoursTest` (CA-05.20a–g) y `MoveEntryConcurrencyTest` (QA-19 con procesos reales).

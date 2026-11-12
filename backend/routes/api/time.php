@@ -18,6 +18,7 @@ Route::middleware('module:time')->group(function () {
     Route::post('/tasks/{task}/timer', [TimerController::class, 'start']);
     Route::post('/projects/{project}/tasks/start', CreateAndStartController::class);
     Route::get('/me/timesheet', [TimeEntryController::class, 'timesheet']);
+    Route::get('/time-entries', [TimeEntryController::class, 'index']);
     Route::post('/tasks/{task}/time-entries', [TimeEntryController::class, 'store']);
     Route::put('/time-entries/{timeEntry}', [TimeEntryController::class, 'update']);
     Route::delete('/time-entries/{timeEntry}', [TimeEntryController::class, 'destroy']);

@@ -7,6 +7,7 @@ use App\Domain\TimeTracking\Actions\AllocateHours;
 use App\Domain\TimeTracking\Models\HourAllocation;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Domain\TimeTracking\Support\HourBag;
+use App\Domain\TimeTracking\Support\ManualEntryWindow;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TimeEntryResource;
 use App\Http\Responses\ApiResponse;
@@ -38,7 +39,7 @@ class ProjectHoursController extends Controller
         return ApiResponse::ok([...HourBag::of($project)->toArray(), 'allocations' => $allocations]);
     }
 
-    public function entries(Request $request, Project $project): AnonymousResourceCollection
+    public function entries(Request $request, Project $project, ManualEntryWindow $window): AnonymousResourceCollection
     {
         Gate::authorize('view', $project);
         $request->validate([
@@ -51,13 +52,16 @@ class ProjectHoursController extends Controller
         $entries = TimeEntry::query()->where('project_id', $project->id)
             ->when($request->integer('user_id'), fn (Builder $q, int $id) => $q->where('user_id', $id))
             ->when($request->integer('task_id'), fn (Builder $q, int $id) => $q->where('task_id', $id))
-            ->when($request->query('from'), fn (Builder $q, string $from) => $q->where('started_at', '>=', $from))
-            ->when($request->query('to'), fn (Builder $q, string $to) => $q->where('started_at', '<', now()->parse($to)->addDay()->toDateString()))
+            ->startedOnLocalDays($request->query('from'), $request->query('to'), $request->user()->effectiveTimezone())
             ->with(['task', 'project', 'user'])
             ->latest('started_at')
             ->paginate(50);
 
-        return TimeEntryResource::collection($entries)->additional(['message' => null, 'errors' => null]);
+        return TimeEntryResource::collection($entries)->additional([
+            'meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()],
+            'message' => null,
+            'errors' => null,
+        ]);
     }
 
     public function allocate(Request $request, Project $project, AllocateHours $allocateHours): JsonResponse

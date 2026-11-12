@@ -1,13 +1,25 @@
-import type { TimeEntry } from '@/features/timer/types'
-import { api, dataOf, pageOf, queryParams, type ApiEnvelope, type Paginated } from '@/lib/api'
-import type { AllocationInput, ExtensionRequest, HourBag, ProjectEntryFilters, ProjectHours } from './types'
+import { api, dataOf, pageOf, queryParams, type ApiEnvelope } from '@/lib/api'
+import type {
+  AllocationInput,
+  EntryPage,
+  ExtensionRequest,
+  HourBag,
+  MyEntryFilters,
+  ProjectEntryFilters,
+  ProjectHours,
+} from './types'
 
 export async function fetchProjectHours(projectId: number): Promise<ProjectHours> {
   return dataOf(api.get<ApiEnvelope<ProjectHours>>(`/projects/${projectId}/hours`))
 }
 
-export async function fetchProjectEntries(projectId: number, filters: ProjectEntryFilters): Promise<Paginated<TimeEntry>> {
-  return pageOf(api.get<Paginated<TimeEntry>>(`/projects/${projectId}/time-entries`, { params: queryParams({ ...filters }) }))
+export async function fetchProjectEntries(projectId: number, filters: ProjectEntryFilters): Promise<EntryPage> {
+  return pageOf(api.get<EntryPage>(`/projects/${projectId}/time-entries`, { params: queryParams({ ...filters }) }))
+}
+
+/** "Mis horas": my entries across projects (or someone else's with `time.manage`). */
+export async function fetchEntries(filters: MyEntryFilters): Promise<EntryPage> {
+  return pageOf(api.get<EntryPage>('/time-entries', { params: queryParams({ ...filters }) }))
 }
 
 export async function allocateHours(projectId: number, input: AllocationInput): Promise<HourBag> {

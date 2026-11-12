@@ -27,11 +27,12 @@ El corazón del sistema. Es lo que Worksuite no resuelve.
 | RF-05.12 | "Mi semana": hoja de horas personal (lun–dom) con total diario. | S |
 | RF-05.13 | ~~Mantenimiento mensual~~ — descartado (P-05: no hay facturación). | W |
 | RF-05.14 | Proyecto tipo **Interno**: sin tope, no bloquea, pero registra. | M |
-| RF-05.15 | Admin puede corregir o borrar registros de cualquiera (queda en Actividad). Un colaborador corrige los suyos dentro de la ventana de 7 días. | M |
+| RF-05.15 | Admin puede corregir o borrar registros de cualquiera (queda en Actividad). Cada persona corrige **y borra** los suyos dentro de la ventana de 7 días (P-06; cambio 2026-11-10, antes borrar era solo de Admin). Corregir cambia fecha, desde–hasta, comentario y **tarea**, también de otro proyecto: la tarea nueva tiene que estar asignada al dueño del registro y abierta, y si cambia de proyecto el tiempo entero tiene que entrar en la bolsa destino (R-4, R-7). | M |
 | RF-05.16 | **Comentario obligatorio al detener** (pedido PO 2026-11-06): "¿qué hiciste?" — mínimo 10 caracteres, en web y en MCP. Sin comentario, el timer no se detiene. Si el corte lo provoca iniciar otro timer o "Crear e iniciar", se pide el comentario del anterior en el mismo paso. | M |
 | RF-05.17 | **Cortes automáticos** (sin horas, olvidado, tarea cerrada, proyecto finalizado, baja): el registro queda con **comentario pendiente**. El usuario no puede iniciar un nuevo timer hasta completarlo (banner en web, aviso en `whoami`/`start_timer` por MCP). | M |
 | RF-05.18 | El comentario del registro se muestra en la tab Horas, en "Mi semana" y en el reporte: es el detalle de qué se hizo con las horas del cliente. | M |
 | RF-05.19 | **Reloj del día** (pedido 2026-11-10): alternativa al ▶ por tarea. Un reloj por persona y por día, sin tarea, que se inicia y se frena desde el header. Al frenarlo se **reparte** en partes (desde–hasta, proyecto, tarea mía o nueva, "¿qué hiciste?"); cada parte es un registro de horas normal (`source = day_clock`). Los huecos no se cuentan. Una parte puede dejar la bolsa en negativo: se guarda igual y se avisa a Admin + líder. Convive con el ▶ (nunca los dos a la vez) y un día sin repartir bloquea el ▶ y otro día. Si se olvida, se corta a la medianoche local. Solo web (MCP lo muestra en `whoami`). | M |
+| RF-05.20 | **Mis horas** (pedido 2026-11-10): todos mis registros de horas, de todos los proyectos, del más nuevo al más viejo, con filtros por proyecto y fechas; desde ahí los corrijo y los borro (RF-05.15). Los que quedaron fuera de la ventana se ven con candado. Admin elige la persona. | M |
 
 ## Reglas de concurrencia (lo que suele romperse)
 
@@ -40,6 +41,7 @@ El corazón del sistema. Es lo que Worksuite no resuelve.
 - **R-3** Una ampliación cargada con timers ya cortados no los reanuda: el usuario vuelve a dar ▶.
 - **R-4** Horas manuales que superarían la bolsa: se rechazan enteras (no se recortan en silencio). **Excepción RF-05.19:** el reparto del reloj del día se guarda entero aunque deje la bolsa en negativo, y avisa.
 - **R-6** (RF-05.19) Cuando un reparto deja un proyecto en negativo, los ▶ que corrían en él quedan **sin tope** (`uncapped`): no los corta el corte por bolsa (RF-05.06) ni se recortan al cerrar (R-1); guardan su tiempo completo. Desde ahí rige RF-05.05 para todos (nadie inicia ▶ ni carga manual), salvo otro reparto del reloj del día. El reparto bloquea el día y luego los proyectos **en orden de id** (como R-2), dentro de una sola transacción.
+- **R-7** (RF-05.15) Corregir un registro a una tarea de otro proyecto bloquea **los dos proyectos en orden de id** (como R-2 y R-6) y después el registro, en una sola transacción: la bolsa origen baja lo que tenía el registro y la destino sube lo nuevo; si no entra en la destino, no cambia nada.
 - **R-5** Toda la aritmética en **segundos enteros**; la UI muestra `h m`.
 
 ## Criterios de aceptación
@@ -58,3 +60,10 @@ El corazón del sistema. Es lo que Worksuite no resuelve.
 - **CA-05.19g** Dado otro usuario con ▶ corriendo en BH News, cuando mi reparto la deja en negativo, entonces su ▶ sigue corriendo, el corte por bolsa no lo corta y al frenarlo guarda su tiempo completo; después nadie puede iniciar ▶ ni cargar horas manuales en BH News (`no_hours_available`).
 - **CA-05.19h** Un día olvidado se corta solo a la medianoche local de la persona (también si lo inició a las 23:50); frenarlo tarde nunca lo estira más allá de esa medianoche.
 - **CA-05.19i** "No conté nada este día" (reparto sin partes) cierra el día sin registros; repartir dos veces el mismo día se rechaza (`day_already_split`); un día pendiente se puede repartir aunque tenga más de 7 días.
+- **CA-05.20a** En "Mis horas" veo solo mis registros, de todos los proyectos, del más nuevo al más viejo y de a 50; cada uno con proyecto, tarea, horario, duración, origen y comentario.
+- **CA-05.20b** Filtro por proyecto y por fechas; las fechas son días de mi zona horaria (un registro de las 23:30 cae en ese día aunque en UTC sea el siguiente).
+- **CA-05.20c** Los registros que empezaron antes de la ventana (P-06) se ven con candado, sin "Editar" ni "Borrar", y el aviso de pedirle a un administrador; el servidor rechaza igual (`outside_manual_window`). Admin no tiene candado.
+- **CA-05.20d** Dado un registro mío de 1 h en Cliente Dos dentro de la ventana, cuando lo corrijo a una tarea mía de BH News, entonces Cliente Dos baja 1 h, BH News sube 1 h y queda la corrección en la Actividad de los dos proyectos.
+- **CA-05.20e** Corregir a una tarea que no es del dueño del registro (`task_not_assigned`), a una tarea o proyecto cerrados (`task_closed` / `project_closed`) o a un proyecto donde el tiempo no entra (`manual_exceeds_bag`) se rechaza sin cambiar nada.
+- **CA-05.20f** Borro un registro mío dentro de la ventana: las horas vuelven a la bolsa y queda en Actividad. Un registro de otra persona no lo veo ni lo borro (404).
+- **CA-05.20g** Admin elige la persona en "Mis horas" y corrige o borra sus registros (a tareas asignadas a esa persona); otro rol que pida las horas de otra persona recibe 403.

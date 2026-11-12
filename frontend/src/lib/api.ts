@@ -7,9 +7,10 @@ export interface ApiEnvelope<T> {
   errors: Record<string, string[]> | null
 }
 
-export interface Paginated<T> {
+/** `Extra`: fields a list adds to its `meta` (e.g. `editable_since` on time entries). */
+export interface Paginated<T, Extra = object> {
   data: T[]
-  meta: { current_page: number; last_page: number; per_page: number; total: number }
+  meta: { current_page: number; last_page: number; per_page: number; total: number } & Extra
 }
 
 export const api = axios.create({
@@ -85,7 +86,7 @@ export function fieldErrorOf(error: unknown, field: string): string | undefined 
 }
 
 /** Awaits a paginated Laravel resource collection (`{ data, meta, links }`) and keeps `data` + `meta`. */
-export async function pageOf<T>(request: Promise<{ data: Paginated<T> }>): Promise<Paginated<T>> {
+export async function pageOf<T, Extra = object>(request: Promise<{ data: Paginated<T, Extra> }>): Promise<Paginated<T, Extra>> {
   try {
     const response = await request
     return { data: response.data.data, meta: response.data.meta }

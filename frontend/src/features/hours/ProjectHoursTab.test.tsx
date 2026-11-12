@@ -4,7 +4,7 @@ import * as authApi from '@/features/auth/authApi'
 import { ProjectPage } from '@/features/projects/ProjectPage'
 import * as projectsApi from '@/features/projects/projectsApi'
 import * as tasksApi from '@/features/tasks/tasksApi'
-import { buildHourBag, buildProject, buildTimeEntry, page } from '@/test/fixtures'
+import { buildHourBag, buildProject, buildTimeEntry, entryPage, page } from '@/test/fixtures'
 import { buildUser, renderRoutes } from '@/test/renderWithProviders'
 import * as hoursApi from './hoursApi'
 import { ProjectHoursTab } from './ProjectHoursTab'
@@ -24,7 +24,7 @@ function renderHours(permissions: string[], requests: ExtensionRequest[] = []) {
   vi.spyOn(projectsApi, 'fetchProject').mockResolvedValue(buildProject())
   vi.spyOn(hoursApi, 'fetchProjectHours').mockResolvedValue({ ...buildHourBag(), allocations: [] })
   vi.spyOn(hoursApi, 'fetchProjectEntries').mockResolvedValue(
-    page([buildTimeEntry({ is_running: false, ended_at: '2026-11-06T15:00:00+00:00', comment: 'Revisé el formulario de login' })]),
+    entryPage([buildTimeEntry({ is_running: false, ended_at: '2026-11-06T15:00:00+00:00', comment: 'Revisé el formulario de login' })]),
   )
   vi.spyOn(hoursApi, 'fetchExtensionRequests').mockResolvedValue(requests)
   vi.spyOn(tasksApi, 'fetchProjectTasks').mockResolvedValue(page([]))
