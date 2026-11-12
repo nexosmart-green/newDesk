@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(TaskCatalogSeeder::class);
+        $this->call(ShiftTemplateSeeder::class);
+        $this->call(ShiftCoordinatorSeeder::class);
         $this->sampleProject($admin, $collaborator);
     }
 

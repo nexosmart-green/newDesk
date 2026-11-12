@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\V1\Scheduling\CalendarController;
 use App\Http\Controllers\Api\V1\Scheduling\ShiftController;
+use App\Http\Controllers\Api\V1\Scheduling\ShiftRecurrenceController;
+use App\Http\Controllers\Api\V1\Scheduling\TeamCalendarController;
 use Illuminate\Support\Facades\Route;
 
 // Module switch per role (Configuración → Roles); the Admin always has every module.
@@ -21,4 +23,11 @@ Route::middleware('module:calendar')->group(function () {
     Route::delete('/me/calendar-feed', [CalendarController::class, 'revokeFeed']);
     Route::post('/holidays', [CalendarController::class, 'storeHoliday']);
     Route::delete('/holidays/{holiday}', [CalendarController::class, 'destroyHoliday']);
+
+    // RF-06.03 recurring shifts ("turnos fijos") and RF-06.05 team calendar.
+    Route::get('/shift-recurrences', [ShiftRecurrenceController::class, 'index']);
+    Route::post('/shift-recurrences', [ShiftRecurrenceController::class, 'store']);
+    Route::put('/shift-recurrences/{shiftRecurrence}/end', [ShiftRecurrenceController::class, 'end']);
+    Route::delete('/shift-recurrences/{shiftRecurrence}', [ShiftRecurrenceController::class, 'destroy']);
+    Route::get('/team-calendar', TeamCalendarController::class);
 });

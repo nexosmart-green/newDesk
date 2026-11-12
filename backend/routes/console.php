@@ -12,3 +12,6 @@ Schedule::command('tasks:notify-due')->hourly()->onOneServer();
 
 // Invariants 2–3: caches vs ledgers.
 Schedule::command('hours:reconcile')->dailyAt('03:15')->onOneServer();
+
+// RF-06.03: recurring shifts stay generated 8 weeks ahead (idempotent).
+Schedule::command('shifts:extend-recurrences')->dailyAt('02:30')->onOneServer();

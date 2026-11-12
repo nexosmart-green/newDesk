@@ -1,7 +1,9 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { ApiError } from '@/lib/api'
 import { renderRoutes } from '@/test/renderWithProviders'
 import * as calendarApi from './calendarApi'
+import * as teamCalendarApi from './teamCalendarApi'
 import { MyCalendarPage } from './MyCalendarPage'
 import type { MyCalendar } from './types'
 
@@ -26,6 +28,7 @@ const calendar: MyCalendar = {
 }
 
 function renderCalendar(feedActive = false) {
+  vi.spyOn(teamCalendarApi, 'fetchTeamCalendar').mockRejectedValue(new ApiError(403, 'Sin gente a cargo.'))
   vi.spyOn(calendarApi, 'fetchCalendarFeedStatus').mockResolvedValue(feedActive)
   const fetch = vi.spyOn(calendarApi, 'fetchMyCalendar').mockResolvedValue(calendar)
   renderRoutes([{ path: '/calendario', element: <MyCalendarPage /> }], '/calendario')

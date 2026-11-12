@@ -13,11 +13,12 @@ import type { HolidayInput } from './types'
 const calendarKey = ['calendar'] as const
 const feedKey = ['calendar-feed'] as const
 
-export function useMyCalendar(from: string, to: string) {
+export function useMyCalendar(from: string, to: string, enabled = true) {
   return useQuery({
     queryKey: [...calendarKey, 'mine', from, to],
     queryFn: () => fetchMyCalendar(from, to),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
