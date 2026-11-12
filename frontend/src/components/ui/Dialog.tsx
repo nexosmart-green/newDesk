@@ -3,7 +3,7 @@ import { useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useModalFocus } from './useModalFocus'
 
-export type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface DialogProps {
   title: string

@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { TaskFiltersBar } from './TaskFiltersBar'
@@ -27,12 +28,14 @@ export function MyTasksPage() {
       {!tasks.data ? (
         <PageState isPending={tasks.isPending} error={tasks.error} shape="list" onRetry={() => void tasks.refetch()} />
       ) : (
-        <TaskList
-          tasks={tasks.data.data}
-          userId={user?.id}
-          showProject
-          empty={<TasksEmptyState filters={filters} onReset={() => change({ ...defaultTaskFilters })} />}
-        />
+        <StaleContent stale={tasks.isPlaceholderData}>
+          <TaskList
+            tasks={tasks.data.data}
+            userId={user?.id}
+            showProject
+            empty={<TasksEmptyState filters={filters} onReset={() => change({ ...defaultTaskFilters })} />}
+          />
+        </StaleContent>
       )}
     </section>
   )

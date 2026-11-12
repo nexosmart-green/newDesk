@@ -27,7 +27,7 @@ class EndShiftRecurrenceRequest extends FormRequest
     {
         return [
             'ends_on.required' => 'Indicá hasta qué día va el turno fijo.',
-            'ends_on.date_format' => 'La fecha de fin no es válida.',
+            'ends_on.date_format' => 'Escribí la fecha de fin con el formato AAAA-MM-DD.',
         ];
     }
 }

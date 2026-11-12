@@ -21,11 +21,8 @@ class TimeEntryHistoryController extends Controller
     {
         $filters = $request->filters();
 
-        return TimeEntryRowResource::collection($this->history->paginate($filters))->additional([
-            'meta' => ['total_seconds' => $this->history->totalSeconds($filters)],
-            'message' => null,
-            'errors' => null,
-        ]);
+        return TimeEntryRowResource::collection($this->history->paginate($filters))
+            ->additional(['meta' => ['total_seconds' => $this->history->totalSeconds($filters)]]);
     }
 
     public function export(TimeEntryHistoryRequest $request, TimeEntryCsv $csv): StreamedResponse

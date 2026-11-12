@@ -14,7 +14,7 @@ export interface UploadItem {
   retryable: boolean
 }
 
-export type SendUpload<T> = (file: File, onProgress: (percent: number) => void) => Promise<T>
+type SendUpload<T> = (file: File, onProgress: (percent: number) => void) => Promise<T>
 
 interface UploadQueueOptions<T> {
   /** Same rules as the backend, checked first so a wrong file never waits for a round trip. */
@@ -27,7 +27,7 @@ interface UploadQueueOptions<T> {
   onUploaded?: (result: T, file: File) => void
 }
 
-export interface UploadJob<T> {
+interface UploadJob<T> {
   id: number
   /** The result, or null when it failed (already explained). */
   done: Promise<T | null>

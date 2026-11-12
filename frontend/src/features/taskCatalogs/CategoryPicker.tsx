@@ -1,6 +1,6 @@
 import { useId, useState, type KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { SelectField } from '@/components/ui/SelectField'
+import { AsyncSelectField } from '@/components/ui/AsyncSelectField'
 import { inputClassName } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { useCreateTaskCategory, useTaskCategories } from './useTaskCatalogs'
@@ -85,8 +85,10 @@ export function CategoryPicker({ value, onChange, error, current }: CategoryPick
   }
 
   return (
-    <SelectField
+    <AsyncSelectField
       label="Categoría"
+      loading={categories.isPending}
+      emptyLabel="Sin categoría"
       value={value ?? ''}
       error={error}
       onChange={(event) => {
@@ -95,7 +97,6 @@ export function CategoryPicker({ value, onChange, error, current }: CategoryPick
         else onChange(next ? Number(next) : null)
       }}
     >
-      <option value="">{categories.isPending ? 'Cargando…' : 'Sin categoría'}</option>
       {showCurrent && <option value={current.id}>{current.name}</option>}
       {options.map((category) => (
         <option key={category.id} value={category.id}>
@@ -103,6 +104,6 @@ export function CategoryPicker({ value, onChange, error, current }: CategoryPick
         </option>
       ))}
       <option value={CREATE}>＋ Crear categoría…</option>
-    </SelectField>
+    </AsyncSelectField>
   )
 }

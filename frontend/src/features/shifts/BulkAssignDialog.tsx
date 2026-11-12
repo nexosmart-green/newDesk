@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { TextField } from '@/components/ui/TextField'
-import type { Week } from '@/features/timesheet/week'
+import type { Week } from '@/lib/week'
 import { fieldErrorOf } from '@/lib/api'
 import { TemplateSelect } from './TemplateSelect'
 import {

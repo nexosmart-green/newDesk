@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan, useCurrentUser } from '@/features/auth/useAuth'
 import type { ProjectDetail } from '@/features/projects/types'
 import type { TimeEntry } from '@/features/timer/types'
@@ -38,22 +39,26 @@ export function ProjectEntries({ project }: { project: ProjectDetail }) {
       <EntryFilters project={project} filters={filters} onChange={change} />
       {!entries.data ? (
         <PageState isPending={entries.isPending} error={entries.error} onRetry={() => void entries.refetch()} />
-      ) : entries.data.data.length === 0 ? (
-        <p className="text-sm text-muted">No hay registros con estos filtros.</p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Registros de horas">
-          {entries.data.data.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              canChange={canManage || entry.user.id === user?.id}
-              onEdit={() => setChanging({ entry, action: 'edit' })}
-              onDelete={() => setChanging({ entry, action: 'delete' })}
-            />
-          ))}
-        </ul>
+        <StaleContent stale={entries.isPlaceholderData} className="space-y-3">
+          {entries.data.data.length === 0 ? (
+            <p className="text-sm text-muted">No hay registros con estos filtros.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Registros de horas">
+              {entries.data.data.map((entry) => (
+                <EntryRow
+                  key={entry.id}
+                  entry={entry}
+                  canChange={canManage || entry.user.id === user?.id}
+                  onEdit={() => setChanging({ entry, action: 'edit' })}
+                  onDelete={() => setChanging({ entry, action: 'delete' })}
+                />
+              ))}
+            </ul>
+          )}
+          <Pagination meta={entries.data.meta} onPageChange={(page) => change({ page })} />
+        </StaleContent>
       )}
-      {entries.data && <Pagination meta={entries.data.meta} onPageChange={(page) => change({ page })} />}
       {changing?.action === 'edit' && changing.entry.ended_at !== null && (
         <EditEntryDialog entry={{ ...changing.entry, ended_at: changing.entry.ended_at }} onClose={close} />
       )}

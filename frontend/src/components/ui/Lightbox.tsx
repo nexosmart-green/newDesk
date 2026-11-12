@@ -3,7 +3,7 @@ import { useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useModalFocus } from './useModalFocus'
 
-export interface LightboxImage {
+interface LightboxImage {
   src: string
   name: string
 }

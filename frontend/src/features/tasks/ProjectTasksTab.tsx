@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { useProjectFromOutlet } from '@/features/projects/projectContext'
 import { isClosedStatus } from '@/features/projects/types'
@@ -56,10 +57,14 @@ export function ProjectTasksTab() {
           shape="list"
           onRetry={() => void Promise.all([tasks.refetch(), statuses.refetch()])}
         />
-      ) : view === 'list' ? (
-        <TaskList tasks={tasks.data.data} userId={userId} />
       ) : (
-        <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} userId={userId} />
+        <StaleContent stale={tasks.isPlaceholderData}>
+          {view === 'list' ? (
+            <TaskList tasks={tasks.data.data} userId={userId} />
+          ) : (
+            <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} userId={userId} />
+          )}
+        </StaleContent>
       )}
       {tasks.data && tasks.data.meta.total > tasks.data.data.length && (
         <p className="text-xs text-muted">

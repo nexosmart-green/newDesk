@@ -1,8 +1,8 @@
 <?php
 
 use App\Domain\Projects\Models\Project;
-use App\Domain\TimeTracking\Actions\AutoStopTimers;
 use App\Domain\TimeTracking\Actions\CloseTimeEntry;
+use App\Domain\TimeTracking\Actions\CutTaskTimers;
 use App\Domain\TimeTracking\Enums\StopReason;
 use App\Domain\TimeTracking\Models\TimeEntry;
 
@@ -16,7 +16,7 @@ it('never closes an entry twice: stop after an automatic cut keeps the cache equ
     $this->travel(20)->minutes();
 
     $entry = TimeEntry::query()->firstOrFail();
-    app(AutoStopTimers::class)->forTask($task);                      // the cut wins the race
+    app(CutTaskTimers::class)($task);                      // the cut wins the race
     $closed = app(CloseTimeEntry::class)($entry, Project::query()->find($project->id), now()->addMinutes(5), StopReason::User, 'Tarde, ya cortado');
 
     expect($closed->stop_reason->value)->toBe('task_closed')->and($closed->comment_pending)->toBeTrue();
@@ -56,7 +56,7 @@ it('only time.manage deletes entries; people cannot erase their auto-cut pending
     ['task' => $task] = bagProject($admin, [$dev], 10 * 3600);
     startTimer($dev, $task);
     $this->travel(30)->minutes();
-    app(AutoStopTimers::class)->forTask($task);
+    app(CutTaskTimers::class)($task);
     $id = TimeEntry::query()->value('id');
 
     $this->actingAs($dev)->deleteJson("/api/v1/time-entries/{$id}")->assertForbidden();

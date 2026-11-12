@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PersonSelect } from '@/features/people/PersonSelect'
+import type { PersonSummary } from '@/features/people/types'
 import { useProjectFromOutlet } from './projectContext'
 import { useAddProjectMember, useRemoveProjectMember } from './useProjects'
 
@@ -13,23 +14,16 @@ export function ProjectMembersTab() {
   const project = useProjectFromOutlet()
   const [toAdd, setToAdd] = useState<number | null>(null)
   const add = useAddProjectMember(project.id)
-  const remove = useRemoveProjectMember(project.id)
   const memberIds = project.members.map((member) => member.id)
 
   function handleAdd() {
     if (toAdd === null) return
-    remove.reset()
     add.mutate(toAdd, { onSuccess: () => setToAdd(null) })
-  }
-
-  function handleRemove(userId: number) {
-    add.reset()
-    remove.mutate(userId)
   }
 
   return (
     <div className="space-y-4">
-      <FieldErrorsAlert error={add.error ?? remove.error} />
+      <FieldErrorsAlert error={add.error} />
       {project.can.manage_members && (
         <div className="flex items-end gap-2">
           <PersonSelect
@@ -49,30 +43,53 @@ export function ProjectMembersTab() {
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Miembros">
           {project.members.map((member) => (
-            <li key={member.id} className="flex items-center gap-3 p-3">
-              <Avatar name={member.full_name} url={member.avatar?.avatar} size="sm" />
-              <Link to={`/personas/${member.id}`} className="min-w-0 flex-1">
-                <span className="block font-medium">{member.full_name}</span>
-                <span className="block truncate text-sm text-muted">{member.job_title?.name ?? member.email}</span>
-              </Link>
-              {member.id === project.leader?.id && <Badge tone="accent">Responsable</Badge>}
-              {member.status === 'inactive' && <Badge>De baja</Badge>}
-              {project.can.manage_members && (
-                <Button
-                  variant="link"
-                  className="text-danger"
-                  aria-label={`Quitar a ${member.full_name}`}
-                  loading={remove.isPending && remove.variables === member.id}
-                  disabled={remove.isPending}
-                  onClick={() => handleRemove(member.id)}
-                >
-                  Quitar
-                </Button>
-              )}
-            </li>
+            <MemberRow
+              key={member.id}
+              projectId={project.id}
+              member={member}
+              isLeader={member.id === project.leader?.id}
+              canRemove={project.can.manage_members}
+            />
           ))}
         </ul>
       )}
     </div>
+  )
+}
+
+interface MemberRowProps {
+  projectId: number
+  member: PersonSummary
+  isLeader: boolean
+  canRemove: boolean
+}
+
+/** Its own "Quitar": removing one member only makes that row wait. */
+function MemberRow({ projectId, member, isLeader, canRemove }: MemberRowProps) {
+  const remove = useRemoveProjectMember(projectId)
+  return (
+    <li className="space-y-2 p-3">
+      <div className="flex items-center gap-3">
+        <Avatar name={member.full_name} url={member.avatar?.avatar} size="sm" />
+        <Link to={`/personas/${member.id}`} className="min-w-0 flex-1">
+          <span className="block font-medium">{member.full_name}</span>
+          <span className="block truncate text-sm text-muted">{member.job_title?.name ?? member.email}</span>
+        </Link>
+        {isLeader && <Badge tone="accent">Responsable</Badge>}
+        {member.status === 'inactive' && <Badge>De baja</Badge>}
+        {canRemove && (
+          <Button
+            variant="link"
+            className="text-danger"
+            aria-label={`Quitar a ${member.full_name}`}
+            loading={remove.isPending}
+            onClick={() => remove.mutate(member.id)}
+          >
+            Quitar
+          </Button>
+        )}
+      </div>
+      <FieldErrorsAlert error={remove.error} />
+    </li>
   )
 }

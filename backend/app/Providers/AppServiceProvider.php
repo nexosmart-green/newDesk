@@ -9,7 +9,6 @@ use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\TimeTracking\Listeners\StopTimersOnDomainEvents;
-use App\Domain\TimeTracking\Support\HourBagRegistry;
 use App\Infrastructure\Images\GdAvatarProcessor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +19,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -28,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
-        $this->app->scoped(HourBagRegistry::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
     }
 
@@ -41,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
+        $this->registerValidationReplacers();
 
         Event::subscribe(StopTimersOnDomainEvents::class);
         Event::subscribe(SendDomainNotifications::class);
@@ -48,6 +48,16 @@ class AppServiceProvider extends ServiceProvider
         $this->registerAuthorization();
         $this->registerRouteBindings();
         $this->registerRateLimiters();
+    }
+
+    /** `date_format:Y-m-d` reads as "AAAA-MM-DD" in messages (lang/es/validation.php), not as PHP format codes. */
+    private function registerValidationReplacers(): void
+    {
+        Validator::replacer('date_format', fn (string $message, string $attribute, string $rule, array $parameters) => str_replace(
+            ':format',
+            strtr($parameters[0] ?? '', ['Y' => 'AAAA', 'm' => 'MM', 'd' => 'DD', 'H' => 'HH', 'i' => 'MM', 's' => 'SS']),
+            $message,
+        ));
     }
 
     private function registerAuthorization(): void

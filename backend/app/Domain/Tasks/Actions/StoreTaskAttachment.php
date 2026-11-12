@@ -7,6 +7,7 @@ use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskAttachment;
+use App\Domain\Tasks\Support\AttachmentFileType;
 use App\Domain\Tasks\Support\UploadedFileType;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -20,47 +21,15 @@ use Throwable;
  */
 final class StoreTaskAttachment
 {
-    /** Sniffed content type → stored extension. SVG and HTML are left out on purpose: they can carry scripts. */
-    private const ALLOWED = [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/webp' => 'webp',
-        'image/gif' => 'gif',
-        'application/pdf' => 'pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-        'application/vnd.oasis.opendocument.text' => 'odt',
-        'application/vnd.oasis.opendocument.spreadsheet' => 'ods',
-        'text/plain' => 'txt',
-        'text/csv' => 'csv',
-        'application/zip' => 'zip',
-    ];
-
-    /**
-     * Office files are zip containers and libmagic often reports them as plain zip; text files carry no
-     * signature. For those the extension picks the precise type among the ones the bytes allow.
-     */
-    private const REFINED_BY_EXTENSION = [
-        'application/zip' => [
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'odt' => 'application/vnd.oasis.opendocument.text',
-            'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-        ],
-        'text/plain' => ['csv' => 'text/csv'],
-        'application/csv' => ['csv' => 'text/csv'],
-    ];
-
     public function __construct(private readonly RecordActivity $recordActivity) {}
 
     public function __invoke(User $actor, Task $task, UploadedFile $file): TaskAttachment
     {
         $mime = $this->contentType($file);
-        $name = $this->displayName($file, self::ALLOWED[$mime]);
+        $extension = AttachmentFileType::extensionOf($mime);
+        $name = $this->displayName($file, $extension);
         $uuid = (string) Str::uuid();
-        $path = $file->storeAs("task-attachments/{$task->company_id}/{$task->id}", "{$uuid}.".self::ALLOWED[$mime], TaskAttachment::DISK);
+        $path = $file->storeAs("task-attachments/{$task->company_id}/{$task->id}", "{$uuid}.{$extension}", TaskAttachment::DISK);
 
         try {
             return DB::transaction(function () use ($actor, $task, $file, $mime, $name, $uuid, $path) {
@@ -100,34 +69,13 @@ final class StoreTaskAttachment
         $sniffed = UploadedFileType::sniff($file);
 
         if (UploadedFileType::isIphonePhoto($file, $sniffed)) {
-            throw new BusinessRuleViolation('Convertí la imagen a JPG o PNG.', 'attachment_heic');
+            throw new BusinessRuleViolation(UploadedFileType::IPHONE_PHOTO_MESSAGE, 'attachment_heic');
         }
 
-        $extension = UploadedFileType::extension($file);
-        $mime = self::REFINED_BY_EXTENSION[$sniffed][$extension] ?? $this->plainTextFallback($sniffed, $extension) ?? $sniffed;
-        if (! isset(self::ALLOWED[$mime])) {
-            throw new BusinessRuleViolation('Ese tipo de archivo no se puede adjuntar.', 'attachment_type');
-        }
-
-        return $mime;
-    }
-
-    /**
-     * libmagic names text by its look (a log is `text/x-…`, a JSON export `application/json`, an empty file
-     * `application/x-empty`). A .txt/.csv with any of those is still plain text; markup that a browser
-     * would render (HTML, XML, SVG) stays rejected.
-     */
-    private function plainTextFallback(string $sniffed, string $extension): ?string
-    {
-        $isText = str_starts_with($sniffed, 'text/') || in_array($sniffed, ['application/json', 'application/x-empty'], true);
-        $isMarkup = in_array($sniffed, ['text/html', 'text/xml', 'application/xml', 'image/svg+xml'], true);
-
-        return match (true) {
-            ! $isText || $isMarkup => null,
-            $extension === 'txt' => 'text/plain',
-            $extension === 'csv' => 'text/csv',
-            default => null,
-        };
+        return AttachmentFileType::detect($file, $sniffed) ?? throw new BusinessRuleViolation(
+            'Ese tipo de archivo no se puede adjuntar. Subí uno de estos: '.AttachmentFileType::allowedKinds().'.',
+            'attachment_type',
+        );
     }
 
     /**

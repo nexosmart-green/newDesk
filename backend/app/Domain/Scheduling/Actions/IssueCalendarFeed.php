@@ -12,13 +12,15 @@ use Illuminate\Support\Str;
  */
 final class IssueCalendarFeed
 {
+    public function __construct(private readonly RevokeCalendarFeed $revoke) {}
+
     /** @return string the plain token (shown once, embedded in the feed URL) */
-    public function issue(User $user): string
+    public function __invoke(User $user): string
     {
         $token = Str::random(48);
 
         DB::transaction(function () use ($user, $token) {
-            $this->revoke($user);
+            ($this->revoke)($user);
             DB::table('calendar_feed_tokens')->insert([
                 'user_id' => $user->id,
                 'token_hash' => hash('sha256', $token),
@@ -28,25 +30,5 @@ final class IssueCalendarFeed
         });
 
         return $token;
-    }
-
-    public function revoke(User $user): void
-    {
-        DB::table('calendar_feed_tokens')->where('user_id', $user->id)->whereNull('revoked_at')->update(['revoked_at' => now()]);
-    }
-
-    public function isActive(User $user): bool
-    {
-        return DB::table('calendar_feed_tokens')->where('user_id', $user->id)->whereNull('revoked_at')->exists();
-    }
-
-    public function userFor(string $token): ?User
-    {
-        $userId = DB::table('calendar_feed_tokens')
-            ->where('token_hash', hash('sha256', $token))->whereNull('revoked_at')->value('user_id');
-
-        $user = $userId !== null ? User::query()->find($userId) : null;
-
-        return $user?->isActive() ? $user : null;
     }
 }

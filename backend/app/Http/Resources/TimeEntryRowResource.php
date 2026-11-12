@@ -5,7 +5,6 @@ namespace App\Http\Resources;
 use App\Domain\People\Actions\ReplaceAvatar;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Read-only row of the task "Horas" tab and of "Historial de horas". Never includes rates.
@@ -13,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * @mixin TimeEntry
  */
-class TimeEntryRowResource extends JsonResource
+class TimeEntryRowResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

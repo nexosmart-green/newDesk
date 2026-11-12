@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Domain\Tasks\Models\TaskComment;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin TaskComment
  */
-class TaskCommentResource extends JsonResource
+class TaskCommentResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

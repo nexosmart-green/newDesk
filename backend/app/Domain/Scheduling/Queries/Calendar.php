@@ -2,7 +2,6 @@
 
 namespace App\Domain\Scheduling\Queries;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\Scheduling\Models\Holiday;
 use App\Domain\Scheduling\Models\ShiftAssignment;
@@ -14,6 +13,9 @@ use App\Domain\Tasks\Models\Task;
  */
 final class Calendar
 {
+    /** Longest range "Mi calendario", the shift grid and my_shifts may ask for. */
+    public const MAX_DAYS = 62;
+
     /** @return array<string, mixed> */
     public function forPerson(User $user, string $from, string $to): array
     {
@@ -39,7 +41,7 @@ final class Calendar
 
         return [
             'timezone' => $timezone,
-            'people' => User::query()->where('company_id', $companyId)->where('status', UserStatus::Active)
+            'people' => User::query()->where('company_id', $companyId)->active()
                 ->orderBy('first_name')->orderBy('last_name')->get()
                 ->map(fn (User $person) => [
                     'id' => $person->id,

@@ -2,6 +2,24 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from '@/components/ui/toast/toastStore'
 import { useTimeDataChanged } from '@/features/timer/useTimer'
 import {
+  allTasksKey,
+  dashboardKey,
+  myTasksKey,
+  projectKey,
+  projectListsKey,
+  projectTasksKey,
+  taskActivityKey,
+  taskCategoriesKey,
+  taskCommentsKey,
+  taskKey,
+  taskLabelsKey,
+  taskListsKeys,
+  taskStatusesKey,
+  taskTimeEntriesKey,
+  timerKey,
+} from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
+import {
   createAndStartTask,
   createTask,
   fetchAllTasks,
@@ -16,23 +34,16 @@ import {
   postTaskComment,
   updateTask,
   updateTaskAssignees,
-  updateTaskStatus,
 } from './tasksApi'
 import type { NewComment, SaveTaskInput, Task, TaskFilters } from './types'
 
-export const tasksKey = ['tasks'] as const
-export const taskKey = (code: string) => [...tasksKey, 'detail', code.toLowerCase()] as const
-const commentsKey = (code: string) => [...taskKey(code), 'comments'] as const
-/** Counters and "próximas a vencer" of the Panel read task rows too. */
-export const dashboardKey = ['dashboard'] as const
-
 export function useTaskStatuses() {
-  return useQuery({ queryKey: ['task-statuses'], queryFn: fetchTaskStatuses, staleTime: 5 * 60_000 })
+  return useQuery({ queryKey: taskStatusesKey, queryFn: fetchTaskStatuses, staleTime: 5 * 60_000 })
 }
 
 export function useProjectTasks(projectId: number, filters: TaskFilters) {
   return useQuery({
-    queryKey: [...tasksKey, 'project', projectId, filters],
+    queryKey: [...projectTasksKey(projectId), filters],
     queryFn: () => fetchProjectTasks(projectId, filters),
     placeholderData: keepPreviousData,
   })
@@ -40,7 +51,7 @@ export function useProjectTasks(projectId: number, filters: TaskFilters) {
 
 export function useMyTasks(filters: TaskFilters) {
   return useQuery({
-    queryKey: [...tasksKey, 'mine', filters],
+    queryKey: [...myTasksKey, filters],
     queryFn: () => fetchMyTasks(filters),
     placeholderData: keepPreviousData,
   })
@@ -48,7 +59,7 @@ export function useMyTasks(filters: TaskFilters) {
 
 export function useAllTasks(filters: TaskFilters, page: number) {
   return useQuery({
-    queryKey: [...tasksKey, 'all', filters, page],
+    queryKey: [...allTasksKey, filters, page],
     queryFn: () => fetchAllTasks(filters, page),
     placeholderData: keepPreviousData,
   })
@@ -57,7 +68,7 @@ export function useAllTasks(filters: TaskFilters, page: number) {
 /** Under the task's key: any task or time mutation (which invalidates `tasks`) refreshes it. */
 export function useTaskTimeEntries(code: string, page: number) {
   return useQuery({
-    queryKey: [...taskKey(code), 'time-entries', page],
+    queryKey: [...taskTimeEntriesKey(code), page],
     queryFn: () => fetchTaskTimeEntries(code, page),
     placeholderData: keepPreviousData,
   })
@@ -65,7 +76,7 @@ export function useTaskTimeEntries(code: string, page: number) {
 
 export function useTaskActivity(code: string, page: number) {
   return useQuery({
-    queryKey: [...taskKey(code), 'activity', page],
+    queryKey: [...taskActivityKey(code), page],
     queryFn: () => fetchTaskActivity(code, page),
     placeholderData: keepPreviousData,
   })
@@ -76,22 +87,40 @@ export function useTask(code: string) {
 }
 
 export function useTaskComments(code: string) {
-  return useQuery({ queryKey: commentsKey(code), queryFn: () => fetchTaskComments(code) })
+  return useQuery({ queryKey: taskCommentsKey(code), queryFn: () => fetchTaskComments(code) })
 }
 
-/** Lists, board, detail and the Panel share the task rows; the activity log changes too. */
+interface TaskRefresh {
+  /** The server's version of the task: written to its detail at once (that query is not refetched). */
+  task?: Task
+  /** Projects whose detail shows the task (both of them on a move). */
+  projectIds?: readonly (number | undefined)[]
+  /** Category/label changes move their `tasks_count`. */
+  catalogs?: boolean
+  /** What the screen in front of the person shows; the rest refreshes in the background. */
+  now?: readonly (readonly unknown[])[]
+}
+
+/**
+ * Lists, board and the Panel read task rows, the task's Historial logs the change, and the projects that
+ * hold it show their tasks. Its other tabs (comments, files) don't change.
+ */
 export function useRefreshTasks() {
   const queryClient = useQueryClient()
-  return (task?: Task) => {
+  return ({ task, projectIds = [], catalogs = false, now = [] }: TaskRefresh = {}) => {
     if (task) queryClient.setQueryData<Task>(taskKey(task.code), (current) => ({ ...current, ...task }))
-    return Promise.all([
-      queryClient.invalidateQueries({ queryKey: tasksKey }),
-      queryClient.invalidateQueries({ queryKey: ['projects'] }),
-      queryClient.invalidateQueries({ queryKey: dashboardKey }),
-      // Their `tasks_count` changes with a task's category/labels (literal keys: importing them would be circular).
-      queryClient.invalidateQueries({ queryKey: ['task-categories'] }),
-      queryClient.invalidateQueries({ queryKey: ['task-labels'] }),
-    ])
+    const projects = [...new Set([...projectIds, task?.project?.id].filter((id): id is number => id !== undefined))]
+    return refreshQueries(queryClient, {
+      now,
+      later: [
+        ...taskListsKeys,
+        ...(task ? [taskActivityKey(task.code)] : []),
+        dashboardKey,
+        projectListsKey,
+        ...projects.map(projectKey),
+        ...(catalogs ? [taskCategoriesKey, taskLabelsKey] : []),
+      ],
+    })
   }
 }
 
@@ -101,7 +130,8 @@ export function useCreateTask(projectId: number) {
     mutationFn: (input: SaveTaskInput) => createTask(projectId, input),
     onSuccess: (task) => {
       toast.success(`Tarea ${task.code} creada.`)
-      return refresh()
+      // The dialog closes onto the project's list: it shows the new task.
+      return refresh({ projectIds: [projectId], catalogs: true, now: [projectTasksKey(projectId)] })
     },
   })
 }
@@ -116,7 +146,10 @@ export function useCreateAndStartTask(projectId: number) {
       createAndStartTask(projectId, input, previousComment),
     onSuccess: (result) => {
       if (!result.timer_error) toast.success(`Tarea ${result.task.code} creada y cronómetro en marcha.`)
-      return Promise.all([refresh(), timeChanged()])
+      return Promise.all([
+        refresh({ projectIds: [projectId], catalogs: true, now: [projectTasksKey(projectId)] }),
+        timeChanged([timerKey]),
+      ])
     },
   })
 }
@@ -126,18 +159,7 @@ export function useUpdateTask(code: string) {
   return useMutation({
     meta: { successMessage: 'Tarea actualizada.' },
     mutationFn: (input: Partial<Omit<SaveTaskInput, 'assignee_ids'>>) => updateTask(code, input),
-    onSuccess: refresh,
-  })
-}
-
-/** CA-04.03: closing a task stops its timers, so the header refreshes too. */
-export function useUpdateTaskStatus() {
-  const refresh = useRefreshTasks()
-  const timeChanged = useTimeDataChanged()
-  return useMutation({
-    mutationFn: ({ code, statusId }: { code: string; statusId: number }) => updateTaskStatus(code, statusId),
-    meta: { successMessage: 'Estado actualizado.' },
-    onSuccess: (task) => Promise.all([refresh(task), timeChanged()]),
+    onSuccess: (task) => refresh({ task, catalogs: true }),
   })
 }
 
@@ -146,7 +168,7 @@ export function useUpdateTaskAssignees(code: string) {
   return useMutation({
     mutationFn: (assigneeIds: number[]) => updateTaskAssignees(code, assigneeIds),
     meta: { successMessage: 'Asignación actualizada.' },
-    onSuccess: refresh,
+    onSuccess: (task) => refresh({ task }),
   })
 }
 
@@ -155,16 +177,21 @@ export function usePostTaskComment(code: string) {
   return useMutation({
     mutationFn: (comment: NewComment) => postTaskComment(code, comment),
     meta: { successMessage: 'Comentario publicado.' },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: commentsKey(code) }),
+    // The composer clears once the new comment is in the list above it.
+    onSuccess: () => refreshQueries(queryClient, { now: [taskCommentsKey(code)], later: [taskActivityKey(code)] }),
   })
 }
 
 /** Moving changes both projects' hours, so lists, bags and timesheets refresh. */
 export function useMoveTask(code: string) {
+  const queryClient = useQueryClient()
   const refresh = useRefreshTasks()
   const timeChanged = useTimeDataChanged()
   return useMutation({
     mutationFn: (projectId: number) => moveTask(code, projectId),
-    onSuccess: (result) => Promise.all([refresh(result.task), timeChanged()]),
+    onSuccess: (result) => {
+      const from = queryClient.getQueryData<Task>(taskKey(code))?.project?.id
+      return Promise.all([refresh({ task: result.task, projectIds: [from] }), timeChanged()])
+    },
   })
 }

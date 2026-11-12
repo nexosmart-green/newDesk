@@ -1,4 +1,4 @@
-export type CsvCell = string | number | null
+type CsvCell = string | number | null
 
 /** `;`-separated (what Excel expects with a Spanish locale), quoted when needed, CRLF rows. */
 export function toCsv(rows: readonly (readonly CsvCell[])[]): string {

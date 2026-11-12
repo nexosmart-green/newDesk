@@ -9,6 +9,8 @@ use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Events\TaskAssigned;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskStatus;
+use App\Domain\Tasks\Support\ResolveProjectMembers;
+use App\Domain\Tasks\Support\ResolveTaskClassification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 

@@ -1,7 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as catalogsApi from '@/features/catalogs/catalogsApi'
-import * as peopleApi from '@/features/people/peopleApi'
+import * as profileApi from './profileApi'
 import { buildProfile } from '@/test/fixtures'
 import { renderAt } from '@/test/renderWithProviders'
 import { SkillsEditor } from './SkillsEditor'
@@ -12,7 +12,7 @@ describe('SkillsEditor', () => {
       { id: 1, name: 'PHP' },
       { id: 3, name: 'React' },
     ])
-    const save = vi.spyOn(peopleApi, 'saveMySkills').mockResolvedValue(buildProfile())
+    const save = vi.spyOn(profileApi, 'saveMySkills').mockResolvedValue(buildProfile())
     renderAt(<SkillsEditor skills={[{ id: 1, name: 'PHP', level: 40 }]} />)
 
     await screen.findByRole('option', { name: 'React' })

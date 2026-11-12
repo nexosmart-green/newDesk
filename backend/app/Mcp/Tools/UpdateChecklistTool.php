@@ -4,10 +4,8 @@ namespace App\Mcp\Tools;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
-use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Actions\AddChecklistItem;
 use App\Domain\Tasks\Actions\UpdateChecklistItem;
-use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskChecklistItem;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
@@ -47,31 +45,10 @@ class UpdateChecklistTool extends NewDeskTool
         if ($input['action'] === 'add') {
             ($this->addItem)($user, $task, $item);
         } else {
-            ($this->updateItem)($user, $this->find($task, $item), done: $input['action'] === 'check');
+            ($this->updateItem)($user, $this->lookup->checklistItem($task, $item), done: $input['action'] === 'check');
         }
 
         return $this->json(['task' => $task->code, 'checklist' => McpPresenter::checklist($task)]);
-    }
-
-    /** By number (1 = first) or by text: exact first, then a single partial match. */
-    private function find(Task $task, string $reference): TaskChecklistItem
-    {
-        $items = $task->checklistItems()->get()->each->setRelation('task', $task)->values();
-
-        if (ctype_digit($reference) && $items->has((int) $reference - 1)) {
-            return $items[(int) $reference - 1];
-        }
-
-        $needle = mb_strtolower($reference);
-        $exact = $items->first(fn (TaskChecklistItem $item) => mb_strtolower($item->text) === $needle);
-        $partial = $items->filter(fn (TaskChecklistItem $item) => str_contains(mb_strtolower($item->text), $needle));
-
-        return $exact ?? ($partial->count() === 1 ? $partial->first() : throw new BusinessRuleViolation(
-            $partial->isEmpty()
-                ? "No encontré la subtarea «{$reference}» en {$task->code}."
-                : "«{$reference}» coincide con varias subtareas de {$task->code}: indicá el número.",
-            'checklist_item_unknown',
-        ));
     }
 
     public function schema(JsonSchema $schema): array

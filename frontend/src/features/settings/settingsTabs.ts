@@ -1,7 +1,7 @@
 /** Any of these grants access to /configuracion (UI hint; the backend authorizes each call). */
 export const SETTINGS_PERMISSIONS = ['company.manage', 'roles.manage', 'users.manage', 'projects.manage', 'mcp.manage_tokens'] as const
 
-export interface SettingsTab {
+interface SettingsTab {
   path: string
   label: string
   /** The user needs any one of them. */

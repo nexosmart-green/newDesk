@@ -8,14 +8,13 @@ import {
   issueCalendarFeed,
   revokeCalendarFeed,
 } from './calendarApi'
+import { calendarFeedKey, calendarKey, holidaysKey, myCalendarKey, shiftsKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import type { HolidayInput } from './types'
-
-const calendarKey = ['calendar'] as const
-const feedKey = ['calendar-feed'] as const
 
 export function useMyCalendar(from: string, to: string, enabled = true) {
   return useQuery({
-    queryKey: [...calendarKey, 'mine', from, to],
+    queryKey: myCalendarKey(from, to),
     queryFn: () => fetchMyCalendar(from, to),
     placeholderData: keepPreviousData,
     enabled,
@@ -24,19 +23,19 @@ export function useMyCalendar(from: string, to: string, enabled = true) {
 
 export function useHolidays(year: number) {
   return useQuery({
-    queryKey: [...calendarKey, 'holidays', year],
+    queryKey: holidaysKey(year),
     queryFn: () => fetchHolidays(year),
     placeholderData: keepPreviousData,
   })
 }
 
 export function useCalendarFeedStatus() {
-  return useQuery({ queryKey: feedKey, queryFn: fetchCalendarFeedStatus })
+  return useQuery({ queryKey: calendarFeedKey, queryFn: fetchCalendarFeedStatus })
 }
 
 function useRefreshFeedStatus() {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: feedKey })
+  return () => queryClient.invalidateQueries({ queryKey: calendarFeedKey })
 }
 
 export function useIssueCalendarFeed() {
@@ -54,14 +53,10 @@ export function useRevokeCalendarFeed() {
   })
 }
 
-/** Holidays show in every calendar and in the team grid. */
+/** The holidays tab waits for its list; every calendar and the team grid show them too and follow behind. */
 function useRefreshHolidays() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: calendarKey }),
-      queryClient.invalidateQueries({ queryKey: ['shifts'] }),
-    ])
+  return () => refreshQueries(queryClient, { now: [[...calendarKey, 'holidays']], later: [calendarKey, shiftsKey] })
 }
 
 export function useCreateHoliday() {

@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { PeriodNav } from '@/components/ui/PeriodNav'
+import { useSearchParamPatch, useTabParam } from '@/lib/useSearchParamPatch'
 import { useCan } from '@/features/auth/useAuth'
 import { SHIFTS_PERMISSION } from '@/features/shifts/types'
-import { useWeekParam } from '@/features/timesheet/useWeekParam'
-import { WeekNav } from '@/features/timesheet/WeekNav'
-import { datesBetween } from '@/features/timesheet/week'
+import { useWeekParam } from '@/lib/useWeekParam'
+import { WeekNav } from '@/components/ui/WeekNav'
+import { datesBetween } from '@/lib/week'
 import { CalendarFeedPanel } from './CalendarFeedPanel'
 import { CalendarMonthView, CalendarWeekView } from './CalendarViews'
 import { groupByDate, isMonthString, monthGridRange, monthLabel, monthOf, shiftMonth } from './calendarDays'
@@ -21,35 +22,16 @@ type PageView = CalendarView | 'equipo'
 
 const viewLabels: Record<PageView, string> = { semana: 'Semana', mes: 'Mes', equipo: 'Equipo' }
 
+const pageViews: readonly PageView[] = ['semana', 'mes', 'equipo']
+
 function useMonthParam() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, patch] = useSearchParamPatch()
   const [currentMonth] = useState(() => monthOf(new Date()))
   const value = searchParams.get('mes')
   const month = isMonthString(value) ? value : currentMonth
-  const requested = searchParams.get('vista')
-  const view: PageView = requested === 'mes' || requested === 'equipo' ? requested : 'semana'
+  const { selected: view, select: setView } = useTabParam(pageViews, 'semana', 'vista')
 
-  function update(changes: Record<string, string | null>) {
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        for (const [key, change] of Object.entries(changes)) {
-          if (change === null) next.delete(key)
-          else next.set(key, change)
-        }
-        return next
-      },
-      { replace: true },
-    )
-  }
-
-  return {
-    view,
-    month,
-    isCurrentMonth: month === currentMonth,
-    setView: (next: PageView) => update({ vista: next === 'semana' ? null : next }),
-    goToMonth: (next: string | null) => update({ mes: next }),
-  }
+  return { view, month, isCurrentMonth: month === currentMonth, setView, goToMonth: (next: string | null) => patch({ mes: next }) }
 }
 
 /** The team tab shows to whoever manages shifts or has people in charge (the endpoint answers 403 otherwise). */
@@ -104,14 +86,14 @@ export function MyCalendarPage() {
           {!calendar.data ? (
             <PageState isPending={calendar.isPending} error={calendar.error} shape="table" onRetry={() => void calendar.refetch()} />
           ) : (
-            <>
+            <StaleContent stale={calendar.isPlaceholderData} className="space-y-4">
               <p className="text-xs text-muted">Horarios de turno en {calendar.data.timezone}.</p>
               {view === 'semana' ? (
                 <CalendarWeekView dates={dates} days={groupByDate(calendar.data)} />
               ) : (
                 <CalendarMonthView dates={dates} days={groupByDate(calendar.data)} month={month} />
               )}
-            </>
+            </StaleContent>
           )}
           <CalendarFeedPanel />
         </>

@@ -1,22 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
 import { createShiftRecurrences, deleteShiftRecurrence, endShiftRecurrence, fetchShiftRecurrences } from './recurrencesApi'
+import { calendarKey, shiftRecurrencesKey, shiftsKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import type { ShiftRecurrenceInput } from './recurrenceTypes'
 
-const recurrencesKey = ['shifts', 'recurrences'] as const
-
 export function useShiftRecurrences() {
-  return useQuery({ queryKey: recurrencesKey, queryFn: fetchShiftRecurrences })
+  return useQuery({ queryKey: shiftRecurrencesKey, queryFn: fetchShiftRecurrences })
 }
 
-/** A rule writes days: the weekly grid, everyone's calendar and the team calendar move with it. */
+/**
+ * A rule writes days: the rules panel waits for its list; the weekly grid, everyone's calendar and the
+ * team calendar follow behind.
+ */
 function useRefreshAfterRecurrence() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['shifts'] }),
-      queryClient.invalidateQueries({ queryKey: ['calendar'] }),
-    ])
+  return () => refreshQueries(queryClient, { now: [shiftRecurrencesKey], later: [shiftsKey, calendarKey] })
 }
 
 const announce = (result: { message: string | null }, fallback: string) => toast.success(result.message ?? fallback)

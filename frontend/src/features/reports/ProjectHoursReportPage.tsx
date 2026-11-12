@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
 import { HoursBar } from '@/features/hours/HoursBar'
 import { formatDuration } from '@/lib/duration'
@@ -62,7 +63,7 @@ export function ProjectHoursReportPage() {
       {!report.data ? (
         <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />
       ) : (
-        <>
+        <StaleContent stale={report.isPlaceholderData} className="space-y-4">
           <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
             <p className="text-sm">
               En el período: <strong className="font-mono">{formatDuration(report.data.consumed_in_period_seconds)}</strong>
@@ -92,7 +93,7 @@ export function ProjectHoursReportPage() {
               }))}
             />
           </div>
-        </>
+        </StaleContent>
       )}
     </section>
   )

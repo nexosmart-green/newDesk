@@ -2,48 +2,28 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Actions\ResetPassword;
+use App\Domain\Identity\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
-use Illuminate\Validation\ValidationException;
 
 class PasswordResetController extends Controller
 {
-    public function forgot(Request $request): JsonResponse
+    public function forgot(ForgotPasswordRequest $request): JsonResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
-
         // Only active users can reset; the answer is identical either way (no account enumeration).
-        Password::broker()->sendResetLink(['email' => $request->string('email'), 'status' => 'active']);
+        Password::broker()->sendResetLink(['email' => $request->string('email')->value(), 'status' => UserStatus::Active->value]);
 
-        return ApiResponse::ok(message: 'Si el email está registrado, te enviamos un enlace para restablecer la contraseña.');
+        return ApiResponse::ok(message: 'Si el email está registrado, te va a llegar un enlace para restablecer la contraseña. Revisá también la carpeta de spam.');
     }
 
-    public function reset(Request $request): JsonResponse
+    public function reset(ResetPasswordRequest $request, ResetPassword $resetPassword): JsonResponse
     {
-        $request->validate([
-            'token' => ['required', 'string'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::defaults()],
-        ]);
-
-        $status = Password::broker()->reset(
-            [...$request->only('email', 'password', 'password_confirmation', 'token'), 'status' => 'active'],
-            function (User $user, string $password) {
-                $user->forceFill(['password' => $password])->setRememberToken(null);
-                $user->save();
-                // A reset after a compromise must also kill MCP tokens the attacker may have created.
-                $user->tokens()->delete();
-            },
-        );
-
-        if ($status !== Password::PASSWORD_RESET) {
-            throw ValidationException::withMessages(['email' => 'El enlace no es válido o venció. Pedí uno nuevo.']);
-        }
+        $resetPassword($request->string('email')->value(), $request->string('token')->value(), $request->string('password')->value());
 
         return ApiResponse::ok(message: 'Contraseña actualizada. Ya podés ingresar.');
     }

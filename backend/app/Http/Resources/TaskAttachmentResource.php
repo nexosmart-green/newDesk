@@ -5,14 +5,13 @@ namespace App\Http\Resources;
 use App\Domain\Tasks\Models\TaskAttachment;
 use App\Domain\Tasks\Policies\TaskAttachmentPolicy;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Task attachment (RF-04.09). Eager load `uploader`; only for attachments of a task the viewer sees.
  *
  * @mixin TaskAttachment
  */
-class TaskAttachmentResource extends JsonResource
+class TaskAttachmentResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

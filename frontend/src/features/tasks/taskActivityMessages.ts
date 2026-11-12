@@ -30,7 +30,7 @@ const fields: Record<string, { label: string; noun: string; format?: (value: unk
 /** Text too long to diff inline: the sentence already says it changed. */
 const SENTENCE_ONLY = new Set(['description', 'description_changed'])
 
-export interface ActivityChange {
+interface ActivityChange {
   key: string
   label: string
   before: string
@@ -51,7 +51,7 @@ function readable(key: string, value: unknown): string {
 }
 
 /** Field-by-field before → after of an update (only what changed). */
-export function activityChanges(entry: ActivityEntry): ActivityChange[] {
+function activityChanges(entry: ActivityEntry): ActivityChange[] {
   const keys = new Set([...Object.keys(entry.before ?? {}), ...Object.keys(entry.after ?? {})])
   return [...keys]
     .filter((key) => JSON.stringify(entry.before?.[key] ?? null) !== JSON.stringify(entry.after?.[key] ?? null))

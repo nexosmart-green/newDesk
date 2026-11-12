@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createAiToken, fetchCompanyAiTokens, fetchMyAiTokens, revokeAiToken } from './aiConnectionsApi'
+import { aiTokensKey } from '@/lib/queryKeys'
 import type { CreateTokenInput } from './types'
-
-const aiTokensKey = ['ai-tokens'] as const
 
 export function useMyAiTokens() {
   return useQuery({ queryKey: [...aiTokensKey, 'mine'], queryFn: fetchMyAiTokens })

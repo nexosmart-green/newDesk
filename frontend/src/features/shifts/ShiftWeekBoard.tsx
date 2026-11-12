@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageState } from '@/components/ui/PageState'
-import { useWeekParam } from '@/features/timesheet/useWeekParam'
-import { WeekNav } from '@/features/timesheet/WeekNav'
-import { datesBetween, weekLabel } from '@/features/timesheet/week'
+import { StaleContent } from '@/components/ui/StaleContent'
+import { useWeekParam } from '@/lib/useWeekParam'
+import { WeekNav } from '@/components/ui/WeekNav'
+import { datesBetween, weekLabel } from '@/lib/week'
 import { AssignCellsDialog } from './AssignCellsDialog'
 import { BulkAssignDialog } from './BulkAssignDialog'
 import { cellKey, type Cell } from './selection'
@@ -87,10 +88,10 @@ export function ShiftWeekBoard() {
       ) : grid.data.people.length === 0 ? (
         <p className="text-sm text-muted">No hay personas activas.</p>
       ) : (
-        <>
+        <StaleContent stale={grid.isPlaceholderData} className="space-y-3">
           <p className="text-xs text-muted">Tocá uno o varios días para asignarles un turno. Horarios de {grid.data.timezone}.</p>
           <ShiftGridTable grid={grid.data} dates={dates} selected={new Set(selected.keys())} onToggle={toggle} />
-        </>
+        </StaleContent>
       )}
       {dialog === 'cells' && templates.data && (
         <AssignCellsDialog

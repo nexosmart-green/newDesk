@@ -23,7 +23,7 @@ final class UserTimerLock
         try {
             return Cache::lock("timer:user:{$userId}", 15)->block(10, $callback);
         } catch (LockTimeoutException) {
-            throw new BusinessRuleViolation('Hay otra operación de cronómetro en curso. Probá de nuevo.', 'timer_busy', 409);
+            throw new BusinessRuleViolation('Otro pedido de cronómetro estaba en curso. Esperá un segundo y probá de nuevo.', 'timer_busy', 409);
         }
     }
 }

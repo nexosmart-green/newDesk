@@ -5,7 +5,6 @@ import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { MarkdownView } from '@/components/ui/Markdown'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCan } from '@/features/auth/useAuth'
-import type { PersonSummary } from '@/features/people/types'
 import { LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { formatDate } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
@@ -16,16 +15,11 @@ import { TaskDetailsForm } from './TaskDetailsForm'
 import { Panel } from './TaskPanel'
 import { TaskStatusSelect } from './TaskStatusSelect'
 import { taskPriorityLabels, type Task } from './types'
-import { useTaskStatuses, useUpdateTaskStatus } from './useTasks'
-
-interface TaskDetailTabProps {
-  task: Task
-  members: PersonSummary[]
-  membersLoaded: boolean
-}
+import { useTaskStatuses } from './useTasks'
+import { useUpdateTaskStatus } from './useTaskStatusChange'
 
 /** Tab "Detalle": the description reads as formatted text; "Editar detalles" turns it into the form in place. */
-export function TaskDetailTab({ task, members, membersLoaded }: TaskDetailTabProps) {
+export function TaskDetailTab({ task }: { task: Task }) {
   const [editing, setEditing] = useState(false)
   const canAssign = useCan('tasks.assign')
 
@@ -71,15 +65,15 @@ export function TaskDetailTab({ task, members, membersLoaded }: TaskDetailTabPro
           <TaskFacts task={task} />
         </Panel>
         <Panel title="Asignados">
-          {canAssign && membersLoaded ? (
-            <TaskAssigneesEditor key={task.id} task={task} members={members} />
-          ) : (
-            <p className="text-sm">{(task.assignees ?? []).map((assignee) => assignee.full_name).join(', ') || 'Sin asignar'}</p>
-          )}
+          {canAssign ? <TaskAssigneesEditor key={task.id} task={task} /> : <AssigneeNames task={task} />}
         </Panel>
       </aside>
     </div>
   )
+}
+
+function AssigneeNames({ task }: { task: Task }) {
+  return <p className="text-sm">{(task.assignees ?? []).map((assignee) => assignee.full_name).join(', ') || 'Sin asignar'}</p>
 }
 
 function StatusControl({ task }: { task: Task }) {

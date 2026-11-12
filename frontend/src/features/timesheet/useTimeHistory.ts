@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
 import { downloadBlob } from '@/lib/csv'
+import { timeHistoryKey } from '@/lib/queryKeys'
 import { exportMyTimeEntries, fetchMyTimeEntries } from './historyApi'
 import type { HistoryFilters } from './types'
 
@@ -8,7 +9,7 @@ import type { HistoryFilters } from './types'
 export function useTimeHistory(filters: HistoryFilters, page: number, enabled: boolean) {
   return useQuery({
     enabled,
-    queryKey: ['timesheet', 'history', filters, page],
+    queryKey: [...timeHistoryKey, filters, page],
     queryFn: () => fetchMyTimeEntries(filters, page),
     placeholderData: keepPreviousData,
   })

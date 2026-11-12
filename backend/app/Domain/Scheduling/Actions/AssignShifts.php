@@ -2,11 +2,11 @@
 
 namespace App\Domain\Scheduling\Actions;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Queries\ActiveCompanyPeople;
 use App\Domain\Scheduling\Events\ShiftsChanged;
-use App\Domain\Scheduling\Models\ShiftAssignment;
 use App\Domain\Scheduling\Models\ShiftTemplate;
+use App\Domain\Scheduling\Support\ShiftCellWriter;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Carbon;
@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\DB;
  */
 final class AssignShifts
 {
-    private const MAX_CELLS = 2000;
-
-    public function __construct(private readonly RecordActivity $recordActivity) {}
+    public function __construct(
+        private readonly RecordActivity $recordActivity,
+        private readonly ActiveCompanyPeople $activePeople,
+        private readonly ShiftCellWriter $cellWriter,
+    ) {}
 
     /**
      * @param  list<int>  $userIds
@@ -29,35 +31,16 @@ final class AssignShifts
      */
     public function __invoke(User $actor, array $userIds, ?ShiftTemplate $template, string $from, string $to, array $weekdays = []): int
     {
-        $people = User::query()->where('company_id', $actor->company_id)->where('status', UserStatus::Active)->whereKey($userIds)->get();
-        if ($people->count() !== count(array_unique($userIds))) {
-            throw new BusinessRuleViolation('Alguna persona no existe o está dada de baja.', 'member_inactive');
-        }
+        $people = $this->activePeople->resolveOrFail($actor->company_id, $userIds);
 
         $dates = $this->dates($from, $to, $weekdays);
-        if ($people->count() * count($dates) > self::MAX_CELLS) {
-            throw new BusinessRuleViolation('Demasiados días a la vez: hacelo por partes (máximo 2000 celdas).', 'too_many_cells');
-        }
+        $this->cellWriter->ensureWithinLimit($people->count() * count($dates));
 
         $touched = DB::transaction(function () use ($actor, $people, $template, $dates) {
             $touched = [];
-            foreach ($people as $person) {
-                ShiftAssignment::query()->forCompany($actor->company_id)->where('user_id', $person->id)->whereIn('date', $dates)->delete();
-                foreach ($dates as $date) {
-                    if ($template !== null) {
-                        ShiftAssignment::query()->create([
-                            'company_id' => $actor->company_id,
-                            'user_id' => $person->id,
-                            'date' => $date,
-                            'shift_template_id' => $template->id,
-                            'starts_at' => $template->starts_at,
-                            'ends_at' => $template->ends_at,
-                            'mode' => $template->mode,
-                            'assigned_by' => $actor->id,
-                        ]);
-                    }
-                    $touched[$person->id][] = $date;
-                }
+            foreach ($dates === [] ? [] : $people as $person) {
+                $this->cellWriter->write($actor, $person->id, $dates, $template);
+                $touched[$person->id] = $dates;
             }
 
             ($this->recordActivity)('shifts.assigned', $actor, $actor, after: [
@@ -81,7 +64,7 @@ final class AssignShifts
         $start = Carbon::parse($from);
         $end = Carbon::parse($to);
         if ($end->lt($start) || $start->diffInDays($end) > 366) {
-            throw new BusinessRuleViolation('Rango de fechas inválido (máximo un año).', 'invalid_range');
+            throw new BusinessRuleViolation('Elegí un rango de hasta un año, con la fecha de fin igual o posterior al inicio.', 'invalid_range');
         }
 
         $dates = [];

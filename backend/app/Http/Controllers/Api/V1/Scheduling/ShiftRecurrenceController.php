@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1\Scheduling;
 
-use App\Domain\Identity\Enums\Permission;
 use App\Domain\Scheduling\Actions\CreateShiftRecurrences;
 use App\Domain\Scheduling\Actions\DeleteShiftRecurrence;
 use App\Domain\Scheduling\Actions\EndShiftRecurrence;
@@ -11,9 +10,11 @@ use App\Domain\Scheduling\Models\ShiftTemplate;
 use App\Domain\Scheduling\Support\RecurrenceGeneration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Scheduling\EndShiftRecurrenceRequest;
+use App\Http\Requests\Scheduling\ShiftRecurrenceListRequest;
 use App\Http\Requests\Scheduling\StoreShiftRecurrenceRequest;
 use App\Http\Resources\ShiftRecurrenceResource;
 use App\Http\Responses\ApiResponse;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,13 +26,10 @@ class ShiftRecurrenceController extends Controller
 {
     private const SKIPPED_IN_RESPONSE = 20;
 
-    public function index(Request $request): JsonResponse
+    public function index(ShiftRecurrenceListRequest $request): JsonResponse
     {
-        Gate::authorize(Permission::ShiftsManage->value);
-        $request->validate(['user_id' => ['sometimes', 'integer']]);
-
         $recurrences = ShiftRecurrence::query()->with(['user', 'template'])
-            ->when($request->filled('user_id'), fn ($query) => $query->where('user_id', $request->integer('user_id')))
+            ->when($request->userId() !== null, fn (Builder $query) => $query->where('user_id', $request->userId()))
             ->orderByDesc('id')->get();
 
         return ApiResponse::ok(ShiftRecurrenceResource::collection($recurrences)->resolve($request));

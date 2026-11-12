@@ -4,7 +4,7 @@ import { readStoredJson, writeStoredJson } from '@/lib/storage'
 import { defaultTaskFilters, type TaskFilters } from './types'
 
 /** Where the filters are used: the project "Tareas" tab, "Mis tareas" or "Todas las tareas". Each remembers its own. */
-export type TaskFilterScope = 'project' | 'mine' | 'all'
+type TaskFilterScope = 'project' | 'mine' | 'all'
 
 export function taskFiltersStorageKey(scope: TaskFilterScope, userId: number): string {
   return `newdesk:task-filters:${scope}:${userId}`
@@ -17,7 +17,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /** Stored JSON is untrusted: keep each field only when it has the right type, defaults otherwise. */
-export function parseStoredTaskFilters(stored: unknown): TaskFilters {
+function parseStoredTaskFilters(stored: unknown): TaskFilters {
   if (!isRecord(stored)) return { ...defaultTaskFilters }
   const statusIds = stored.status_ids
   return {

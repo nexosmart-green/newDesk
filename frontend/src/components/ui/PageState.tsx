@@ -1,5 +1,5 @@
 import { CircleAlert, Lock, RotateCw } from 'lucide-react'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { ApiError } from '@/lib/api'
 import { errorTextOf, MODULE_DISABLED } from '@/lib/errorText'
 import { Button } from './Button'
@@ -12,6 +12,8 @@ interface PageStateProps {
   error: unknown
   /** Which skeleton to show while loading (what the content will look like). */
   shape?: Shape
+  /** A skeleton of its own (a panel, a small list…) instead of one of the shapes. */
+  skeleton?: ReactNode
   /** Offers "Reintentar" on errors that may go away (network, server). */
   onRetry?: () => void
 }
@@ -24,8 +26,8 @@ const skeletons: Record<Shape, () => ReactElement> = {
 }
 
 /** Loading / error placeholder shared by pages that fetch a resource or a list. */
-export function PageState({ isPending, error, shape = 'list', onRetry }: PageStateProps) {
-  if (isPending) return skeletons[shape]()
+export function PageState({ isPending, error, shape = 'list', skeleton, onRetry }: PageStateProps) {
+  if (isPending) return skeleton ?? skeletons[shape]()
   if (!error) return null
   if (error instanceof ApiError && error.code === MODULE_DISABLED) return <ModuleDisabledState />
 
@@ -48,7 +50,7 @@ export function PageState({ isPending, error, shape = 'list', onRetry }: PageSta
 }
 
 /** A 403 `module_disabled`: not an error the person can fix, so it reads as an empty state. */
-export function ModuleDisabledState() {
+function ModuleDisabledState() {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl border border-border bg-surface px-6 py-10 text-center">
       <span className="grid size-12 place-items-center rounded-full bg-surface-2 text-muted">

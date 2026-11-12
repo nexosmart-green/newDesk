@@ -26,3 +26,10 @@ it('reports hours per project and period with sold, consumed, % and per person (
 it('is only for projects.manage', function () {
     $this->actingAs(userWithRole(adminUser()))->getJson('/api/v1/reports/hours')->assertForbidden();
 });
+
+it('puts a backwards period under «Hasta» so the form can show it next to the field', function () {
+    $this->actingAs(adminUser())->getJson('/api/v1/reports/hours?from=2026-11-10&to=2026-11-01')
+        ->assertUnprocessable()
+        ->assertJsonPath('data.code', 'invalid_range')
+        ->assertJsonPath('errors.to.0', '«Hasta» (01/11/2026) no puede ser anterior a «Desde» (10/11/2026). Revisá las fechas del período.');
+});

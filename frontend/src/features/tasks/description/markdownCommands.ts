@@ -13,7 +13,7 @@ function replaceRange(state: EditorState, text: string, selectFrom: number, sele
 }
 
 /** `**x**`: wraps the selection, or inserts a placeholder selected so typing replaces it. */
-export function wrapSelection(state: EditorState, before: string, after: string, placeholder: string): EditorState {
+function wrapSelection(state: EditorState, before: string, after: string, placeholder: string): EditorState {
   const selected = state.value.slice(state.start, state.end)
   const inner = selected || placeholder
   return replaceRange(state, `${before}${inner}${after}`, before.length, before.length + inner.length)

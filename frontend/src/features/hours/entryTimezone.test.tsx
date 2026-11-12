@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey } from '@/lib/queryKeys'
 import { ManualTimeForm } from '@/features/tasks/ManualTimeForm'
 import * as timerApi from '@/features/timer/timerApi'
 import { buildTimeEntry } from '@/test/fixtures'

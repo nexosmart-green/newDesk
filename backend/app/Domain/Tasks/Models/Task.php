@@ -200,12 +200,7 @@ class Task extends Model
             $query->select($query->qualifyColumn('*'));
         }
 
-        $sum = DB::table('time_entries')
-            ->whereColumn('time_entries.task_id', $query->qualifyColumn('id'))
-            ->whereNull('time_entries.deleted_at')
-            ->selectRaw('COALESCE(SUM('.TimeEntry::elapsedSecondsExpression()->getValue(DB::connection()->getQueryGrammar()).'), 0)');
-
-        return $query->selectSub($sum, 'logged_seconds');
+        return $query->selectSub(TimeEntry::elapsedSecondsSubquery('task_id', $query->qualifyColumn('id')), 'logged_seconds');
     }
 
     /** Tasks of the projects the viewer may see: every project with `projects.manage`, otherwise theirs. */

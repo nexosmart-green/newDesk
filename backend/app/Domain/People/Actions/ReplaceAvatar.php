@@ -22,7 +22,7 @@ final class ReplaceAvatar
     {
         if (! $this->processor->supports((string) $picture->getMimeType())) {
             throw new BusinessRuleViolation(
-                'Formato no soportado. Subí JPG, PNG o WebP (en iPhone, elegí "Más compatible" en Cámara → Formatos).',
+                'Ese formato no sirve para la foto. Subí JPG, PNG o WebP (en iPhone, elegí "Más compatible" en Cámara → Formatos).',
                 'avatar_format',
             );
         }

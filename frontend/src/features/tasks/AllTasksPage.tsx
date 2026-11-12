@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { emptyDirectoryFilters } from '@/features/people/types'
@@ -55,7 +56,7 @@ export function AllTasksPage() {
       {!tasks.data ? (
         <PageState isPending={tasks.isPending} error={tasks.error} shape="list" onRetry={() => void tasks.refetch()} />
       ) : (
-        <div className={`space-y-4 transition-opacity ${tasks.isPlaceholderData ? 'opacity-60' : ''}`}>
+        <StaleContent stale={tasks.isPlaceholderData} className="space-y-4">
           <TaskList
             tasks={tasks.data.data}
             userId={userId}
@@ -63,7 +64,7 @@ export function AllTasksPage() {
             empty={<TasksEmptyState filters={filters} onReset={() => changeFilters({ ...defaultTaskFilters })} />}
           />
           <Pagination meta={tasks.data.meta} onPageChange={setPage} />
-        </div>
+        </StaleContent>
       )}
     </section>
   )

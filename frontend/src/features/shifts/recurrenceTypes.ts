@@ -24,7 +24,7 @@ export interface ShiftRecurrenceInput {
   skip_holidays: boolean
 }
 
-export interface SkippedDay {
+interface SkippedDay {
   date: string
   reason: 'holiday' | 'taken'
 }

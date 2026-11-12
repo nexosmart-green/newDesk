@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Tasks\Events\TaskAssigned;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\Tasks\Support\ResolveProjectMembers;
 use Illuminate\Support\Facades\DB;
 
 /**

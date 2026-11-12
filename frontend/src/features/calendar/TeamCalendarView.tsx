@@ -1,10 +1,11 @@
 import { CalendarPlus } from 'lucide-react'
 import { Link } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
 import { SHIFTS_PERMISSION } from '@/features/shifts/types'
-import type { Week } from '@/features/timesheet/week'
-import { WeekNav } from '@/features/timesheet/WeekNav'
+import type { Week } from '@/lib/week'
+import { WeekNav } from '@/components/ui/WeekNav'
 import { todayIn } from '@/lib/timezone'
 import { TeamTodayBoard, TeamTodaySkeleton } from './TeamTodayBoard'
 import { TeamWeekGrid } from './TeamWeekGrid'
@@ -27,10 +28,8 @@ export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCale
     <div className="space-y-6">
       {today.data ? (
         <TeamTodayBoard calendar={today.data} />
-      ) : today.isPending ? (
-        <TeamTodaySkeleton />
       ) : (
-        <PageState isPending={false} error={today.error} onRetry={() => void today.refetch()} />
+        <PageState isPending={today.isPending} error={today.error} skeleton={<TeamTodaySkeleton />} onRetry={() => void today.refetch()} />
       )}
 
       <section aria-labelledby="team-week-title" className="space-y-3">
@@ -43,7 +42,7 @@ export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCale
         {!weekCalendar.data ? (
           <PageState isPending={weekCalendar.isPending} error={weekCalendar.error} shape="table" onRetry={() => void weekCalendar.refetch()} />
         ) : (
-          <>
+          <StaleContent stale={weekCalendar.isPlaceholderData} className="space-y-3">
             {nobodyWorks && (
               <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-4 py-3 text-sm">
                 <span className="min-w-0 flex-1 text-muted">Nadie del equipo tiene turnos esta semana.</span>
@@ -60,7 +59,7 @@ export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCale
             )}
             <TeamWeekGrid calendar={weekCalendar.data} today={todayIn(weekCalendar.data.timezone)} />
             <p className="text-xs text-muted">Horarios en {weekCalendar.data.timezone}. Las licencias se suman cuando esté el módulo.</p>
-          </>
+          </StaleContent>
         )}
       </section>
     </div>

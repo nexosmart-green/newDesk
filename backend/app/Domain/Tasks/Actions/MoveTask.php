@@ -2,7 +2,6 @@
 
 namespace App\Domain\Tasks\Actions;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
@@ -28,7 +27,7 @@ final class MoveTask
     public function __invoke(User $actor, Task $task, Project $destination): array
     {
         if ($task->project_id === $destination->id) {
-            throw new BusinessRuleViolation("{$task->code} ya está en {$destination->name}.", 'same_project');
+            throw new BusinessRuleViolation("{$task->code} ya está en {$destination->name}. Elegí otro proyecto de destino.", 'same_project');
         }
 
         return DB::transaction(function () use ($actor, $task, $destination) {
@@ -39,7 +38,7 @@ final class MoveTask
             $task = Task::query()->forCompany($task->company_id)->lockForUpdate()->findOrFail($task->id);
 
             if ($to->status->isClosed()) {
-                throw new BusinessRuleViolation("{$to->name} está {$to->status->label()}: no admite tareas.", 'project_closed');
+                throw new BusinessRuleViolation("{$to->name} está {$to->status->label()}: no admite tareas. Elegí otro proyecto de destino o reabrilo.", 'project_closed');
             }
 
             $seconds = ($this->transferHours)($task, $from, $to);
@@ -83,7 +82,7 @@ final class MoveTask
     /** @return list<string> names removed because they are not active members of the destination */
     private function keepOnlyDestinationMembers(Task $task, Project $destination): array
     {
-        $memberIds = $destination->members()->where('users.status', UserStatus::Active)->pluck('users.id')->all();
+        $memberIds = $destination->members()->active()->pluck('users.id')->all();
         $leaving = $task->assignees()->whereKeyNot($memberIds)->get();
 
         if ($leaving->isNotEmpty()) {

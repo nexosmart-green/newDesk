@@ -3,9 +3,10 @@
 namespace App\Http\Requests\TimeTracking;
 
 use App\Domain\Identity\Enums\Permission;
+use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Domain\Shared\Support\DateRange;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -47,7 +48,7 @@ class TimeEntryHistoryRequest extends FormRequest
             'to.required' => 'Elegí la fecha hasta.',
             'to.date_format' => 'La fecha hasta tiene que ser AAAA-MM-DD.',
             'to.after_or_equal' => 'La fecha hasta no puede ser anterior a la fecha desde.',
-            'user_id.exists' => 'Esa persona no existe.',
+            'user_id.exists' => 'Esa persona ya no está en la empresa. Elegí otra.',
             'search.max' => 'La búsqueda puede tener hasta 100 caracteres.',
         ];
     }
@@ -60,9 +61,10 @@ class TimeEntryHistoryRequest extends FormRequest
                 return;
             }
 
-            $days = Carbon::parse($this->input('from'))->diffInDays(Carbon::parse($this->input('to'))) + 1;
-            if ($days > self::MAX_RANGE_DAYS) {
-                $validator->errors()->add('to', 'El rango puede ser de hasta '.self::MAX_RANGE_DAYS.' días. Acortalo o exportá por partes.');
+            try {
+                DateRange::of($this->string('from')->value(), $this->string('to')->value(), self::MAX_RANGE_DAYS);
+            } catch (BusinessRuleViolation $e) {
+                $validator->errors()->add('to', $e->getMessage());
             }
         }];
     }

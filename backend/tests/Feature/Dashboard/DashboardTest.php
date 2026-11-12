@@ -117,6 +117,24 @@ it('lists bags at 80 % or more, most consumed first, only for who allocates hour
     $this->actingAs($dev)->getJson('/api/v1/me/dashboard')->assertJsonPath('data.bags_running_out', null);
 });
 
+it('uses one definition of "por agotarse" in Inicio and the project list: company threshold, running timers count', function () {
+    $admin = adminUser();
+    $dev = userWithRole($admin);
+    $admin->company->forceFill(['settings' => ['hour_alert_thresholds' => [60, 100]]])->save();
+    ['project' => $running, 'task' => $runningTask] = bagProject($admin, [$dev], 0, 'run');
+    ['project' => $atThreshold] = bagProject($admin, [], 0, 'thr');
+    ['project' => $below] = bagProject($admin, [], 0, 'low');
+    setConsumed($running, 10, 5);      // 50 % closed + 1 h running = 60 %
+    setConsumed($atThreshold, 10, 6);  // 60 %
+    setConsumed($below, 10, 5);        // 50 %
+    logEntry($dev, $runningTask, now()->subHour(), null);
+
+    $dashboard = collect($this->actingAs($admin)->getJson('/api/v1/me/dashboard')->json('data.bags_running_out'))->pluck('id')->sort()->values()->all();
+    $list = collect($this->actingAs($admin)->getJson('/api/v1/projects?running_out=1')->json('data'))->pluck('id')->sort()->values()->all();
+
+    expect($dashboard)->toBe([$running->id, $atThreshold->id])->and($list)->toBe($dashboard);
+});
+
 it('omits the blocks of modules the role does not have', function () {
     $admin = adminUser();
     $dev = userWithRole($admin);

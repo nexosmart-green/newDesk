@@ -2,7 +2,6 @@
 
 namespace App\Domain\TimeTracking\Actions;
 
-use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
@@ -14,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * RF-05.04: load or extend (or correct, with negative seconds) a project's bag. Reason is mandatory.
  * Lifts the block immediately; timers already cut are NOT resumed (R-3).
+ * Who may do it is ProjectPolicy::allocateHours (checked by the web controller and the MCP tool).
  */
 final class AllocateHours
 {
@@ -24,9 +24,6 @@ final class AllocateHours
 
     public function __invoke(User $actor, Project $project, int $seconds, string $reason, ?string $reference = null): HourAllocation
     {
-        if (! $actor->hasPermission(Permission::HoursAllocate)) {
-            throw new BusinessRuleViolation('Tu rol no tiene permiso para cargar horas.', 'cannot_allocate', 403);
-        }
         if (! $project->type->hasHourCap()) {
             throw new BusinessRuleViolation("{$project->name} es interno: no tiene bolsa de horas.", 'project_without_bag');
         }

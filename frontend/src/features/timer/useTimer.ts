@@ -4,6 +4,8 @@ import { toast } from '@/components/ui/toast/toastStore'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { formatDuration } from '@/lib/duration'
 import { toastTextOf } from '@/lib/errorText'
+import { dashboardKey, hoursKey, projectsKey, taskKey, tasksKey, timesheetKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import {
   completeEntryComment,
   correctTimeEntry,
@@ -22,7 +24,7 @@ export { timerKey }
  * Everything a time entry can move: the header, project bags, the hours tab, Mi semana and its
  * history, the tasks' logged hours (lists + detail "Horas") and the Panel's week.
  */
-const timeDependentKeys = [timerKey, ['hours'], ['timesheet'], ['projects'], ['tasks'], ['dashboard']] as const
+const timeDependentKeys = [timerKey, hoursKey, timesheetKey, projectsKey, tasksKey, dashboardKey] as const
 
 export const TIMER_POLL_MS = 30_000
 
@@ -51,12 +53,15 @@ export function useTimerTabSync() {
   )
 }
 
-/** After any time mutation: refresh dependent data here and tell the other tabs. */
+/**
+ * After any time mutation: tell the other tabs and refresh dependent data in the background. Resolves once
+ * `now` (what the current screen shows) is fresh; nothing else waits.
+ */
 export function useTimeDataChanged() {
   const queryClient = useQueryClient()
-  return async () => {
+  return (now: readonly (readonly unknown[])[] = []) => {
     broadcastTimerChanged()
-    await Promise.all(timeDependentKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })))
+    return refreshQueries(queryClient, { now, later: timeDependentKeys })
   }
 }
 
@@ -106,7 +111,8 @@ export function useCompleteEntryComment() {
     // The comment dialog shows refusals inline (it stays open to fix the text).
     meta: { successMessage: 'Comentario guardado.', silentError: true },
     mutationFn: ({ entryId, comment }: { entryId: number; comment: string }) => completeEntryComment(entryId, comment),
-    onSuccess: changed,
+    // The pending-comments banner reads the timer state.
+    onSuccess: () => changed([timerKey]),
   })
 }
 
@@ -116,7 +122,8 @@ export function useLogManualTime(taskCode: string) {
     // The form explains rule refusals itself (bag empty, outside the window) with the way out.
     meta: { successMessage: 'Horas cargadas.', silentError: true },
     mutationFn: (input: ManualEntryInput) => logManualTime(taskCode, input),
-    onSuccess: changed,
+    // The form sits on the task's "Horas" tab: its list and total.
+    onSuccess: () => changed([taskKey(taskCode)]),
   })
 }
 
@@ -125,7 +132,8 @@ export function useCorrectTimeEntry() {
   return useMutation({
     meta: { successMessage: 'Registro corregido.' },
     mutationFn: ({ entryId, input }: { entryId: number; input: CorrectEntryInput }) => correctTimeEntry(entryId, input),
-    onSuccess: changed,
+    // Corrected and deleted from the project's hours tab.
+    onSuccess: () => changed([hoursKey]),
   })
 }
 
@@ -135,7 +143,7 @@ export function useDeleteTimeEntry() {
     mutationFn: (entryId: number) => deleteTimeEntry(entryId),
     onSuccess: (message) => {
       toast.success(message ?? 'Registro borrado.')
-      return changed()
+      return changed([hoursKey])
     },
   })
 }

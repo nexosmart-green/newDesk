@@ -36,7 +36,7 @@ export interface NavGroup {
  * Feature modules register their top-level entries here. Visibility is a UI hint only;
  * the backend policies decide (RNF-05).
  */
-export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
+export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
   // Module switches (per role) first; then the finer permission inside the module.
   const hasProjects = useHasModule(MODULES.projects)
   const hasTime = useHasModule(MODULES.time)

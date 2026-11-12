@@ -32,7 +32,7 @@ class TwoFactorChallengeController extends Controller
             if (! $this->sessionLogin->registerFailedCode($request)) {
                 return ApiResponse::error('Demasiados códigos incorrectos. Volvé a ingresar tu contraseña.', 401);
             }
-            throw ValidationException::withMessages(['code' => 'El código no es válido.']);
+            throw ValidationException::withMessages(['code' => 'El código no coincide. Usá el que muestra ahora tu app de autenticación (cambia cada 30 segundos).']);
         }
 
         $this->sessionLogin->complete($request, $pending['user'], $pending['remember']);

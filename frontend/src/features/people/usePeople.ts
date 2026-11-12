@@ -1,25 +1,15 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  addRate,
-  deactivatePerson,
-  fetchPeople,
-  fetchPerson,
-  fetchRates,
-  reactivatePerson,
-  updatePerson,
-} from './peopleApi'
 import { toast } from '@/components/ui/toast/toastStore'
+import { peopleKey, peopleListsKey, personKey, personRatesKey, projectsKey } from '@/lib/queryKeys'
+import { allExcept, refreshQueries } from '@/lib/refreshQueries'
+import { addRate, deactivatePerson, fetchPeople, fetchPerson, fetchRates, reactivatePerson, updatePerson } from './peopleApi'
 import type { AddRateInput, DirectoryFilters, PersonProfile, UpdateEmployeeInput } from './types'
-
-export const peopleKey = ['people'] as const
-const personKey = (id: number) => [...peopleKey, 'detail', id] as const
-const ratesKey = (id: number) => [...peopleKey, 'rates', id] as const
 
 /** `enabled: false` for roles without the people module (selectors that would 403). */
 export function usePeople(filters: DirectoryFilters, enabled = true) {
   return useQuery({
     enabled,
-    queryKey: [...peopleKey, 'list', filters],
+    queryKey: [...peopleListsKey, filters],
     queryFn: () => fetchPeople(filters),
     placeholderData: keepPreviousData,
   })
@@ -29,15 +19,16 @@ export function usePerson(id: number) {
   return useQuery({ queryKey: personKey(id), queryFn: () => fetchPerson(id) })
 }
 
+/**
+ * A full profile answer is written to the person's page at once (`now` waits for it otherwise); the
+ * directory and the projects' member lists (people cards) follow in the background.
+ */
 function useStorePerson(id: number) {
   const queryClient = useQueryClient()
-  return async (profile?: PersonProfile) => {
-    if (profile) queryClient.setQueryData(personKey(id), profile)
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: peopleKey }),
-      // Members lists embed people cards.
-      queryClient.invalidateQueries({ queryKey: ['projects'] }),
-    ])
+  return (profile?: PersonProfile) => {
+    if (!profile) return refreshQueries(queryClient, { now: [personKey(id)], later: [peopleKey, projectsKey] })
+    queryClient.setQueryData(personKey(id), profile)
+    return refreshQueries(queryClient, { later: [allExcept(peopleKey, personKey(id)), projectsKey] })
   }
 }
 
@@ -62,14 +53,14 @@ export function useSetPersonActive(id: number) {
 }
 
 export function useRates(personId: number) {
-  return useQuery({ queryKey: ratesKey(personId), queryFn: () => fetchRates(personId) })
+  return useQuery({ queryKey: personRatesKey(personId), queryFn: () => fetchRates(personId) })
 }
 
 export function useAddRate(personId: number) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: AddRateInput) => addRate(personId, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ratesKey(personId) }),
+    onSuccess: () => refreshQueries(queryClient, { now: [personRatesKey(personId)] }),
     meta: { successMessage: 'Tarifa registrada.' },
   })
 }

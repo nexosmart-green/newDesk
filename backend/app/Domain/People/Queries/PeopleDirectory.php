@@ -2,7 +2,6 @@
 
 namespace App\Domain\People\Queries;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,7 +23,7 @@ final class PeopleDirectory
         return User::query()
             ->where('company_id', $companyId)
             ->with(['profile.jobTitle', 'profile.area'])
-            ->when(! ($filters['include_inactive'] ?? false), fn (Builder $query) => $query->where('status', UserStatus::Active))
+            ->when(! ($filters['include_inactive'] ?? false), fn (Builder $query) => $query->active())
             ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where(fn (Builder $inner) => $inner
                 ->where('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")

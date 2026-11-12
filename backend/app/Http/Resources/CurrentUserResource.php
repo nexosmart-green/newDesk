@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Domain\Identity\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin User
  */
-class CurrentUserResource extends JsonResource
+class CurrentUserResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
@@ -35,11 +34,5 @@ class CurrentUserResource extends JsonResource
                 'timezone' => $this->company->timezone,
             ],
         ];
-    }
-
-    /** @return array<string, mixed> */
-    public function with(Request $request): array
-    {
-        return ['message' => null, 'errors' => null];
     }
 }

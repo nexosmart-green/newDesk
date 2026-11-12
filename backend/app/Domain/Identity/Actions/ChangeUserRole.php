@@ -50,6 +50,6 @@ final class ChangeUserRole
 
     private function isLastActiveMember(Role $role, User $user): bool
     {
-        return ! $role->users()->where('status', 'active')->whereKeyNot($user->id)->lockForUpdate()->exists();
+        return ! $role->users()->active()->whereKeyNot($user->id)->lockForUpdate()->exists();
     }
 }

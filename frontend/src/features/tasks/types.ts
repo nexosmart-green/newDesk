@@ -3,7 +3,7 @@ import type { EntrySource, TimeEntry } from '@/features/timer/types'
 import type { TimedPage } from '@/lib/api'
 
 /** RF-04.03: what the rules read from a configurable status. Closed ones are hidden by default. */
-export type StatusKind = 'open' | 'blocked' | 'closed'
+type StatusKind = 'open' | 'blocked' | 'closed'
 
 export interface TaskStatus {
   id: number
@@ -28,7 +28,7 @@ export function isTaskPriority(value: unknown): value is TaskPriority {
   return typeof value === 'string' && (taskPriorities as string[]).includes(value)
 }
 
-export interface TaskAssignee {
+interface TaskAssignee {
   id: number
   full_name: string
   avatar: AvatarUrls | null
@@ -144,7 +144,7 @@ export interface SaveTaskInput {
   assignee_ids: number[]
 }
 
-export interface TimerError {
+interface TimerError {
   code: string
   message: string
   project_id?: number

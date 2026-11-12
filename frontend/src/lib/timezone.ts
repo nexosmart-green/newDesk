@@ -2,7 +2,7 @@
  * Wall-clock parts of an instant in an IANA timezone, via Intl (no date library). The backend reads manual
  * dates/times in the person's PROFILE timezone, which may differ from the browser's.
  */
-export interface ZonedParts {
+interface ZonedParts {
   /** `YYYY-MM-DD` */
   date: string
   /** `HH:mm` (24 h) */

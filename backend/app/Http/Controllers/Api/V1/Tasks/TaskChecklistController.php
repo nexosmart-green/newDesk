@@ -9,6 +9,7 @@ use App\Domain\Tasks\Actions\UpdateChecklistItem;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskChecklistItem;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tasks\ReorderChecklistRequest;
 use App\Http\Requests\Tasks\SaveChecklistItemRequest;
 use App\Http\Resources\TaskChecklistItemResource;
 use App\Http\Responses\ApiResponse;
@@ -44,21 +45,9 @@ class TaskChecklistController extends Controller
         return ApiResponse::ok(message: 'Subtarea borrada.');
     }
 
-    public function reorder(Request $request, Task $task, ReorderChecklist $reorder): JsonResponse
+    public function reorder(ReorderChecklistRequest $request, Task $task, ReorderChecklist $reorder): JsonResponse
     {
-        Gate::authorize('update', $task);
-        $request->validate(
-            ['ids' => ['present', 'array', 'max:'.TaskChecklistItem::MAX_PER_TASK], 'ids.*' => ['integer', 'distinct']],
-            [
-                'ids.present' => 'Mandá el orden de las subtareas.',
-                'ids.array' => 'Mandá el orden de las subtareas.',
-                'ids.max' => 'Una tarea tiene como máximo '.TaskChecklistItem::MAX_PER_TASK.' subtareas.',
-                'ids.*.integer' => 'El orden tiene un valor que no es una subtarea.',
-                'ids.*.distinct' => 'Una subtarea aparece dos veces en el orden.',
-            ],
-        );
-
-        $items = $reorder($task, array_map('intval', $request->input('ids')));
+        $items = $reorder($task, $request->orderedIds());
 
         return ApiResponse::ok(TaskChecklistItemResource::collection($items), 'Orden actualizado.');
     }

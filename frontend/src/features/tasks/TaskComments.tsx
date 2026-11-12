@@ -3,7 +3,6 @@ import { MarkdownView } from '@/components/ui/Markdown'
 import { PageState } from '@/components/ui/PageState'
 import { formatDateTime } from '@/lib/dates'
 import { CommentComposer } from './comments/CommentComposer'
-import type { Mentionable } from './mentions'
 import type { TaskComment } from './types'
 import { useTaskComments } from './useTasks'
 
@@ -11,7 +10,6 @@ interface TaskCommentsProps {
   code: string
   /** Pasted images are stored in the task's project. */
   projectId: number | undefined
-  members: Mentionable[]
 }
 
 function CommentItem({ comment }: { comment: TaskComment }) {
@@ -32,7 +30,7 @@ function CommentItem({ comment }: { comment: TaskComment }) {
 }
 
 /** RF-04.06: comments in markdown with @mentions (the backend notifies the mentioned people). */
-export function TaskComments({ code, projectId, members }: TaskCommentsProps) {
+export function TaskComments({ code, projectId }: TaskCommentsProps) {
   const comments = useTaskComments(code)
 
   return (
@@ -54,7 +52,7 @@ export function TaskComments({ code, projectId, members }: TaskCommentsProps) {
           ))}
         </ul>
       )}
-      <CommentComposer code={code} projectId={projectId} members={members} />
+      <CommentComposer code={code} projectId={projectId} />
     </section>
   )
 }

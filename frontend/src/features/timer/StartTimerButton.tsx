@@ -1,14 +1,18 @@
+import { useQuery } from '@tanstack/react-query'
 import { Play, Square } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { MODULES, useHasModule } from '@/features/auth/modules'
 import { ApiError } from '@/lib/api'
+import { timerKey } from '@/lib/queryKeys'
 import { CommentDialog } from './CommentDialog'
 import { RequestExtensionButton } from './RequestExtensionButton'
 import { StopTimerDialog } from './StopTimerDialog'
+import { fetchTimer } from './timerApi'
 import { isProvisional } from './timerOptimistic'
 import { TimerBlockedNotice } from './TimerBlockedNotice'
-import { timerRule } from './types'
+import { timerRule, type TimerState } from './types'
 import { useStartTimer, useTimerState } from './useTimer'
 
 interface StartTimerButtonProps {
@@ -18,6 +22,25 @@ interface StartTimerButtonProps {
 }
 
 const sameCode = (left: string, right: string) => left.toLowerCase() === right.toLowerCase()
+
+/** Only what ▶/■ needs: the poll every 30 s changes the elapsed time, which must not re-render every row. */
+const runningOf = ({ active }: TimerState) =>
+  active ? { id: active.id, code: active.task.code, provisional: isProvisional(active) } : null
+
+/**
+ * Reads the timer the header polls (no poll of its own: one per row would multiply the requests), through
+ * `select`: structural sharing keeps the result identical between polls, so the row doesn't re-render.
+ */
+function useRunningTimer() {
+  const enabled = useHasModule(MODULES.time)
+  return useQuery({ enabled, queryKey: timerKey, queryFn: fetchTimer, select: runningOf }).data ?? null
+}
+
+/** The full entry (with its ticking time) only while the stop dialog is open. */
+function StopRunningDialog({ onClose }: { onClose: () => void }) {
+  const active = useTimerState().data?.active
+  return active ? <StopTimerDialog entry={active} onClose={onClose} /> : null
+}
 const asksForComment = (error: ApiError) =>
   error.code === timerRule.previousCommentRequired || error.code === timerRule.commentRequired || error.hasFieldErrors()
 
@@ -27,14 +50,13 @@ const asksForComment = (error: ApiError) =>
  * A project already out of hours says so before the click, with the extension request at hand.
  */
 export function StartTimerButton({ task, compact = false }: StartTimerButtonProps) {
-  const timer = useTimerState()
+  const active = useRunningTimer()
   const start = useStartTimer()
   const noHoursId = useId()
   const [askingPrevious, setAskingPrevious] = useState(false)
   const [blocked, setBlocked] = useState<ApiError | null>(null)
   const [stoppingId, setStoppingId] = useState<number | null>(null)
-  const active = timer.data?.active ?? null
-  const runningHere = active !== null && sameCode(active.task.code, task.code)
+  const runningHere = active !== null && sameCode(active.code, task.code)
   const projectId = task.project?.id
 
   function begin(previousComment?: string) {
@@ -85,7 +107,7 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
         title={label}
         loading={start.isPending}
         // A just-started (optimistic) entry can't be stopped until the server confirms it.
-        disabled={runningHere && active !== null && isProvisional(active)}
+        disabled={runningHere && active.provisional}
         onClick={handleClick}
         className={compact ? 'min-w-11 px-0' : undefined}
       >
@@ -103,7 +125,7 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
         >
           <p>
             Tenés el cronómetro corriendo en{' '}
-            {active ? <span className="font-mono uppercase">{active.task.code}</span> : 'otra tarea'}. Contá qué
+            {active ? <span className="font-mono uppercase">{active.code}</span> : 'otra tarea'}. Contá qué
             hiciste ahí para detenerlo y arrancar <span className="font-mono uppercase">{task.code}</span>.
           </p>
         </CommentDialog>
@@ -118,9 +140,7 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
           </DialogFooter>
         </Dialog>
       )}
-      {active && stoppingId === active.id && (
-        <StopTimerDialog entry={active} onClose={() => setStoppingId(null)} />
-      )}
+      {active && stoppingId === active.id && <StopRunningDialog onClose={() => setStoppingId(null)} />}
     </>
   )
 }

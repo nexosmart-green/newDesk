@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\StartTimer;
+use App\Domain\TimeTracking\Support\TimeTrackingLimits;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -26,7 +27,7 @@ class StartTimerTool extends NewDeskTool
 
     protected function run(Request $request, User $user): Response
     {
-        $input = $request->validate(['code' => 'required|string', 'comment' => 'nullable|string|max:5000']);
+        $input = $request->validate(['code' => 'required|string', 'comment' => 'nullable|string|max:'.TimeTrackingLimits::ENTRY_COMMENT_MAX]);
         $task = $this->lookup->task($user, $input['code']);
 
         $entry = ($this->startTimer)($user, $task, $input['comment'] ?? null);

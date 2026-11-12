@@ -7,6 +7,7 @@ use App\Domain\Tasks\Actions\StoreTaskAttachment;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskAttachment;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tasks\StoreTaskAttachmentRequest;
 use App\Http\Resources\TaskAttachmentResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -29,19 +30,8 @@ class TaskAttachmentController extends Controller
         return ApiResponse::ok(TaskAttachmentResource::collection($attachments));
     }
 
-    public function store(Request $request, Task $task, StoreTaskAttachment $store): JsonResponse
+    public function store(StoreTaskAttachmentRequest $request, Task $task, StoreTaskAttachment $store): JsonResponse
     {
-        Gate::authorize('update', $task);
-        $request->validate(
-            ['file' => ['required', 'file', 'max:'.TaskAttachment::MAX_KILOBYTES]],
-            [
-                'file.required' => 'Elegí un archivo para subir.',
-                'file.file' => 'Elegí un archivo para subir.',
-                'file.uploaded' => 'El archivo no se pudo subir: puede pesar hasta 20 MB.',
-                'file.max' => 'El archivo puede pesar hasta 20 MB.',
-            ],
-        );
-
         $attachment = $store($request->user(), $task, $request->file('file'));
 
         return ApiResponse::ok(TaskAttachmentResource::make($attachment->load('uploader')), "Adjuntaste {$attachment->original_name}.", 201);

@@ -8,11 +8,11 @@ use App\Domain\People\Actions\SaveCatalogItem;
 use App\Domain\People\Enums\CatalogType;
 use App\Domain\People\Models\CatalogItem;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\People\SaveCatalogItemRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 /**
  * RF-01.08 administrable catalogs: /catalogs/{job-titles|areas|employment-types|skills}.
@@ -25,23 +25,16 @@ class CatalogController extends Controller
         return ApiResponse::ok($catalog->modelClass()::query()->orderBy('name')->get(['id', 'name']));
     }
 
-    public function store(Request $request, CatalogType $catalog, SaveCatalogItem $save): JsonResponse
+    public function store(SaveCatalogItemRequest $request, CatalogType $catalog, SaveCatalogItem $save): JsonResponse
     {
-        Gate::authorize(Permission::UsersManage->value);
-        $request->validate(['name' => $this->nameRules($request, $catalog)]);
-
-        $item = $save($request->user(), $catalog, $request->string('name')->trim()->value());
+        $item = $save($request->user(), $catalog, $request->itemName());
 
         return ApiResponse::ok($item->only('id', 'name'), 'Agregado.', 201);
     }
 
-    public function update(Request $request, CatalogType $catalog, int $item, SaveCatalogItem $save): JsonResponse
+    public function update(SaveCatalogItemRequest $request, CatalogType $catalog, int $item, SaveCatalogItem $save): JsonResponse
     {
-        Gate::authorize(Permission::UsersManage->value);
-        $model = $this->find($catalog, $item);
-        $request->validate(['name' => $this->nameRules($request, $catalog, $model->id)]);
-
-        $model = $save($request->user(), $catalog, $request->string('name')->trim()->value(), $model);
+        $model = $save($request->user(), $catalog, $request->itemName(), $this->find($catalog, $item));
 
         return ApiResponse::ok($model->only('id', 'name'), 'Actualizado.');
     }
@@ -58,14 +51,5 @@ class CatalogController extends Controller
     private function find(CatalogType $catalog, int $id): CatalogItem
     {
         return $catalog->modelClass()::query()->findOrFail($id);
-    }
-
-    /** @return list<mixed> */
-    private function nameRules(Request $request, CatalogType $catalog, ?int $ignoreId = null): array
-    {
-        return [
-            'required', 'string', 'max:80',
-            Rule::unique($catalog->table(), 'name')->where('company_id', $request->user()->company_id)->ignore($ignoreId),
-        ];
     }
 }

@@ -2,7 +2,7 @@ import type { HourBag } from '@/features/hours/types'
 
 export const REPORTS_PERMISSION = 'projects.manage'
 
-export interface ReportProjectRef {
+interface ReportProjectRef {
   id: number
   name: string
   prefix: string
@@ -25,7 +25,7 @@ interface HoursFigures {
 }
 
 /** RF-10.01 one row of `GET /reports/hours`. */
-export interface HoursReportRow extends HoursFigures {
+interface HoursReportRow extends HoursFigures {
   project: ReportProjectRef
   client: string | null
   type: string

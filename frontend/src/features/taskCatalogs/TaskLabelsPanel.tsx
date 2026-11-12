@@ -21,10 +21,8 @@ export function TaskLabelsPanel() {
 
   return (
     <CatalogPanel title="Etiquetas de tarea" description="Marcas libres con color. Una tarea puede tener varias.">
-      {labels.isPending ? (
-        <ListSkeleton rows={3} label="Cargando etiquetas…" />
-      ) : labels.isError ? (
-        <PageState isPending={false} error={labels.error} onRetry={() => void labels.refetch()} />
+      {!labels.data ? (
+        <PageState isPending={labels.isPending} error={labels.error} skeleton={<ListSkeleton rows={3} label="Cargando etiquetas…" />} onRetry={() => void labels.refetch()} />
       ) : labels.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay etiquetas. Creá la primera abajo.</p>
       ) : (

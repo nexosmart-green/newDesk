@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
 import { HoursBar } from '@/features/hours/HoursBar'
 import { downloadCsv, toCsv } from '@/lib/csv'
@@ -45,9 +46,11 @@ export function HoursReportPage() {
       {!report.data ? (
         <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />
       ) : report.data.projects.length === 0 ? (
-        <p className="text-sm text-muted">No hay proyectos activos ni horas en el período.</p>
+        <StaleContent stale={report.isPlaceholderData}>
+          <p className="text-sm text-muted">No hay proyectos activos ni horas en el período.</p>
+        </StaleContent>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+        <StaleContent stale={report.isPlaceholderData} className="overflow-x-auto rounded-lg border border-border bg-surface">
           <table className="w-full min-w-[48rem] text-sm">
             <caption className="sr-only">Horas por proyecto</caption>
             <thead className="border-b border-border text-left text-muted">
@@ -79,7 +82,7 @@ export function HoursReportPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </StaleContent>
       )}
     </section>
   )

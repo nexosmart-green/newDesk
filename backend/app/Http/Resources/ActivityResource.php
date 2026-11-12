@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Domain\Shared\Activity\ActivityLog;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin ActivityLog
  */
-class ActivityResource extends JsonResource
+class ActivityResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

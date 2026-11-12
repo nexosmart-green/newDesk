@@ -5,14 +5,13 @@ namespace App\Http\Resources;
 use App\Domain\Identity\Models\User;
 use App\Domain\People\Models\EmployeeProfile;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Full profile (RF-01.04). Sensitive fields only for the person themself and `users.manage` (RNF-06).
  *
  * @mixin User
  */
-class ProfileResource extends JsonResource
+class ProfileResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

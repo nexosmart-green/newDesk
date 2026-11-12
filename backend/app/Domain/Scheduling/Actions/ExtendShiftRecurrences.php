@@ -3,7 +3,6 @@
 namespace App\Domain\Scheduling\Actions;
 
 use App\Domain\Companies\Models\Company;
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Scheduling\Models\ShiftRecurrence;
 use App\Domain\Scheduling\Support\RecurringShiftGenerator;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +29,7 @@ final class ExtendShiftRecurrences
             ShiftRecurrence::query()->forCompany($company->id)
                 ->where(fn ($query) => $query->whereNull('ends_on')->orWhere('ends_on', '>=', $today))
                 ->where(fn ($query) => $query->whereNull('generated_until')->orWhere('generated_until', '<', $horizon))
-                ->whereHas('user', fn ($query) => $query->where('status', UserStatus::Active))
+                ->whereHas('user', fn ($query) => $query->active())
                 ->whereHas('template', fn ($query) => $query->whereNull('deleted_at'))
                 ->select('id')
                 ->chunkById(200, function ($recurrences) use ($today, &$created) {

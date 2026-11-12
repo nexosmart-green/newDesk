@@ -10,34 +10,35 @@ import {
   setShiftCells,
   updateShiftTemplate,
 } from './shiftsApi'
+import { calendarKey, shiftGridKey, shiftsKey, shiftTemplatesKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import type { AssignShiftsInput, ShiftCellsInput, ShiftTemplateInput } from './types'
-
-const shiftsKey = ['shifts'] as const
-const templatesKey = [...shiftsKey, 'templates'] as const
 
 export const daysLabel = (count: number) => (count === 1 ? '1 día' : `${count} días`)
 const assigned = (cells: number) => toast.success(`Listo: ${daysLabel(cells)} actualizados.`)
 
 export function useShiftTemplates() {
-  return useQuery({ queryKey: templatesKey, queryFn: fetchShiftTemplates, staleTime: 5 * 60_000 })
+  return useQuery({ queryKey: shiftTemplatesKey, queryFn: fetchShiftTemplates, staleTime: 5 * 60_000 })
 }
 
 export function useShiftGrid(from: string, to: string) {
   return useQuery({
-    queryKey: [...shiftsKey, 'grid', from, to],
+    queryKey: shiftGridKey(from, to),
     queryFn: () => fetchShiftGrid(from, to),
     placeholderData: keepPreviousData,
   })
 }
 
-/** A shift change moves the team grid and everyone's calendar. */
+/** A shift change moves the weekly grid (awaited: the dialog closes onto it) and everyone's calendar (behind). */
 function useRefreshShifts() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: shiftsKey }),
-      queryClient.invalidateQueries({ queryKey: ['calendar'] }),
-    ])
+  return () => refreshQueries(queryClient, { now: [[...shiftsKey, 'grid']], later: [shiftsKey, calendarKey] })
+}
+
+/** A template change shows in the templates panel (awaited); grids and calendars label shifts with it (behind). */
+function useRefreshTemplates() {
+  const queryClient = useQueryClient()
+  return () => refreshQueries(queryClient, { now: [shiftTemplatesKey], later: [shiftsKey, calendarKey] })
 }
 
 export function useAssignShifts() {
@@ -75,7 +76,7 @@ export function useCopyPreviousWeek() {
 }
 
 export function useSaveShiftTemplate() {
-  const refresh = useRefreshShifts()
+  const refresh = useRefreshTemplates()
   return useMutation({
     mutationFn: ({ id, input }: { id: number | null; input: ShiftTemplateInput }) =>
       id === null ? createShiftTemplate(input) : updateShiftTemplate(id, input),
@@ -85,7 +86,7 @@ export function useSaveShiftTemplate() {
 }
 
 export function useDeleteShiftTemplate() {
-  const refresh = useRefreshShifts()
+  const refresh = useRefreshTemplates()
   return useMutation({
     mutationFn: (id: number) => deleteShiftTemplate(id),
     meta: { successMessage: 'Plantilla borrada.' },

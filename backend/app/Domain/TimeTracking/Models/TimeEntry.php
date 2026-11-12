@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -103,9 +104,33 @@ class TimeEntry extends Model
         return DB::raw("COALESCE({$table}.seconds, GREATEST(0, TIMESTAMPDIFF(SECOND, {$table}.started_at, '{$instant}')))");
     }
 
+    /**
+     * Correlated `COALESCE(SUM(elapsed), 0)` of the entries whose `$foreignKey` matches `$outerColumn`,
+     * for lists that bring worked time in the same query (tasks: `task_id` = `tasks.id`).
+     */
+    public static function elapsedSecondsSubquery(string $foreignKey, string $outerColumn): QueryBuilder
+    {
+        return DB::table('time_entries')
+            ->whereColumn("time_entries.{$foreignKey}", $outerColumn)
+            ->whereNull('time_entries.deleted_at')
+            ->selectRaw('COALESCE(SUM('.self::elapsedSecondsExpression()->getValue(DB::connection()->getQueryGrammar()).'), 0)');
+    }
+
+    /** Same as elapsedSecondsSubquery() but only running timers ("Consumidas" adds them to the stored total). */
+    public static function runningSecondsSubquery(string $foreignKey, string $outerColumn): QueryBuilder
+    {
+        return self::elapsedSecondsSubquery($foreignKey, $outerColumn)->whereNull('time_entries.ended_at');
+    }
+
     public function scopeRunning(Builder $query): Builder
     {
         return $query->whereNull($query->qualifyColumn('ended_at'));
+    }
+
+    /** The person's running timer (at most one, RF-05.03), without relying on the session's company scope. */
+    public function scopeRunningFor(Builder $query, User $user): Builder
+    {
+        return $query->forCompany($user->company_id)->where($query->qualifyColumn('user_id'), $user->id)->running();
     }
 
     public static function isValidComment(?string $comment): bool

@@ -19,7 +19,7 @@ class EnsureUserIsActive
         $user = $request->user();
 
         if ($user instanceof User && ! $user->isActive()) {
-            return ApiResponse::error('Tu usuario está inactivo.', 401);
+            return ApiResponse::error('Tu usuario está dado de baja. Si creés que es un error, hablá con un administrador.', 401);
         }
 
         return $next($request);

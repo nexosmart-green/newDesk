@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan, useProfileTimeZone } from '@/features/auth/useAuth'
 import { formatEntryRange } from '@/features/hours/entryTimes'
 import { useProjects } from '@/features/projects/useProjects'
@@ -76,20 +77,20 @@ export function TimeHistoryTab() {
       {!ready ? null : !history.data ? (
         <PageState isPending={history.isPending} error={history.error} shape="table" onRetry={() => void history.refetch()} />
       ) : history.data.data.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
+        <StaleContent stale={history.isPlaceholderData} className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
           <SearchX aria-hidden="true" className="size-6 text-muted" />
           <p className="font-medium">No hay horas en ese rango</p>
           <p className="max-w-sm text-sm text-muted">Probá con un rango más amplio o sacá el proyecto o la búsqueda.</p>
-        </div>
+        </StaleContent>
       ) : (
-        <div className={`space-y-4 transition-opacity ${history.isPlaceholderData ? 'opacity-60' : ''}`}>
+        <StaleContent stale={history.isPlaceholderData} className="space-y-4">
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Registros de horas">
             {history.data.data.map((entry) => (
               <HistoryRow key={entry.id} entry={entry} timeZone={timeZone} showPerson={canPickPerson && filters.user_id !== null} />
             ))}
           </ul>
           <Pagination meta={history.data.meta} onPageChange={setPage} />
-        </div>
+        </StaleContent>
       )}
     </div>
   )

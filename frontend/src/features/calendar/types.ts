@@ -1,6 +1,6 @@
 import type { Holiday, Shift } from '@/features/shifts/types'
 
-export interface DueTask {
+interface DueTask {
   code: string
   title: string
   due_on: string

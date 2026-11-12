@@ -12,6 +12,9 @@ use Illuminate\Support\Carbon;
  */
 final class Timesheet
 {
+    /** Longest range "Mi semana" and my_timesheet may ask for. */
+    public const MAX_DAYS = 62;
+
     /** @return array{timezone: string, total_seconds: int, days: list<array{date: string, total_seconds: int, entries: list<array<string, mixed>>}>} */
     public function __invoke(User $user, string $fromDate, string $toDate): array
     {

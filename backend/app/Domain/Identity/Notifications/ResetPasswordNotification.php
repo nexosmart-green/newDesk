@@ -30,7 +30,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Restablecer tu contraseña')
             ->greeting("Hola {$notifiable->first_name}")
-            ->line('Recibimos un pedido para restablecer tu contraseña.')
+            ->line('Alguien pidió restablecer la contraseña de tu cuenta de newDesk.')
             ->action('Elegir una contraseña nueva', $url)
             ->line('Si no lo pediste, ignorá este correo.');
     }

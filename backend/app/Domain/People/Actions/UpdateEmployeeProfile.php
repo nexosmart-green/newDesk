@@ -54,13 +54,13 @@ final class UpdateEmployeeProfile
 
         while ($currentId !== null) {
             if (isset($visited[$currentId])) {
-                throw new BusinessRuleViolation('Esa relación "reporta a" generaría un ciclo.', 'reports_to_cycle');
+                throw new BusinessRuleViolation('No puede reportar a esa persona: esa persona ya le reporta, directa o indirectamente. Elegí otra.', 'reports_to_cycle');
             }
             $visited[$currentId] = true;
 
             $current = User::query()->where('company_id', $user->company_id)->with('profile')->find($currentId);
             if ($current === null) {
-                throw new BusinessRuleViolation('La persona superior no existe en la empresa.', 'reports_to_invalid');
+                throw new BusinessRuleViolation('La persona a la que reporta ya no está en la empresa. Recargá y elegí otra.', 'reports_to_invalid');
             }
             $currentId = $current->profile?->reports_to_user_id;
         }

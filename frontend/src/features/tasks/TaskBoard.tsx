@@ -7,7 +7,7 @@ import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours } from './TaskBits'
 import { TaskStatusSelect } from './TaskStatusSelect'
 import { isAssignedTo, type Task, type TaskFilters, type TaskStatus } from './types'
-import { useUpdateTaskStatus } from './useTasks'
+import { useSavingStatusCodes, useUpdateTaskStatus } from './useTaskStatusChange'
 
 interface TaskBoardProps {
   tasks: Task[]
@@ -16,14 +16,18 @@ interface TaskBoardProps {
   userId: number | undefined
 }
 
-/** RF-04.04 "Tablero": drag a card to another column, or use its status select (keyboard). */
+/**
+ * RF-04.04 "Tablero": drag a card to another column, or use its status select (keyboard). The card moves at
+ * once (optimistic) and goes back with a toast if the server refuses; only that card waits meanwhile.
+ */
 export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) {
   const updateStatus = useUpdateTaskStatus()
+  const saving = useSavingStatusCodes()
   const [dropTarget, setDropTarget] = useState<number | null>(null)
 
   function move(code: string, statusId: number) {
     const task = tasks.find((candidate) => candidate.code === code)
-    if (task && task.status?.id !== statusId) updateStatus.mutate({ code, statusId })
+    if (task && task.status?.id !== statusId && !saving.includes(code.toLowerCase())) updateStatus.mutate({ code, statusId })
   }
 
   function handleDrop(event: DragEvent, statusId: number) {
@@ -56,38 +60,42 @@ export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) 
                 <span className="text-xs font-normal text-muted">{cards.length}</span>
               </h3>
               <ul className="space-y-2">
-                {cards.map((task) => (
-                  <li
-                    key={task.id}
-                    draggable
-                    onDragStart={(event) => event.dataTransfer.setData('text/plain', task.code)}
-                    className={`cursor-grab space-y-2 rounded border border-border bg-surface p-2 ${task.is_overdue ? overdueRowClassName : ''}`}
-                  >
-                    <Link to={`/tareas/${task.code}`} className="block text-sm hover:underline">
-                      <span className="mr-1 font-mono text-xs uppercase text-muted">{task.code}</span>
-                      {task.title}
-                    </Link>
-                    <LabelChips labels={task.labels} />
-                    <div className="flex flex-wrap items-center gap-2">
-                      <CategoryTag category={task.category} />
-                      <TaskAssigneeNames task={task} />
-                      <TaskDue task={task} />
-                      <TaskLoggedHours task={task} />
-                      <TaskChecklistBadge task={task} />
-                      <TaskAttachmentsBadge task={task} />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <TaskStatusSelect
-                        code={task.code}
-                        statusId={task.status?.id}
-                        statuses={statuses}
-                        disabled={updateStatus.isPending}
-                        onChange={(statusId) => move(task.code, statusId)}
-                      />
-                      {isAssignedTo(task, userId) && <StartTimerButton task={task} compact />}
-                    </div>
-                  </li>
-                ))}
+                {cards.map((task) => {
+                  const busy = saving.includes(task.code.toLowerCase())
+                  return (
+                    <li
+                      key={task.id}
+                      aria-busy={busy || undefined}
+                      draggable={!busy}
+                      onDragStart={(event) => event.dataTransfer.setData('text/plain', task.code)}
+                      className={`cursor-grab space-y-2 rounded border border-border bg-surface p-2 ${task.is_overdue ? overdueRowClassName : ''}`}
+                    >
+                      <Link to={`/tareas/${task.code}`} className="block text-sm hover:underline">
+                        <span className="mr-1 font-mono text-xs uppercase text-muted">{task.code}</span>
+                        {task.title}
+                      </Link>
+                      <LabelChips labels={task.labels} />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CategoryTag category={task.category} />
+                        <TaskAssigneeNames task={task} />
+                        <TaskDue task={task} />
+                        <TaskLoggedHours task={task} />
+                        <TaskChecklistBadge task={task} />
+                        <TaskAttachmentsBadge task={task} />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TaskStatusSelect
+                          code={task.code}
+                          statusId={task.status?.id}
+                          statuses={statuses}
+                          disabled={busy}
+                          onChange={(statusId) => move(task.code, statusId)}
+                        />
+                        {isAssignedTo(task, userId) && <StartTimerButton task={task} compact />}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             </section>
           )

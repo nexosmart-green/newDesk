@@ -1,4 +1,4 @@
-import { parseLocalDate, toLocalDateString } from '@/features/timesheet/week'
+import { parseLocalDate, toLocalDateString } from '@/lib/week'
 import { zonedPartsOf } from '@/lib/timezone'
 import type { TeamCalendar, TeamDay, TeamPerson, TeamShift } from './teamCalendarTypes'
 
@@ -11,7 +11,7 @@ export interface PersonToday {
   shift: TeamShift | null
 }
 
-export interface TodaySummary {
+interface TodaySummary {
   date: string
   /** `HH:mm`, company-local */
   time: string

@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Api\V1\Tasks;
 
 use App\Domain\Projects\Models\Project;
 use App\Domain\Tasks\Actions\StoreTaskImage;
-use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskImage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Tasks\StoreTaskImageRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,21 +18,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class TaskImageController extends Controller
 {
-    private const MAX_KILOBYTES = 5120;
-
-    public function store(Request $request, Project $project, StoreTaskImage $storeImage): JsonResponse
+    public function store(StoreTaskImageRequest $request, Project $project, StoreTaskImage $storeImage): JsonResponse
     {
-        Gate::authorize('create', [Task::class, $project]);
-        $request->validate(
-            ['image' => ['required', 'file', 'max:'.self::MAX_KILOBYTES]],
-            [
-                'image.required' => 'Elegí una imagen para subir.',
-                'image.file' => 'Elegí una imagen para subir.',
-                'image.uploaded' => 'La imagen no se pudo subir: puede pesar hasta 5 MB.',
-                'image.max' => 'La imagen puede pesar hasta 5 MB.',
-            ],
-        );
-
         $image = $storeImage($request->user(), $project, $request->file('image'));
 
         return ApiResponse::ok(['url' => $image->url()], 'Imagen subida.', 201);

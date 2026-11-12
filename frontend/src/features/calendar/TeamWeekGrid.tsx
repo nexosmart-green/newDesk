@@ -1,6 +1,6 @@
 import { Avatar } from '@/components/ui/Avatar'
 import { workModeLabels } from '@/features/shifts/types'
-import { dayLabel } from '@/features/timesheet/week'
+import { dayLabel } from '@/lib/week'
 import type { TeamCalendar, TeamDay, TeamShift } from './teamCalendarTypes'
 import { WorkModeIcon } from './WorkModeIcon'
 

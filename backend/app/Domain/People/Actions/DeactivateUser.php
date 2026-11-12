@@ -33,7 +33,7 @@ final class DeactivateUser
         }
 
         DB::transaction(function () use ($actor, $user) {
-            if ($user->role->is_system && ! $user->role->users()->where('status', 'active')->whereKeyNot($user->id)->lockForUpdate()->exists()) {
+            if ($user->role->is_system && ! $user->role->users()->active()->whereKeyNot($user->id)->lockForUpdate()->exists()) {
                 throw new BusinessRuleViolation('No se puede dar de baja al último administrador.', 'last_admin');
             }
 

@@ -51,7 +51,7 @@ it('explains unknown or ambiguous items, hides other tasks and honors the projec
     expect($unknown['error'])->toBeTrue()->and($unknown['text'])->toContain('No encontré la subtarea «7»');
 
     $other = mcpResult(mcpCall($token, 'update_checklist', ['code' => $hidden->code, 'action' => 'add', 'item' => 'Intruso']));
-    expect($other['error'])->toBeTrue()->and($other['text'])->toContain('No encontrado');
+    expect($other['error'])->toBeTrue()->and($other['text'])->toContain('No existe o no tenés acceso');
 
     revokeModule($admin, DefaultRoles::COLLABORATOR, Permission::ModuleProjects);
     $disabled = mcpResult(mcpCall($token, 'update_checklist', ['code' => $task->code, 'action' => 'add', 'item' => 'Otra']));

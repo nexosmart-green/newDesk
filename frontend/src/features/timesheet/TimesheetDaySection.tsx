@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { formatDuration } from '@/lib/duration'
 import { zonedPartsOf } from '@/lib/timezone'
 import type { TimesheetDay, TimesheetEntry } from './types'
-import { dayLabel } from './week'
+import { dayLabel } from '@/lib/week'
 
 interface TimesheetDaySectionProps {
   day: TimesheetDay

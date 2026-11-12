@@ -118,9 +118,9 @@ it('saves category and labels on tasks, rejects other companies values and logs 
         ->assertJsonPath('data.labels.1.name', 'Entrega');
 
     $this->actingAs($dev)->putJson("/api/v1/tasks/{$task->id}", ['label_ids' => [$foreignLabel->id]])
-        ->assertUnprocessable()->assertJsonPath('errors', ['label_ids.0' => ['Alguna de las etiquetas elegidas no existe.']]);
+        ->assertUnprocessable()->assertJsonPath('errors', ['label_ids.0' => ['Una de las etiquetas elegidas ya no existe. Recargá y elegí de nuevo.']]);
     $this->actingAs($dev)->putJson("/api/v1/tasks/{$task->id}", ['category_id' => $foreignCategory->id])
-        ->assertUnprocessable()->assertJsonPath('errors.category_id.0', 'La categoría elegida no existe.');
+        ->assertUnprocessable()->assertJsonPath('errors.category_id.0', 'La categoría elegida ya no existe. Recargá y elegí otra.');
 
     $this->actingAs($dev)->putJson("/api/v1/tasks/{$task->id}", ['category_id' => $category->id, 'label_ids' => [$delivery->id]])
         ->assertOk()->assertJsonPath('data.category.name', 'Backend-API')->assertJsonCount(1, 'data.labels');

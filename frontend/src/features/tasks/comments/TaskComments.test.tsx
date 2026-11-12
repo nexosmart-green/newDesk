@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { page } from '@/test/fixtures'
+import * as projectsApi from '@/features/projects/projectsApi'
+import { buildPerson, buildProject, page } from '@/test/fixtures'
 import { renderAt } from '@/test/renderWithProviders'
 import { TaskComments } from '../TaskComments'
 import * as tasksApi from '../tasksApi'
@@ -21,7 +22,8 @@ const comment: TaskComment = {
 
 function renderComments(comments: TaskComment[] = [comment]) {
   vi.spyOn(tasksApi, 'fetchTaskComments').mockResolvedValue(page(comments))
-  return renderAt(<TaskComments code="bhn-60" projectId={9} members={members} />)
+  vi.spyOn(projectsApi, 'fetchProject').mockResolvedValue(buildProject({ members: members.map((member) => buildPerson(member)) }))
+  return renderAt(<TaskComments code="bhn-60" projectId={9} />)
 }
 
 describe('TaskComments', () => {

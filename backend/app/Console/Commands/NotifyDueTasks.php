@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Domain\Companies\Models\Company;
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\Notifications\Notifications\TasksDueNotification;
 use App\Domain\Tasks\Models\Task;
@@ -40,7 +39,7 @@ class NotifyDueTasks extends Command
     {
         $tasks = Task::query()->forCompany($company->id)->open()
             ->whereNotNull('due_on')->where('due_on', '<=', $tomorrow)
-            ->with(['assignees' => fn ($q) => $q->where('users.status', UserStatus::Active)])
+            ->with(['assignees' => fn ($q) => $q->active()])
             ->get();
 
         $byPerson = [];

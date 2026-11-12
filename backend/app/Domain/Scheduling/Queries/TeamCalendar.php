@@ -3,7 +3,6 @@
 namespace App\Domain\Scheduling\Queries;
 
 use App\Domain\Identity\Enums\Permission;
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\People\Actions\ReplaceAvatar;
 use App\Domain\People\Models\EmployeeProfile;
@@ -28,7 +27,7 @@ final class TeamCalendar
      */
     public function audienceOf(User $viewer): Collection
     {
-        $people = User::query()->where('company_id', $viewer->company_id)->where('status', UserStatus::Active)
+        $people = User::query()->where('company_id', $viewer->company_id)->active()
             ->with('profile.jobTitle')->orderBy('first_name')->orderBy('last_name');
 
         if ($viewer->hasPermission(Permission::ShiftsManage)) {

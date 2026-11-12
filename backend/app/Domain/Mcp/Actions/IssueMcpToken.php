@@ -23,7 +23,7 @@ final class IssueMcpToken
     public function __invoke(User $user, string $name, ?int $expiresInDays): NewAccessToken
     {
         if (! $user->hasPermission(Permission::McpUse)) {
-            throw new BusinessRuleViolation('Tu rol no tiene habilitado el uso de MCP.', 'mcp_not_allowed', 403);
+            throw new BusinessRuleViolation('Tu rol no tiene habilitado el uso de MCP. Pedile a un administrador que lo habilite.', 'mcp_not_allowed', 403);
         }
         if ($expiresInDays !== null && ! in_array($expiresInDays, self::EXPIRY_OPTIONS, true)) {
             throw new BusinessRuleViolation('El vencimiento puede ser 30, 90 o 365 días, o sin vencimiento.', 'invalid_expiry');

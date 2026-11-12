@@ -30,7 +30,7 @@ class Client extends Model
 
     protected $fillable = ['company_id', 'status', ...self::EDITABLE];
 
-    protected $attributes = ['status' => 'active'];
+    protected $attributes = ['status' => ClientStatus::Active->value];
 
     protected function casts(): array
     {

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { useCan, useCanAny } from '@/features/auth/useAuth'
@@ -56,24 +57,28 @@ export function ClientsPage() {
       </div>
       {!clients.data ? (
         <PageState isPending={clients.isPending} error={clients.error} onRetry={() => void clients.refetch()} />
-      ) : clients.data.data.length === 0 ? (
-        <p className="text-sm text-muted">No hay clientes que coincidan con la búsqueda.</p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Clientes">
-          {clients.data.data.map((client) => (
-            <li key={client.id}>
-              <Link to={`/clientes/${client.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3 hover:bg-bg">
-                <span className="flex-1 font-medium">{client.display_name}</span>
-                {client.status === 'inactive' && <Badge>Inactivo</Badge>}
-                <span className="text-sm text-muted">
-                  {client.projects_count ?? 0} {client.projects_count === 1 ? 'proyecto' : 'proyectos'}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <StaleContent stale={clients.isPlaceholderData} className="space-y-4">
+          {clients.data.data.length === 0 ? (
+            <p className="text-sm text-muted">No hay clientes que coincidan con la búsqueda.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Clientes">
+              {clients.data.data.map((client) => (
+                <li key={client.id}>
+                  <Link to={`/clientes/${client.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3 hover:bg-bg">
+                    <span className="flex-1 font-medium">{client.display_name}</span>
+                    {client.status === 'inactive' && <Badge>Inactivo</Badge>}
+                    <span className="text-sm text-muted">
+                      {client.projects_count ?? 0} {client.projects_count === 1 ? 'proyecto' : 'proyectos'}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Pagination meta={clients.data.meta} onPageChange={(page) => change({ page })} />
+        </StaleContent>
       )}
-      {clients.data && <Pagination meta={clients.data.meta} onPageChange={(page) => change({ page })} />}
       {creating && (
         <ClientFormDialog client={null} onClose={() => setCreating(false)} onSaved={(client) => navigate(`/clientes/${client.id}`)} />
       )}

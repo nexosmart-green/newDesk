@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Domain\Identity\Actions\AcceptInvitation;
 use App\Domain\Identity\Models\UserInvitation;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\AcceptInvitationRequest;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rules\Password;
 
 /**
  * Public endpoints reached from the invitation e-mail (RF-01.01).
@@ -33,10 +32,8 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function accept(Request $request, string $token, AcceptInvitation $accept): JsonResponse
+    public function accept(AcceptInvitationRequest $request, string $token, AcceptInvitation $accept): JsonResponse
     {
-        $request->validate(['password' => ['required', 'confirmed', Password::defaults()]]);
-
         $user = $accept($token, $request->string('password'));
 
         return ApiResponse::ok(['email' => $user->email], 'Listo. Ya podés ingresar con tu email y contraseña.');

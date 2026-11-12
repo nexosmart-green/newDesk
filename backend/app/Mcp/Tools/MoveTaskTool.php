@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
+use App\Domain\Shared\Support\Duration;
 use App\Domain\Tasks\Actions\MoveTask;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
@@ -35,9 +36,9 @@ class MoveTaskTool extends NewDeskTool
         $result = ($this->moveTask)($user, $task, $destination);
 
         return $this->json([
-            'moved' => McpPresenter::task($result['task']),
+            'moved' => McpPresenter::task($result['task'], $user),
             'previous_code' => $input['code'],
-            'hours_moved' => McpPresenter::hours($result['seconds_moved']),
+            'hours_moved' => Duration::humanize($result['seconds_moved']),
             'unassigned' => $result['unassigned'],
         ]);
     }

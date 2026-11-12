@@ -214,11 +214,11 @@ it('validates the rule with clear messages', function () {
     createRecurrence($admin, [], $template)->assertUnprocessable()
         ->assertJsonPath('errors.user_ids.0', 'Elegí al menos una persona.');
     createRecurrence($admin, [$admin->id, $gone->id], $template)->assertUnprocessable()
-        ->assertJsonPath('message', 'Alguna persona no existe o está dada de baja.');
+        ->assertJsonPath('message', 'Una de las personas elegidas está dada de baja. Recargá la página y elegí de nuevo.');
 
     $outsider = adminUser('otra@example.com');
     createRecurrence($admin, [$admin->id], recurrenceTemplate($outsider))->assertUnprocessable()
-        ->assertJsonPath('errors.shift_template_id.0', 'Esa plantilla no existe o fue borrada.');
+        ->assertJsonPath('errors.shift_template_id.0', 'Esa plantilla fue borrada. Elegí otra.');
     createRecurrence($admin, [$outsider->id], $template)->assertUnprocessable();
 
     expect(ShiftRecurrence::query()->withoutGlobalScopes()->count())->toBe(0);

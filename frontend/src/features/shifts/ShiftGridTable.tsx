@@ -1,4 +1,4 @@
-import { dayLabel } from '@/features/timesheet/week'
+import { dayLabel } from '@/lib/week'
 import { cellKey, type Cell } from './selection'
 import { shiftLabel, type Holiday, type Shift, type ShiftGrid } from './types'
 

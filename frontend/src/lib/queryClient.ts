@@ -2,8 +2,9 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
 import { ApiError } from './api'
 import { errorTextOf, isUnexpectedError } from './errorText'
+import { currentUserKey } from './queryKeys'
 
-export const TWO_FACTOR_SETUP_REQUIRED = 'two_factor_setup_required'
+const TWO_FACTOR_SETUP_REQUIRED = 'two_factor_setup_required'
 
 /**
  * Mutation feedback convention (one place, so screens don't each invent theirs):
@@ -30,7 +31,7 @@ export function createQueryClient({ retry = true }: CreateQueryClientOptions = {
       onError: (error, query) => {
         // A stale /me may still claim 2FA is fine; refetching it lets RequireAuth force the setup page.
         if (error instanceof ApiError && error.code === TWO_FACTOR_SETUP_REQUIRED) {
-          void client.invalidateQueries({ queryKey: ['me'] })
+          void client.invalidateQueries({ queryKey: currentUserKey })
           return
         }
         // First loads show their own error state; a failing background refresh would go unnoticed.

@@ -24,7 +24,7 @@ class SessionController extends Controller
         // Only active users can log in (RF-01.10); invited users have no password yet.
         $user = $this->sessionLogin->findActiveUserByCredentials($request->string('email'), $request->string('password'));
         if ($user === null) {
-            throw ValidationException::withMessages(['email' => 'Credenciales incorrectas.']);
+            throw ValidationException::withMessages(['email' => 'El email o la contraseña no coinciden. Revisalos o usá «¿Olvidaste tu contraseña?».']);
         }
 
         if ($user->hasTwoFactorEnabled()) {

@@ -4,14 +4,13 @@ namespace App\Http\Resources;
 
 use App\Domain\Tasks\Models\TaskChecklistItem;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Checklist line. Eager load `doneBy`.
  *
  * @mixin TaskChecklistItem
  */
-class TaskChecklistItemResource extends JsonResource
+class TaskChecklistItemResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

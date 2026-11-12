@@ -2,13 +2,12 @@
 
 namespace App\Domain\Scheduling\Actions;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Queries\ActiveCompanyPeople;
 use App\Domain\Scheduling\Events\ShiftsChanged;
-use App\Domain\Scheduling\Models\ShiftAssignment;
 use App\Domain\Scheduling\Models\ShiftTemplate;
+use App\Domain\Scheduling\Support\ShiftCellWriter;
 use App\Domain\Shared\Activity\RecordActivity;
-use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,41 +16,29 @@ use Illuminate\Support\Facades\DB;
  */
 final class SetShiftCells
 {
-    private const MAX_CELLS = 2000;
-
-    public function __construct(private readonly RecordActivity $recordActivity) {}
+    public function __construct(
+        private readonly RecordActivity $recordActivity,
+        private readonly ActiveCompanyPeople $activePeople,
+        private readonly ShiftCellWriter $cellWriter,
+    ) {}
 
     /** @param  list<array{user_id: int, date: string}>  $cells */
     public function __invoke(User $actor, array $cells, ?ShiftTemplate $template): int
     {
-        if (count($cells) > self::MAX_CELLS) {
-            throw new BusinessRuleViolation('Demasiadas celdas a la vez: hacelo por partes (máximo 2000).', 'too_many_cells');
-        }
+        $this->cellWriter->ensureWithinLimit(count($cells));
 
         $byUser = [];
         foreach ($cells as $cell) {
             $byUser[(int) $cell['user_id']][$cell['date']] = true;
         }
 
-        $active = User::query()->where('company_id', $actor->company_id)->where('status', UserStatus::Active)->whereKey(array_keys($byUser))->count();
-        if ($active !== count($byUser)) {
-            throw new BusinessRuleViolation('Alguna persona no existe o está dada de baja.', 'member_inactive');
-        }
+        $this->activePeople->resolveOrFail($actor->company_id, array_keys($byUser));
 
         $touched = DB::transaction(function () use ($actor, $byUser, $template) {
             $touched = [];
             foreach ($byUser as $userId => $dates) {
                 $dates = array_keys($dates);
-                ShiftAssignment::query()->forCompany($actor->company_id)->where('user_id', $userId)->whereIn('date', $dates)->delete();
-                foreach ($dates as $date) {
-                    if ($template !== null) {
-                        ShiftAssignment::query()->create([
-                            'company_id' => $actor->company_id, 'user_id' => $userId, 'date' => $date,
-                            'shift_template_id' => $template->id, 'starts_at' => $template->starts_at,
-                            'ends_at' => $template->ends_at, 'mode' => $template->mode, 'assigned_by' => $actor->id,
-                        ]);
-                    }
-                }
+                $this->cellWriter->write($actor, $userId, $dates, $template);
                 $touched[$userId] = $dates;
             }
 

@@ -13,10 +13,10 @@ import type {
 import { percentReporter } from './uploads/percentReporter'
 
 /** The board needs every card of the project at once; the backend caps it at 200. */
-export const TASKS_PER_PAGE = 200
+const TASKS_PER_PAGE = 200
 
 /** "Todas las tareas" pages through every visible project instead. */
-export const ALL_TASKS_PER_PAGE = 50
+const ALL_TASKS_PER_PAGE = 50
 
 function taskListParams(filters: TaskFilters, perPage = TASKS_PER_PAGE) {
   const { status_ids: statusIds, ...rest } = filters
@@ -84,7 +84,7 @@ export async function postTaskComment(code: string, comment: NewComment): Promis
   return dataOf(api.post<ApiEnvelope<TaskComment>>(`${taskPath(code)}/comments`, comment))
 }
 
-export interface MoveTaskResult {
+interface MoveTaskResult {
   task: Task
   seconds_moved: number
   /** People removed from the task because they are not members of the destination (their hours stay). */

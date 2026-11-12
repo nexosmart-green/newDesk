@@ -23,7 +23,7 @@ final class RevokeMcpToken
             && ($owner->is($actor) || $actor->hasPermission(Permission::McpManageTokens));
 
         if (! $allowed) {
-            throw new BusinessRuleViolation('No encontrado.', 'not_found', 404);
+            throw new BusinessRuleViolation('Ese token ya no existe: puede que ya lo hayas revocado. Recargá la lista.', 'not_found', 404);
         }
 
         ($this->recordActivity)('mcp.token_revoked', $owner, $actor, ['token' => $token->name]);

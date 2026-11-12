@@ -26,11 +26,7 @@ export function DashboardPage() {
         <p className="text-sm text-muted first-letter:uppercase">{longToday(timeZone)}</p>
       </header>
       {!data ? (
-        dashboard.isPending ? (
-          <DashboardSkeleton />
-        ) : (
-          <PageState isPending={false} error={dashboard.error} onRetry={() => void dashboard.refetch()} />
-        )
+        <PageState isPending={dashboard.isPending} error={dashboard.error} skeleton={<DashboardSkeleton />} onRetry={() => void dashboard.refetch()} />
       ) : !data.tasks && !data.projects && !data.week && !data.bags_running_out ? (
         <>
           <p className="text-muted">Elegí por dónde seguir.</p>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Companies;
 use App\Domain\Companies\Actions\ReplaceCompanyLogo;
 use App\Domain\Companies\Actions\UpdateCompanySettings;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Companies\ReplaceCompanyLogoRequest;
 use App\Http\Requests\Companies\UpdateCompanyRequest;
 use App\Http\Resources\CompanyResource;
 use App\Http\Responses\ApiResponse;
@@ -32,15 +33,9 @@ class CompanyController extends Controller
         return ApiResponse::ok(CompanyResource::make($company), 'Configuración guardada.');
     }
 
-    public function updateLogo(Request $request, ReplaceCompanyLogo $replaceLogo): JsonResponse
+    public function updateLogo(ReplaceCompanyLogoRequest $request, ReplaceCompanyLogo $replaceLogo): JsonResponse
     {
-        $company = $request->user()->company;
-        Gate::authorize('update', $company);
-
-        // No SVG: it can carry scripts.
-        $request->validate(['logo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048']]);
-
-        $company = $replaceLogo($request->user(), $company, $request->file('logo'));
+        $company = $replaceLogo($request->user(), $request->user()->company, $request->file('logo'));
 
         return ApiResponse::ok(CompanyResource::make($company), 'Logo actualizado.');
     }

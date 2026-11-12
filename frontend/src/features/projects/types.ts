@@ -77,7 +77,7 @@ export interface CreateProjectInput extends SaveProjectInput {
   member_ids: number[]
 }
 
-export type ActivitySource = 'web' | 'mcp' | 'system'
+type ActivitySource = 'web' | 'mcp' | 'system'
 
 export interface ActivityEntry {
   id: number

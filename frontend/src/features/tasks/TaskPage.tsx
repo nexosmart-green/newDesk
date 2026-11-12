@@ -1,16 +1,16 @@
 import { ArrowLeft, Clock } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCurrentUser, useProfileTimeZone } from '@/features/auth/useAuth'
-import { useProject } from '@/features/projects/useProjects'
 import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { ApiError } from '@/lib/api'
 import { formatInstant } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
+import { useTabParam } from '@/lib/useSearchParamPatch'
 import { TaskAttachmentsTab } from './attachments/TaskAttachmentsTab'
 import { TaskDue, TaskStatusLabel } from './TaskBits'
 import { TaskComments } from './TaskComments'
@@ -51,34 +51,17 @@ export function TaskPage() {
   return <TaskView task={task.data} />
 }
 
-/** The selected tab lives in `?tab=` so a link (or reload) lands on the same one. */
-function useTaskTab(tabs: TabItem<TaskTab>[]) {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const requested = searchParams.get('tab')
-  const selected = tabs.find((tab) => tab.id === requested)?.id ?? 'detalle'
-  const select = (tab: TaskTab) =>
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        if (tab === 'detalle') next.delete('tab')
-        else next.set('tab', tab)
-        return next
-      },
-      { replace: true },
-    )
-  return { selected, select }
-}
-
 function TaskView({ task }: { task: Task }) {
   const userId = useCurrentUser().data?.id
   const hasTime = useHasModule(MODULES.time)
-  const project = useProject(task.project?.id ?? 0)
-  const members = project.data?.members ?? []
   const mine = isAssignedTo(task, userId)
   const tabs = (hasTime ? allTabs : allTabs.filter((tab) => tab.id !== 'horas')).map((tab) =>
     tab.id === 'archivos' ? { ...tab, count: task.attachments_count } : tab,
   )
-  const { selected, select } = useTaskTab(tabs)
+  const { selected, select } = useTabParam(
+    tabs.map((tab) => tab.id),
+    'detalle',
+  )
 
   return (
     <section className="max-w-6xl space-y-5">
@@ -90,8 +73,8 @@ function TaskView({ task }: { task: Task }) {
       )}
       <TaskHeader task={task} showLogged={hasTime} timer={mine ? <StartTimerButton task={task} /> : null} />
       <Tabs label="Secciones de la tarea" tabs={tabs} selected={selected} onSelect={select}>
-        {selected === 'detalle' && <TaskDetailTab task={task} members={members} membersLoaded={Boolean(project.data)} />}
-        {selected === 'comentarios' && <TaskComments code={task.code} projectId={task.project?.id} members={members} />}
+        {selected === 'detalle' && <TaskDetailTab task={task} />}
+        {selected === 'comentarios' && <TaskComments code={task.code} projectId={task.project?.id} />}
         {selected === 'archivos' && <TaskAttachmentsTab code={task.code} />}
         {selected === 'horas' && <TaskHoursTab task={task} canLog={mine} />}
         {selected === 'historial' && <TaskHistoryTab code={task.code} />}

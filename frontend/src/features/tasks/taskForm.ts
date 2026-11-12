@@ -47,7 +47,7 @@ export function hasOptionalValues(values: TaskFormValues): boolean {
   return values.starts_on !== '' || values.due_on !== '' || values.estimate_hours.trim() !== ''
 }
 
-export function estimateSecondsOf(hours: string): number | null {
+function estimateSecondsOf(hours: string): number | null {
   const parsed = Number(hours.replace(',', '.'))
   return hours.trim() === '' || !Number.isFinite(parsed) || parsed < 0 ? null : Math.round(parsed * 3600)
 }

@@ -1,4 +1,4 @@
-import { SelectField } from '@/components/ui/SelectField'
+import { AsyncSelectField } from '@/components/ui/AsyncSelectField'
 import type { CatalogType } from '@/features/catalogs/types'
 import { useCatalog } from '@/features/catalogs/useCatalogs'
 
@@ -14,13 +14,19 @@ export function CatalogSelect({ label, catalog, value, error, onChange }: Catalo
   const items = useCatalog(catalog)
 
   return (
-    <SelectField label={label} value={value} error={error} onChange={(event) => onChange(event.target.value)}>
-      <option value="">{items.isPending ? 'Cargando…' : 'Sin asignar'}</option>
+    <AsyncSelectField
+      label={label}
+      loading={items.isPending}
+      emptyLabel="Sin asignar"
+      value={value}
+      error={error}
+      onChange={(event) => onChange(event.target.value)}
+    >
       {items.data?.map((item) => (
         <option key={item.id} value={item.id}>
           {item.name}
         </option>
       ))}
-    </SelectField>
+    </AsyncSelectField>
   )
 }

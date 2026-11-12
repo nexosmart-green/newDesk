@@ -1,6 +1,6 @@
 import type { TeamCalendar, TeamPerson, TeamShift } from '@/features/calendar/teamCalendarTypes'
 import type { ShiftRecurrence } from '@/features/shifts/recurrenceTypes'
-import { datesBetween } from '@/features/timesheet/week'
+import { datesBetween } from '@/lib/week'
 
 export function buildRecurrence(overrides: Partial<ShiftRecurrence> = {}): ShiftRecurrence {
   return {

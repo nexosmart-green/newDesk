@@ -29,15 +29,8 @@ export function CatalogList({ type }: { type: CatalogType }) {
       <h2 id={headingId} className="font-semibold">
         {labels.title}
       </h2>
-      {catalog.isPending ? (
-        <div role="status" className="space-y-3 py-1">
-          <span className="sr-only">Cargando…</span>
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-3/5" />
-        </div>
-      ) : catalog.isError ? (
-        <PageState isPending={false} error={catalog.error} onRetry={() => void catalog.refetch()} />
+      {!catalog.data ? (
+        <PageState isPending={catalog.isPending} error={catalog.error} skeleton={<CatalogSkeleton />} onRetry={() => void catalog.refetch()} />
       ) : catalog.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay valores.</p>
       ) : (
@@ -68,5 +61,16 @@ export function CatalogList({ type }: { type: CatalogType }) {
         {nameError && <p className="text-sm text-danger">{nameError}</p>}
       </form>
     </section>
+  )
+}
+
+function CatalogSkeleton() {
+  return (
+    <div role="status" className="space-y-3 py-1">
+      <span className="sr-only">Cargando…</span>
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-3/5" />
+    </div>
   )
 }

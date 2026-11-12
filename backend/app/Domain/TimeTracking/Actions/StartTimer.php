@@ -50,7 +50,7 @@ final class StartTimer
                 return DB::transaction(fn () => $this->start($user, $task, $previousComment, $active?->project_id));
             } catch (UniqueConstraintViolationException) {
                 // Another device won the race between our read and our insert.
-                return $this->activeEntry($user) ?? throw new BusinessRuleViolation('No se pudo iniciar el cronómetro. Probá de nuevo.', 'timer_busy', 409);
+                return $this->activeEntry($user) ?? throw new BusinessRuleViolation('Otro pedido de cronómetro estaba en curso. Esperá un segundo y tocá Iniciar de nuevo.', 'timer_busy', 409);
             }
         });
     }
@@ -64,7 +64,7 @@ final class StartTimer
         $task = Task::query()->forCompany($user->company_id)->with('status')->findOrFail($task->id);
         $this->rules->assertTrackable($projects[$task->project_id], $task);
 
-        $active = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->lockForUpdate()->first();
+        $active = TimeEntry::query()->runningFor($user)->lockForUpdate()->first();
         if ($active !== null) {
             $project = $projects[$active->project_id] ?? Project::query()->forCompany($user->company_id)->lockForUpdate()->findOrFail($active->project_id);
             ($this->closeEntry)($active, $project, now(), StopReason::Switch, $previousComment);
@@ -84,6 +84,6 @@ final class StartTimer
 
     private function activeEntry(User $user): ?TimeEntry
     {
-        return TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->first();
+        return TimeEntry::query()->runningFor($user)->first();
     }
 }

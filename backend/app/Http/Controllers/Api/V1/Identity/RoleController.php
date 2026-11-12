@@ -26,8 +26,7 @@ class RoleController extends Controller
     {
         Gate::authorize('viewAny', Role::class);
 
-        return RoleResource::collection(Role::query()->withCount('users')->orderBy('name')->get())
-            ->additional(['message' => null, 'errors' => null]);
+        return RoleResource::collection(Role::query()->withCount('users')->orderBy('name')->get());
     }
 
     public function permissions(): JsonResponse

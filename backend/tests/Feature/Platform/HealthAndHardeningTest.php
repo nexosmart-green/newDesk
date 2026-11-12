@@ -23,6 +23,6 @@ it('protects the error log with ERRORS_TOKEN', function () {
 });
 
 it('wraps api errors in the standard envelope', function () {
-    $this->getJson('/api/v1/me')->assertUnauthorized()->assertExactJson(['data' => null, 'message' => 'No autenticado.', 'errors' => null]);
-    $this->getJson('/api/v1/nope')->assertNotFound()->assertExactJson(['data' => null, 'message' => 'No encontrado.', 'errors' => null]);
+    $this->getJson('/api/v1/me')->assertUnauthorized()->assertExactJson(['data' => null, 'message' => 'Tu sesión se cerró. Ingresá de nuevo para seguir.', 'errors' => null]);
+    $this->getJson('/api/v1/nope')->assertNotFound()->assertExactJson(['data' => null, 'message' => 'No existe o no tenés acceso. Volvé al listado y elegilo de nuevo.', 'errors' => null]);
 });

@@ -35,7 +35,7 @@ export interface CreateTokenInput {
   expires_in_days: TokenExpiry
 }
 
-export interface ProjectMcpJson {
+interface ProjectMcpJson {
   mcpServers: Record<string, { type: string; url: string; headers: Record<string, string> }>
 }
 

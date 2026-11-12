@@ -1,10 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { currentUserKey } from '@/features/auth/useAuth'
-import { rolesKey } from '@/features/roles/useRoles'
+import { currentUserKey, rolesKey, usersKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import { changeUserRole, fetchUsers, inviteUser, resendInvitation } from './usersApi'
-import type { InviteUserInput, UserFilters } from './types'
-
-export const usersKey = ['users'] as const
+import type { Paginated } from '@/lib/api'
+import type { InviteUserInput, UserFilters, UserSummary } from './types'
 
 export function useUsers(filters: UserFilters) {
   return useQuery({
@@ -14,28 +13,28 @@ export function useUsers(filters: UserFilters) {
   })
 }
 
-function useInvalidateUsers() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: usersKey }),
-      // Roles show how many users they have.
-      queryClient.invalidateQueries({ queryKey: rolesKey }),
-    ])
-}
+
 
 export function useInviteUser() {
-  const invalidateUsers = useInvalidateUsers()
-  return useMutation({ mutationFn: (input: InviteUserInput) => inviteUser(input), onSuccess: invalidateUsers })
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: InviteUserInput) => inviteUser(input),
+    // The dialog closes onto the list with the invitation in it; role counts follow behind.
+    onSuccess: () => refreshQueries(queryClient, { now: [usersKey], later: [rolesKey] }),
+  })
 }
 
 export function useChangeUserRole() {
   const queryClient = useQueryClient()
-  const invalidateUsers = useInvalidateUsers()
   return useMutation({
     mutationFn: ({ userId, roleId }: { userId: number; roleId: number }) => changeUserRole(userId, roleId),
-    onSuccess: () =>
-      Promise.all([invalidateUsers(), queryClient.invalidateQueries({ queryKey: currentUserKey })]),
+    // The answer is the updated row: patched in every cached page. Role counts and my own permissions follow behind.
+    onSuccess: (user) => {
+      queryClient.setQueriesData<Paginated<UserSummary>>({ queryKey: usersKey }, (page) =>
+        page && { ...page, data: page.data.map((row) => (row.id === user.id ? user : row)) },
+      )
+      return refreshQueries(queryClient, { later: [rolesKey, currentUserKey] })
+    },
   })
 }
 

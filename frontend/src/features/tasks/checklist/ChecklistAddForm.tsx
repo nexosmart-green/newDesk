@@ -6,7 +6,7 @@ import { fieldErrorOf } from '@/lib/api'
 import { CHECKLIST_TEXT_MAX } from './ChecklistTextEditor'
 import { useAddChecklistItem } from './useChecklist'
 
-export const CHECKLIST_MAX_ITEMS = 100
+const CHECKLIST_MAX_ITEMS = 100
 
 interface ChecklistAddFormProps {
   code: string

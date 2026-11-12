@@ -98,25 +98,39 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*', 'mcp', 'mcp/*') || $request->expectsJson());
 
         // Every API error uses the `{ data, message, errors }` envelope.
-        $exceptions->render(function (Throwable $e, Request $request) {
+        // Fallback texts: what happened and what to do. Framework messages (English, technical) never reach the user.
+        $fallback = [
+            401 => 'Tu sesión se cerró. Ingresá de nuevo para seguir.',
+            403 => 'Tu rol no permite esta acción. Si la necesitás, pedile a un administrador que te dé el permiso.',
+            404 => 'No existe o no tenés acceso. Volvé al listado y elegilo de nuevo.',
+            413 => 'Lo que mandaste pesa demasiado. Probá con un archivo más liviano.',
+            422 => 'Revisá los campos marcados: hay datos que faltan o no son correctos.',
+            429 => 'Hiciste demasiados intentos seguidos. Esperá un minuto y probá de nuevo.',
+            '4xx' => 'No se pudo completar la acción. Recargá la página y probá de nuevo.',
+            500 => 'El servidor no pudo completar la acción. Probá de nuevo; si sigue, avisá a soporte.',
+        ];
+
+        $exceptions->render(function (Throwable $e, Request $request) use ($fallback) {
             if (! $request->is('api/*')) {
                 return null;
             }
 
             return match (true) {
-                $e instanceof ValidationException => ApiResponse::error('Los datos enviados no son válidos.', 422, $e->errors()),
-                $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, null, ['code' => $e->ruleCode, ...$e->context]),
-                $e instanceof AuthenticationException => ApiResponse::error('No autenticado.', 401),
+                $e instanceof ValidationException => ApiResponse::error($fallback[422], 422, $e->errors()),
+                $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, $e->errors(), ['code' => $e->ruleCode, ...$e->context]),
+                $e instanceof AuthenticationException => ApiResponse::error($fallback[401], 401),
                 // Policies may deny "as not found" (CA-03.03): never confirm a resource exists.
-                $e instanceof AuthorizationException && $e->status() === 404 => ApiResponse::error('No encontrado.', 404),
+                $e instanceof AuthorizationException && $e->status() === 404 => ApiResponse::error($fallback[404], 404),
                 // A policy may explain the denial (Response::deny('…')); Laravel wraps it in AccessDeniedHttpException.
                 $e instanceof AuthorizationException, $e instanceof AccessDeniedHttpException => ApiResponse::error(
-                    PolicyDenialMessage::of($e) ?? 'No tenés permiso para esta acción.',
+                    PolicyDenialMessage::of($e) ?? $fallback[403],
                     403,
+                    data: PolicyDenialMessage::codeOf($e) !== null ? ['code' => PolicyDenialMessage::codeOf($e)] : null,
                 ),
-                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error('No encontrado.', 404),
-                $e instanceof HttpException => ApiResponse::error($e->getStatusCode() === 429 ? 'Demasiados intentos. Probá en un rato.' : ($e->getMessage() ?: 'Error'), $e->getStatusCode()),
-                default => ApiResponse::error(config('app.debug') ? $e->getMessage() : 'Error interno del servidor.', 500),
+                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error($fallback[404], 404),
+                $e instanceof HttpException && $e->getStatusCode() < 500 => ApiResponse::error($fallback[$e->getStatusCode()] ?? $fallback['4xx'], $e->getStatusCode()),
+                $e instanceof HttpException => ApiResponse::error($fallback[500], $e->getStatusCode()),
+                default => ApiResponse::error(config('app.debug') ? $e->getMessage() : $fallback[500], 500),
             };
         });
     })->create();

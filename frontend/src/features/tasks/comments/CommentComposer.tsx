@@ -2,6 +2,7 @@ import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'rea
 import { Button } from '@/components/ui/Button'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { inputClassName } from '@/components/ui/TextField'
+import { useProjectMembers } from '@/features/projects/useProjects'
 import { ImageFileInput } from '../description/ImageFileInput'
 import { MarkdownToolbar } from '../description/MarkdownToolbar'
 import type { MarkdownCommand } from '../description/markdownCommands'
@@ -16,11 +17,12 @@ const commentCommands: MarkdownCommand[] = ['bold', 'italic', 'list', 'code', 'l
 interface CommentComposerProps {
   code: string
   projectId: number | undefined
-  members: Mentionable[]
 }
 
 /** Markdown with a short format bar, @mentions, pasted/dropped images; Ctrl+Enter publishes. */
-export function CommentComposer({ code, projectId, members }: CommentComposerProps) {
+export function CommentComposer({ code, projectId }: CommentComposerProps) {
+  // @mentions suggest the project's members (shared cache with the project page).
+  const members = useProjectMembers(projectId).data ?? []
   const id = useId()
   const fileRef = useRef<HTMLInputElement>(null)
   const post = usePostTaskComment(code)

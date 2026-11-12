@@ -5,14 +5,13 @@ namespace App\Http\Resources;
 use App\Domain\Projects\Models\Project;
 use App\Domain\TimeTracking\Support\HourBag;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Project row for lists (RF-03.07). Hours (allocated/consumed/%) are added by E4.
  *
  * @mixin Project
  */
-class ProjectSummaryResource extends JsonResource
+class ProjectSummaryResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

@@ -1,13 +1,13 @@
 import { ListTodo } from 'lucide-react'
 import { screen } from '@testing-library/react'
 import { MODULES } from '@/features/auth/modules'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey } from '@/lib/queryKeys'
 import { buildUser, createTestQueryClient, renderAt } from '@/test/renderWithProviders'
-import { sectionTitle, useNavigation } from './navigation'
+import { sectionTitle, useNavGroups } from './navigation'
 import { SidebarNav } from './SidebarNav'
 
 function Nav() {
-  const { groups, footer } = useNavigation()
+  const { groups, footer } = useNavGroups()
   return <SidebarNav groups={groups} footer={footer} collapsed={false} />
 }
 

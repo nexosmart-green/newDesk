@@ -1,7 +1,7 @@
 import { CalendarOff } from 'lucide-react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { dayLabel } from '@/features/timesheet/week'
+import { dayLabel } from '@/lib/week'
 import { holidayScopeLabels } from './types'
 import type { TeamCalendar } from './teamCalendarTypes'
 import { summarizeToday, type PersonToday, type Presence } from './teamToday'

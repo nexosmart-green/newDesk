@@ -1,5 +1,6 @@
-import { useSearchParams } from 'react-router'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
+import { useSearchParamPatch, useTabParam } from '@/lib/useSearchParamPatch'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { PendingCommentDialog } from '@/features/timer/PendingCommentDialog'
 import type { PendingEntrySummary } from '@/features/timer/pendingEntry'
@@ -8,8 +9,8 @@ import { TimeHistoryTab } from './TimeHistoryTab'
 import { TimesheetDaySection } from './TimesheetDaySection'
 import type { Timesheet, TimesheetEntry } from './types'
 import { useTimesheet } from './useTimesheet'
-import { useWeekParam } from './useWeekParam'
-import { WeekNav } from './WeekNav'
+import { useWeekParam } from '@/lib/useWeekParam'
+import { WeekNav } from '@/components/ui/WeekNav'
 
 function toPendingSummary(entry: TimesheetEntry): PendingEntrySummary {
   return {
@@ -32,23 +33,11 @@ const views: TabItem<WeekView>[] = [
   { id: 'semana', label: 'Semana' },
   { id: 'historial', label: 'Historial' },
 ]
+const viewIds = views.map((view) => view.id)
 
 /** RF-05.12 "Mi semana": the Monday–Sunday timesheet, and "Historial" for any range (`?vista=historial`). */
 export function MyWeekPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const view: WeekView = searchParams.get('vista') === 'historial' ? 'historial' : 'semana'
-
-  function selectView(next: WeekView) {
-    setSearchParams(
-      (current) => {
-        const params = new URLSearchParams(current)
-        if (next === 'semana') params.delete('vista')
-        else params.set('vista', next)
-        return params
-      },
-      { replace: true },
-    )
-  }
+  const { selected: view, select: selectView } = useTabParam(viewIds, 'semana', 'vista')
 
   return (
     <section className="max-w-4xl space-y-4">
@@ -61,25 +50,11 @@ export function MyWeekPage() {
 }
 
 function WeekTimesheet() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, updateParams] = useSearchParamPatch()
   const { week, isCurrentWeek, goToWeek } = useWeekParam()
   const timesheet = useTimesheet(week.from, week.to)
   const reviewing = Number(searchParams.get('revisar')) || null
   const reviewEntry = reviewing ? findEntry(timesheet.data, reviewing) : undefined
-
-  function updateParams(changes: Record<string, string | null>) {
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        for (const [key, value] of Object.entries(changes)) {
-          if (value === null) next.delete(key)
-          else next.set(key, value)
-        }
-        return next
-      },
-      { replace: true },
-    )
-  }
 
   return (
     <div className="space-y-4">
@@ -94,7 +69,7 @@ function WeekTimesheet() {
       {!timesheet.data ? (
         <PageState isPending={timesheet.isPending} error={timesheet.error} shape="table" onRetry={() => void timesheet.refetch()} />
       ) : (
-        <div className="space-y-3">
+        <StaleContent stale={timesheet.isPlaceholderData} className="space-y-3">
           {timesheet.data.days.map((day) => (
             <TimesheetDaySection
               key={day.date}
@@ -103,7 +78,7 @@ function WeekTimesheet() {
               onComplete={(entry) => updateParams({ revisar: String(entry.id) })}
             />
           ))}
-        </div>
+        </StaleContent>
       )}
       {reviewEntry?.comment_pending && (
         <PendingCommentDialog

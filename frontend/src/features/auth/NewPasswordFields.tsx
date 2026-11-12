@@ -2,7 +2,7 @@ import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import type { NewPasswordInput } from './types'
 
-export const PASSWORD_RULE_HINT = 'Mínimo 10 caracteres, con letras y números.'
+const PASSWORD_RULE_HINT = 'Mínimo 10 caracteres, con letras y números.'
 
 interface NewPasswordFieldsProps {
   value: NewPasswordInput

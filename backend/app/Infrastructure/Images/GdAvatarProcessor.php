@@ -20,7 +20,7 @@ final class GdAvatarProcessor implements AvatarProcessor
         $contents = file_get_contents($path);
         $source = $contents === false ? false : @imagecreatefromstring($contents);
         if (! $source instanceof GdImage) {
-            throw new BusinessRuleViolation('No pudimos leer la imagen. Probá con JPG, PNG o WebP.', 'avatar_unreadable');
+            throw new BusinessRuleViolation('La imagen está dañada o en un formato no soportado. Probá con JPG, PNG o WebP.', 'avatar_unreadable');
         }
 
         $side = min(imagesx($source), imagesy($source));

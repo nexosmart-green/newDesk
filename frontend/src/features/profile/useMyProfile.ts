@@ -1,30 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { currentUserKey } from '@/features/auth/useAuth'
-import { fetchMyProfile, fetchMyTeam, saveMySkills, updateMyProfile, uploadMyAvatar } from '@/features/people/peopleApi'
+import { fetchMyProfile, fetchMyTeam, saveMySkills, updateMyProfile, uploadMyAvatar } from './profileApi'
 import type { PersonProfile, UpdateOwnProfileInput } from '@/features/people/types'
-import { peopleKey } from '@/features/people/usePeople'
-
-/** Not under `['me', …]`: logout keeps only the `me` query, and the profile must not survive it. */
-export const profileKey = ['profile'] as const
-const teamKey = [...profileKey, 'team'] as const
+import { currentUserKey, myTeamKey, peopleKey, profileKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 
 export function useMyProfile() {
   return useQuery({ queryKey: profileKey, queryFn: fetchMyProfile })
 }
 
 export function useMyTeam() {
-  return useQuery({ queryKey: teamKey, queryFn: fetchMyTeam })
+  return useQuery({ queryKey: myTeamKey, queryFn: fetchMyTeam })
 }
 
 function useStoreProfile() {
   const queryClient = useQueryClient()
-  return async (profile: PersonProfile) => {
+  return (profile: PersonProfile) => {
     queryClient.setQueryData(profileKey, profile)
-    await Promise.all([
-      // /me carries locale and timezone.
-      queryClient.invalidateQueries({ queryKey: currentUserKey }),
-      queryClient.invalidateQueries({ queryKey: peopleKey }),
-    ])
+    // /me carries locale and timezone (dates on screen follow it); the directory follows behind.
+    return refreshQueries(queryClient, { now: [currentUserKey], later: [peopleKey] })
   }
 }
 

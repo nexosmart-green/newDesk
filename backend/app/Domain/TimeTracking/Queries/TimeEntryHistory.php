@@ -3,9 +3,9 @@
 namespace App\Domain\TimeTracking\Queries;
 
 use App\Domain\TimeTracking\Models\TimeEntry;
+use App\Domain\TimeTracking\Support\LocalDateRange;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 /**
  * "Historial de horas": one person's entries over a free range of local dates, newest first.
@@ -21,13 +21,9 @@ final class TimeEntryHistory
      */
     public function query(array $filters): Builder
     {
-        $from = Carbon::parse($filters['from'], $filters['timezone'])->startOfDay()->utc();
-        $toExclusive = Carbon::parse($filters['to'], $filters['timezone'])->addDay()->startOfDay()->utc();
+        $range = LocalDateRange::of($filters['from'], $filters['to'], $filters['timezone']);
 
-        return TimeEntry::query()
-            ->where('time_entries.user_id', $filters['user_id'])
-            ->where('time_entries.started_at', '>=', $from)
-            ->where('time_entries.started_at', '<', $toExclusive)
+        return $range->apply(TimeEntry::query()->where('time_entries.user_id', $filters['user_id']))
             ->when($filters['project_id'] ?? null, fn (Builder $q, int $id) => $q->where('time_entries.project_id', $id))
             ->when($filters['search'] ?? null, fn (Builder $q, string $search) => $q->where(fn (Builder $inner) => $inner
                 ->where('time_entries.comment', 'like', "%{$search}%")

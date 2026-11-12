@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Tasks\Enums\StatusKind;
 use App\Domain\Tasks\Models\TaskStatus;
+use App\Domain\Tasks\Support\EnsureStatusSetIsUsable;
 use Illuminate\Support\Facades\DB;
 
 /**

@@ -80,7 +80,7 @@ it('shows someone else entries only with time.manage', function () {
     $this->actingAs($admin)->getJson("/api/v1/me/time-entries?from=2026-11-01&to=2026-11-30&user_id={$teammate->id}")
         ->assertOk()->assertJsonPath('meta.total_seconds', 7200)->assertJsonPath('data.0.user.id', $teammate->id);
     $this->actingAs($admin)->getJson("/api/v1/me/time-entries?from=2026-11-01&to=2026-11-30&user_id={$foreigner->id}")
-        ->assertUnprocessable()->assertJsonPath('errors.user_id.0', 'Esa persona no existe.');
+        ->assertUnprocessable()->assertJsonPath('errors.user_id.0', 'Esa persona ya no está en la empresa. Elegí otra.');
 });
 
 it('validates the range: both dates, in order, up to 366 days', function () {
@@ -88,7 +88,7 @@ it('validates the range: both dates, in order, up to 366 days', function () {
 
     $this->actingAs($admin)->getJson('/api/v1/me/time-entries?from=2025-11-11&to=2026-11-11')->assertOk(); // 366 days
     $this->actingAs($admin)->getJson('/api/v1/me/time-entries?from=2025-11-10&to=2026-11-11')
-        ->assertUnprocessable()->assertJsonPath('errors.to.0', 'El rango puede ser de hasta 366 días. Acortalo o exportá por partes.');
+        ->assertUnprocessable()->assertJsonPath('errors.to.0', 'Elegí un rango de hasta 366 días (pediste 367). Si necesitás más, consultalo por partes: un período a continuación del otro.');
     $this->actingAs($admin)->getJson('/api/v1/me/time-entries/export?from=2020-01-01&to=2026-11-11')->assertUnprocessable();
     $this->actingAs($admin)->getJson('/api/v1/me/time-entries?from=2026-11-11&to=2026-11-01')
         ->assertUnprocessable()->assertJsonPath('errors.to.0', 'La fecha hasta no puede ser anterior a la fecha desde.');

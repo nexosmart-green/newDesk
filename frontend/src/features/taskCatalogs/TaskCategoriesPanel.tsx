@@ -25,10 +25,13 @@ export function TaskCategoriesPanel() {
 
   return (
     <CatalogPanel title="Categorías de tarea" description="Agrupan el tipo de trabajo. Cada tarea tiene una como máximo.">
-      {categories.isPending ? (
-        <ListSkeleton rows={3} label="Cargando categorías…" />
-      ) : categories.isError ? (
-        <PageState isPending={false} error={categories.error} onRetry={() => void categories.refetch()} />
+      {!categories.data ? (
+        <PageState
+          isPending={categories.isPending}
+          error={categories.error}
+          skeleton={<ListSkeleton rows={3} label="Cargando categorías…" />}
+          onRetry={() => void categories.refetch()}
+        />
       ) : categories.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay categorías. Creá la primera abajo.</p>
       ) : (

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import { MODULES } from '@/features/auth/modules'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey } from '@/lib/queryKeys'
 import * as dashboardApi from '@/features/dashboard/dashboardApi'
 import { buildUser, createTestQueryClient, renderAt } from '@/test/renderWithProviders'
 import { HomePage } from './HomePage'

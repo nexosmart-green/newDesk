@@ -1,9 +1,9 @@
 import { Link } from 'react-router'
-import { useNavigation } from './navigation'
+import { useNavGroups } from './navigation'
 
 /** The role's destinations as big links: the home of roles whose Panel has nothing to show. */
 export function QuickLinks() {
-  const { groups, footer } = useNavigation()
+  const { groups, footer } = useNavGroups()
   const destinations = [...groups.flatMap((group) => group.items), ...footer].filter((item) => item.to !== '/')
 
   if (destinations.length === 0) {

@@ -2,41 +2,29 @@
 
 namespace App\Http\Controllers\Api\V1\Notifications;
 
-use App\Domain\Notifications\Enums\NotificationEvent;
-use App\Domain\Notifications\Models\NotificationPreference;
+use App\Domain\Notifications\Actions\UpdateNotificationPreferences;
+use App\Domain\Notifications\Queries\NotificationPreferenceList;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Notifications\UpdateNotificationPreferencesRequest;
+use App\Http\Resources\NotificationResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * RF-09: header bell (unread count, list, mark read) and e-mail preferences.
  */
 class NotificationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    private const PER_PAGE = 20;
+
+    public function index(Request $request): AnonymousResourceCollection
     {
         $user = $request->user();
-        $page = $user->notifications()->latest()->paginate(20);
 
-        return response()->json([
-            'data' => collect($page->items())->map(fn (DatabaseNotification $notification) => [
-                'id' => $notification->id,
-                ...$notification->data,
-                'read_at' => $notification->read_at?->toIso8601String(),
-                'created_at' => $notification->created_at?->toIso8601String(),
-            ]),
-            'meta' => [
-                'unread_count' => $user->unreadNotifications()->count(),
-                'current_page' => $page->currentPage(),
-                'last_page' => $page->lastPage(),
-                'total' => $page->total(),
-            ],
-            'message' => null,
-            'errors' => null,
-        ]);
+        return NotificationResource::collection($user->notifications()->latest()->paginate(self::PER_PAGE))
+            ->additional(['meta' => ['unread_count' => $user->unreadNotifications()->count()]]);
     }
 
     public function markRead(Request $request, string $notification): JsonResponse
@@ -53,38 +41,18 @@ class NotificationController extends Controller
         return ApiResponse::ok(['unread_count' => 0], 'Todas marcadas como leídas.');
     }
 
-    public function preferences(Request $request): JsonResponse
+    public function preferences(Request $request, NotificationPreferenceList $preferences): JsonResponse
     {
-        $user = $request->user();
-
-        return ApiResponse::ok(array_map(fn (NotificationEvent $event) => [
-            'event' => $event->value,
-            'label' => $event->label(),
-            'email' => NotificationPreference::wantsEmail($user, $event),
-            'locked' => $event->isMandatoryForAdmins() && $user->requiresTwoFactor(),
-        ], NotificationEvent::cases()));
+        return ApiResponse::ok($preferences($request->user()));
     }
 
-    public function updatePreferences(Request $request): JsonResponse
-    {
-        $request->validate([
-            'preferences' => ['required', 'array'],
-            'preferences.*.event' => ['required', Rule::enum(NotificationEvent::class)],
-            'preferences.*.email' => ['required', 'boolean'],
-        ]);
-        $user = $request->user();
+    public function updatePreferences(
+        UpdateNotificationPreferencesRequest $request,
+        UpdateNotificationPreferences $update,
+        NotificationPreferenceList $preferences,
+    ): JsonResponse {
+        $update($request->user(), $request->preferences());
 
-        foreach ($request->input('preferences') as $preference) {
-            $event = NotificationEvent::from($preference['event']);
-            if ($event->isMandatoryForAdmins() && $user->requiresTwoFactor()) {
-                continue; // RF-09: Admins cannot mute hour-block e-mails.
-            }
-            NotificationPreference::query()->updateOrInsert(
-                ['user_id' => $user->id, 'event' => $event->value],
-                ['email' => (bool) $preference['email']],
-            );
-        }
-
-        return $this->preferences($request);
+        return ApiResponse::ok($preferences($request->user()));
     }
 }

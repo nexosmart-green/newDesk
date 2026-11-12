@@ -5,9 +5,7 @@ namespace App\Http\Resources;
 use App\Domain\People\Actions\ReplaceAvatar;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskLabel;
-use App\Domain\TimeTracking\Support\HourBagRegistry;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Task row (list/board). Detail (`tasks.show`) adds description (markdown), checklist and who/when created it.
@@ -16,7 +14,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * @mixin Task
  */
-class TaskResource extends JsonResource
+class TaskResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
@@ -30,7 +28,7 @@ class TaskResource extends JsonResource
             'project' => $this->whenLoaded('project', fn () => [
                 ...$this->project->only('id', 'name', 'code_prefix'),
                 // RF-05.05: lets the ▶ button show "Sin horas disponibles" before the click.
-                'hours_exhausted' => app(HourBagRegistry::class)->for($this->project)->isExhausted(),
+                'hours_exhausted' => $this->project->hourBagSnapshot()->isExhausted(),
             ]),
             'status' => $this->whenLoaded('status', fn () => [
                 'id' => $this->status->id,

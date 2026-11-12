@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
 import { toastTextOf } from '@/lib/errorText'
+import { checklistMutationKey, taskActivityKey, taskKey, taskListsKeys } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import type { ChecklistItem, Task } from '../types'
-import { dashboardKey, taskKey, tasksKey } from '../useTasks'
 import { addChecklistItem, deleteChecklistItem, reorderChecklist, updateChecklistItem } from './checklistApi'
 
 export function progressOf(items: ChecklistItem[]) {
@@ -11,12 +12,12 @@ export function progressOf(items: ChecklistItem[]) {
 
 /**
  * The checklist lives inside the task detail (no query of its own): mutations patch that cache, then
- * refresh the task rows (badges), the detail and its Historial once the last pending change settles.
+ * refresh, in the background, the task rows (badges) and its Historial once the last pending change settles.
  */
 function useChecklistCache(code: string) {
   const queryClient = useQueryClient()
   const key = taskKey(code)
-  const mutationKey = ['checklist', code.toLowerCase()]
+  const mutationKey = checklistMutationKey(code)
 
   const read = () => queryClient.getQueryData<Task>(key)?.checklist ?? []
   const write = (update: (items: ChecklistItem[]) => ChecklistItem[]) =>
@@ -35,10 +36,7 @@ function useChecklistCache(code: string) {
   function settle() {
     // This mutation still counts as pending here: refresh only when it is the last one.
     if (queryClient.isMutating({ mutationKey }) > 1) return
-    return Promise.all([
-      queryClient.invalidateQueries({ queryKey: tasksKey }),
-      queryClient.invalidateQueries({ queryKey: dashboardKey }),
-    ])
+    void refreshQueries(queryClient, { later: [...taskListsKeys, taskActivityKey(code)] })
   }
 
   const replaceItem = (saved: ChecklistItem) => write((items) => items.map((item) => (item.id === saved.id ? saved : item)))

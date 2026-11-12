@@ -2,6 +2,7 @@
 
 namespace App\Domain\TimeTracking\Queries;
 
+use App\Domain\Projects\Enums\ProjectStatus;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
@@ -23,7 +24,7 @@ final class HoursReport
 
         return Project::query()->forCompany($companyId)
             ->whereIn('id', $consumed->keys())
-            ->orWhere(fn ($query) => $query->where('company_id', $companyId)->where('status', 'active'))
+            ->orWhere(fn ($query) => $query->where('company_id', $companyId)->where('status', ProjectStatus::Active))
             ->with('client')->orderBy('name')->get()
             ->map(fn (Project $project) => [
                 'project' => ['id' => $project->id, 'name' => $project->name, 'prefix' => $project->code_prefix],

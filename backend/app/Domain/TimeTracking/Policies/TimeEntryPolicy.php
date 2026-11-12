@@ -31,4 +31,19 @@ class TimeEntryPolicy
 
         return $entry->user_id === $user->id ? Response::deny('Solo un administrador puede borrar registros de horas.') : Response::denyAsNotFound();
     }
+
+    /**
+     * RF-05.17: only the owner writes the comment of an entry the system cut. Whoever may see other people's
+     * entries (`time.manage`) gets the reason; anyone else does not learn the entry exists.
+     */
+    public function completeComment(User $user, TimeEntry $entry): Response
+    {
+        if ($entry->user_id === $user->id) {
+            return Response::allow();
+        }
+
+        return $user->hasPermission(Permission::TimeManage)
+            ? Response::deny('Solo quien registró las horas puede completar su comentario.', 'not_entry_owner')
+            : Response::denyAsNotFound();
+    }
 }

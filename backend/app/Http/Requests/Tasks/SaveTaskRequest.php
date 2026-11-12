@@ -5,6 +5,7 @@ namespace App\Http\Requests\Tasks;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Tasks\Enums\TaskPriority;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\Tasks\Support\TaskLimits;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -34,16 +35,16 @@ class SaveTaskRequest extends FormRequest
         $companyId = $this->user()->company_id;
 
         return [
-            'title' => [$presence, 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string', 'max:65000'],
+            'title' => [$presence, 'string', 'max:'.TaskLimits::TITLE_MAX],
+            'description' => ['sometimes', 'nullable', 'string', 'max:'.TaskLimits::DESCRIPTION_MAX],
             'priority' => ['sometimes', Rule::enum(TaskPriority::class)],
             'starts_on' => ['sometimes', 'nullable', 'date'],
             'due_on' => ['sometimes', 'nullable', 'date', 'after_or_equal:starts_on'],
             'estimate_seconds' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:3600000'],
-            'assignee_ids' => ['sometimes', 'array', 'max:20'],
+            'assignee_ids' => ['sometimes', 'array', 'max:'.TaskLimits::ASSIGNEES_MAX],
             'assignee_ids.*' => ['integer', 'distinct'],
             'category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('task_categories', 'id')->where('company_id', $companyId)],
-            'label_ids' => ['sometimes', 'array', 'max:20'],
+            'label_ids' => ['sometimes', 'array', 'max:'.TaskLimits::LABELS_MAX],
             'label_ids.*' => ['integer', 'distinct', Rule::exists('task_labels', 'id')->where('company_id', $companyId)],
         ];
     }
@@ -52,9 +53,9 @@ class SaveTaskRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_id.exists' => 'La categoría elegida no existe.',
-            'label_ids.*.exists' => 'Alguna de las etiquetas elegidas no existe.',
-            'label_ids.max' => 'Una tarea admite hasta 20 etiquetas.',
+            'category_id.exists' => 'La categoría elegida ya no existe. Recargá y elegí otra.',
+            'label_ids.*.exists' => 'Una de las etiquetas elegidas ya no existe. Recargá y elegí de nuevo.',
+            'label_ids.max' => 'Una tarea admite hasta '.TaskLimits::LABELS_MAX.' etiquetas.',
         ];
     }
 

@@ -29,10 +29,10 @@ final class StoreTaskImage
         $mime = UploadedFileType::sniff($image);
 
         if (UploadedFileType::isIphonePhoto($image, $mime)) {
-            throw new BusinessRuleViolation('Convertí la imagen a JPG o PNG.', 'task_image_heic');
+            throw new BusinessRuleViolation(UploadedFileType::IPHONE_PHOTO_MESSAGE, 'task_image_heic');
         }
         if (! isset(self::ALLOWED[$mime])) {
-            throw new BusinessRuleViolation('Formato no soportado. Subí una imagen JPG, PNG, WebP o GIF.', 'task_image_format');
+            throw new BusinessRuleViolation('Ese formato de imagen no se puede subir. Usá JPG, PNG, WebP o GIF.', 'task_image_format');
         }
 
         $uuid = (string) Str::uuid();

@@ -1,11 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey, permissionsKey, rolesKey, usersKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from './rolesApi'
 import type { SaveRoleInput } from './types'
-
-export const rolesKey = ['roles'] as const
-export const permissionsKey = ['permissions'] as const
 
 export function useRoles() {
   return useQuery({ queryKey: rolesKey, queryFn: fetchRoles })
@@ -17,13 +15,8 @@ export function usePermissionCatalog() {
 
 function useInvalidateRoles() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: rolesKey }),
-      // Editing my own role changes my permissions; the user list shows role names.
-      queryClient.invalidateQueries({ queryKey: currentUserKey }),
-      queryClient.invalidateQueries({ queryKey: ['users'] }),
-    ])
+  // The roles tab waits for its list; my own permissions and the user list (role names) follow behind.
+  return () => refreshQueries(queryClient, { now: [rolesKey], later: [currentUserKey, usersKey] })
 }
 
 export function useSaveRole(roleId: number | null) {

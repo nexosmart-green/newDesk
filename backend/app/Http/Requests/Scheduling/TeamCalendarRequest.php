@@ -3,8 +3,9 @@
 namespace App\Http\Requests\Scheduling;
 
 use App\Domain\Scheduling\Queries\TeamCalendar;
+use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Domain\Shared\Support\DateRange;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
 
 /**
@@ -26,9 +27,9 @@ class TeamCalendarRequest extends FormRequest
     {
         return [
             'from.required' => 'Indicá desde qué día.',
-            'from.date_format' => 'La fecha de inicio no es válida.',
+            'from.date_format' => 'Escribí la fecha de inicio con el formato AAAA-MM-DD.',
             'to.required' => 'Indicá hasta qué día.',
-            'to.date_format' => 'La fecha de fin no es válida.',
+            'to.date_format' => 'Escribí la fecha de fin con el formato AAAA-MM-DD.',
             'to.after_or_equal' => 'La fecha de fin no puede ser anterior al inicio.',
         ];
     }
@@ -40,9 +41,10 @@ class TeamCalendarRequest extends FormRequest
             if ($validator->errors()->isNotEmpty()) {
                 return;
             }
-            $days = Carbon::parse($this->string('from')->value())->diffInDays(Carbon::parse($this->string('to')->value())) + 1;
-            if ($days > TeamCalendar::MAX_DAYS) {
-                $validator->errors()->add('to', 'El calendario de equipo muestra hasta '.TeamCalendar::MAX_DAYS.' días por vez.');
+            try {
+                DateRange::of($this->string('from')->value(), $this->string('to')->value(), TeamCalendar::MAX_DAYS);
+            } catch (BusinessRuleViolation $e) {
+                $validator->errors()->add('to', $e->getMessage());
             }
         }];
     }

@@ -27,6 +27,8 @@ export default defineConfig({
     restoreMocks: true,
     // Typing-heavy RTL tests exceed 5 s when the whole suite runs jsdom files in parallel.
     testTimeout: 20_000,
+    // Each worker boots its own jsdom (~150 MB). Uncapped, a dev machine ran out of RAM; CI keeps the default.
+    maxWorkers: process.env.CI ? undefined : 2,
     include: ['src/**/*.test.{ts,tsx}'],
   },
 })

@@ -103,7 +103,7 @@ it('rejects disguised, unsupported and iPhone files with clear messages', functi
     $heic = "\x00\x00\x00\x18ftypheic\x00\x00\x00\x00mif1heic".str_repeat("\x00", 64);
 
     attach($task, UploadedFile::fake()->createWithContent('IMG_0001.HEIC', $heic))
-        ->assertUnprocessable()->assertJsonPath('message', 'Convertí la imagen a JPG o PNG.');
+        ->assertUnprocessable()->assertJsonPath('message', 'Las fotos HEIC del iPhone no se pueden subir. Convertila a JPG o PNG.');
 
     $refused = [
         UploadedFile::fake()->createWithContent('factura.pdf', '<!DOCTYPE html><html><body><script>fetch("/api/v1/me")</script></body></html>'),
@@ -113,7 +113,7 @@ it('rejects disguised, unsupported and iPhone files with clear messages', functi
     ];
     foreach ($refused as $file) {
         attach($task, $file)->assertUnprocessable()
-            ->assertJsonPath('message', 'Ese tipo de archivo no se puede adjuntar.')
+            ->assertJsonPath('message', 'Ese tipo de archivo no se puede adjuntar. Subí uno de estos: JPG, PNG, WEBP, GIF, PDF, DOCX, XLSX, PPTX, ODT, ODS, TXT, CSV o ZIP.')
             ->assertJsonPath('data.code', 'attachment_type');
     }
 

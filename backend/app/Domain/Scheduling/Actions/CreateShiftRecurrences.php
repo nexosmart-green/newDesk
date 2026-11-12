@@ -2,15 +2,14 @@
 
 namespace App\Domain\Scheduling\Actions;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Queries\ActiveCompanyPeople;
 use App\Domain\Scheduling\Events\ShiftsChanged;
 use App\Domain\Scheduling\Models\ShiftRecurrence;
 use App\Domain\Scheduling\Models\ShiftTemplate;
 use App\Domain\Scheduling\Support\RecurrenceGeneration;
 use App\Domain\Scheduling\Support\RecurringShiftGenerator;
 use App\Domain\Shared\Activity\RecordActivity;
-use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,6 +21,7 @@ final class CreateShiftRecurrences
     public function __construct(
         private readonly RecurringShiftGenerator $generator,
         private readonly RecordActivity $recordActivity,
+        private readonly ActiveCompanyPeople $activePeople,
     ) {}
 
     /**
@@ -31,11 +31,7 @@ final class CreateShiftRecurrences
      */
     public function __invoke(User $actor, array $userIds, ShiftTemplate $template, array $weekdays, string $startsOn, ?string $endsOn, bool $skipHolidays): array
     {
-        $people = User::query()->where('company_id', $actor->company_id)->where('status', UserStatus::Active)
-            ->whereKey($userIds)->orderBy('first_name')->orderBy('last_name')->get();
-        if ($people->count() !== count(array_unique($userIds))) {
-            throw new BusinessRuleViolation('Alguna persona no existe o está dada de baja.', 'member_inactive');
-        }
+        $people = $this->activePeople->resolveOrFail($actor->company_id, $userIds);
 
         $weekdays = array_values(array_unique(array_map('intval', $weekdays)));
         sort($weekdays);

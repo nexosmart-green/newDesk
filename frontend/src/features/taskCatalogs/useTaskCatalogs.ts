@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type Query } from '@tanstack/react-query'
 import { toast } from '@/components/ui/toast/toastStore'
-import { tasksKey } from '@/features/tasks/useTasks'
+import { taskCategoriesKey, taskLabelsKey, taskListsKeys, tasksKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import {
   createTaskCategory,
   createTaskLabel,
@@ -13,9 +14,6 @@ import {
   type LabelInput,
 } from './taskCatalogsApi'
 
-export const taskCategoriesKey = ['task-categories'] as const
-export const taskLabelsKey = ['task-labels'] as const
-
 export function useTaskCategories() {
   return useQuery({ queryKey: taskCategoriesKey, queryFn: fetchTaskCategories, staleTime: 5 * 60_000 })
 }
@@ -24,14 +22,13 @@ export function useTaskLabels() {
   return useQuery({ queryKey: taskLabelsKey, queryFn: fetchTaskLabels, staleTime: 5 * 60_000 })
 }
 
-/** Task rows embed the category/label name and color, so renames and deletes refresh them too. */
+/** Every task detail (not its tabs). */
+const taskDetails = { queryKey: [...tasksKey, 'detail'], predicate: (query: Query) => query.queryKey.length === 3 }
+
+/** The settings panel waits for its list; task rows and details embed the name and color, so renames and deletes refresh them behind. */
 function useRefresh(key: readonly string[]) {
   const queryClient = useQueryClient()
-  return (withTasks: boolean) =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: key }),
-      withTasks ? queryClient.invalidateQueries({ queryKey: tasksKey }) : null,
-    ])
+  return (withTasks: boolean) => refreshQueries(queryClient, { now: [key], later: withTasks ? [...taskListsKeys, taskDetails] : [] })
 }
 
 export function useCreateTaskCategory() {

@@ -72,7 +72,7 @@ it('limits the range to 31 days', function () {
 
     $this->actingAs($admin)->getJson('/api/v1/team-calendar?from=2026-11-01&to=2026-12-01')->assertOk()->assertJsonCount(31, 'data.days');
     $this->actingAs($admin)->getJson('/api/v1/team-calendar?from=2026-11-01&to=2026-12-02')->assertUnprocessable()
-        ->assertJsonPath('errors.to.0', 'El calendario de equipo muestra hasta 31 días por vez.');
+        ->assertJsonPath('errors.to.0', 'Elegí un rango de hasta 31 días (pediste 32). Si necesitás más, consultalo por partes: un período a continuación del otro.');
     $this->actingAs($admin)->getJson('/api/v1/team-calendar?from=2026-11-10&to=2026-11-01')->assertUnprocessable()
         ->assertJsonPath('errors.to.0', 'La fecha de fin no puede ser anterior al inicio.');
 });

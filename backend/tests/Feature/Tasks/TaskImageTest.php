@@ -42,7 +42,7 @@ it('asks to convert iPhone photos and rejects non images or files over 5 MB', fu
     $heic = "\x00\x00\x00\x18ftypheic\x00\x00\x00\x00mif1heic".str_repeat("\x00", 64);
 
     $upload(UploadedFile::fake()->createWithContent('IMG_0001.HEIC', $heic))
-        ->assertUnprocessable()->assertJsonPath('message', 'Convertí la imagen a JPG o PNG.')->assertJsonPath('data.code', 'task_image_heic');
+        ->assertUnprocessable()->assertJsonPath('message', 'Las fotos HEIC del iPhone no se pueden subir. Convertila a JPG o PNG.')->assertJsonPath('data.code', 'task_image_heic');
     $upload(UploadedFile::fake()->createWithContent('notas.png', 'esto no es una imagen'))
         ->assertUnprocessable()->assertJsonPath('data.code', 'task_image_format');
     $upload(UploadedFile::fake()->createWithContent('dibujo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'))

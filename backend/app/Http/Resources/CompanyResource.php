@@ -4,13 +4,12 @@ namespace App\Http\Resources;
 
 use App\Domain\Companies\Models\Company;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
 
 /**
  * @mixin Company
  */
-class CompanyResource extends JsonResource
+class CompanyResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

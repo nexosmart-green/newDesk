@@ -4,14 +4,13 @@ namespace App\Http\Resources;
 
 use App\Domain\Projects\Models\Project;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Project detail (RF-03.04 "Resumen" header).
  *
  * @mixin Project
  */
-class ProjectResource extends JsonResource
+class ProjectResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

@@ -2,7 +2,7 @@ import { ApiError, toApiError } from './api'
 
 export const MODULE_DISABLED = 'module_disabled'
 
-export interface ErrorText {
+interface ErrorText {
   title: string
   message: string
 }

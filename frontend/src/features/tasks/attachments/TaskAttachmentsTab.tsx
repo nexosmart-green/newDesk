@@ -42,8 +42,9 @@ export function TaskAttachmentsTab({ code }: { code: string }) {
   const images = list.filter((attachment) => attachment.is_image)
 
   if (!attachments.data) {
-    if (attachments.isPending) return <AttachmentsSkeleton />
-    return <PageState isPending={false} error={attachments.error} onRetry={() => void attachments.refetch()} />
+    return (
+      <PageState isPending={attachments.isPending} error={attachments.error} skeleton={<AttachmentsSkeleton />} onRetry={() => void attachments.refetch()} />
+    )
   }
 
   const empty = list.length === 0 && uploads.uploads.length === 0

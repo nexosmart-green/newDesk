@@ -1,10 +1,10 @@
 import { fileExtension } from '@/lib/fileSize'
 
-export const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024
 export const MAX_ATTACHMENTS_PER_TASK = 50
 
 /** What the backend accepts (it checks the content; this is the early, friendly check by name). */
-export const ATTACHMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'docx', 'xlsx', 'pptx', 'odt', 'ods', 'txt', 'csv', 'zip']
+const ATTACHMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'docx', 'xlsx', 'pptx', 'odt', 'ods', 'txt', 'csv', 'zip']
 export const ATTACHMENT_ACCEPT = ATTACHMENT_EXTENSIONS.map((extension) => `.${extension}`).join(',')
 
 /** Same messages as the backend, so the reason reads the same before and after uploading. */

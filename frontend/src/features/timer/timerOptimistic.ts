@@ -1,7 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { TimeEntry, TimerState } from './types'
 
-export const timerKey = ['timer'] as const
+import { timerKey } from '@/lib/queryKeys'
+export { timerKey }
 
 /** What ▶ knows about the task before the server answers. */
 export interface StartingTask {

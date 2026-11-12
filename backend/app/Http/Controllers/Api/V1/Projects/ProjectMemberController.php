@@ -7,6 +7,7 @@ use App\Domain\Projects\Actions\AddProjectMember;
 use App\Domain\Projects\Actions\RemoveProjectMember;
 use App\Domain\Projects\Models\Project;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Projects\AddProjectMemberRequest;
 use App\Http\Resources\PersonResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -18,12 +19,9 @@ use Illuminate\Support\Facades\Gate;
  */
 class ProjectMemberController extends Controller
 {
-    public function store(Request $request, Project $project, AddProjectMember $addMember): JsonResponse
+    public function store(AddProjectMemberRequest $request, Project $project, AddProjectMember $addMember): JsonResponse
     {
-        Gate::authorize('manageMembers', $project);
-        $request->validate(['user_id' => ['required', 'integer']]);
-
-        $member = $addMember($request->user(), $project, $request->integer('user_id'));
+        $member = $addMember($request->user(), $project, $request->userId());
 
         return ApiResponse::ok(PersonResource::make($member), 'Miembro agregado.', 201);
     }

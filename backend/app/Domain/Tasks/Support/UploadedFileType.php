@@ -10,6 +10,8 @@ use Illuminate\Http\UploadedFile;
  */
 final class UploadedFileType
 {
+    public const IPHONE_PHOTO_MESSAGE = 'Las fotos HEIC del iPhone no se pueden subir. Convertila a JPG o PNG.';
+
     private const IPHONE_FORMATS = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
 
     public static function sniff(UploadedFile $file): string

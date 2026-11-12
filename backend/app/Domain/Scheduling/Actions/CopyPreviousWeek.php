@@ -24,7 +24,7 @@ final class CopyPreviousWeek
 
         $previous = ShiftAssignment::query()->forCompany($actor->company_id)
             ->whereBetween('date', [$source->toDateString(), $source->copy()->addDays(6)->toDateString()])
-            ->whereHas('user', fn ($q) => $q->where('status', 'active'))
+            ->whereHas('user', fn ($q) => $q->active())
             ->get();
 
         $touched = DB::transaction(function () use ($actor, $target, $previous) {

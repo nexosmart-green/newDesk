@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router'
 
-export interface TabLink {
+interface TabLink {
   path: string
   label: string
 }

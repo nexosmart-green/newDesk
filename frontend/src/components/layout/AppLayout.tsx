@@ -1,13 +1,12 @@
-import { Suspense, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
-import { DetailSkeleton } from '@/components/ui/Skeleton'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { PendingCommentsBanner } from '@/features/timer/PendingCommentsBanner'
 import { FetchingBar } from './FetchingBar'
 import { readStoredJson, writeStoredJson } from '@/lib/storage'
 import { Header } from './Header'
 import { MobileDrawer } from './MobileDrawer'
-import { sectionTitle, useNavigation } from './navigation'
+import { sectionTitle, useNavGroups } from './navigation'
 import { Sidebar } from './Sidebar'
 import { useTheme } from './useTheme'
 
@@ -15,7 +14,7 @@ const COLLAPSED_KEY = 'newdesk.sidebar.collapsed'
 
 /** App shell: dark sidebar (desk palette) + header with the live bits + content. */
 export function AppLayout() {
-  const { groups, footer } = useNavigation()
+  const { groups, footer } = useNavGroups()
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const hasTime = useHasModule(MODULES.time)
@@ -51,9 +50,7 @@ export function AppLayout() {
         <FetchingBar />
         {hasTime && <PendingCommentsBanner />}
         <main id="contenido" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 focus:outline-none sm:px-6 lg:px-8">
-          <Suspense fallback={<DetailSkeleton />}>
-            <Outlet />
-          </Suspense>
+          <Outlet />
         </main>
       </div>
     </div>

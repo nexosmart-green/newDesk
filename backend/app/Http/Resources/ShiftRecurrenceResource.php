@@ -4,14 +4,13 @@ namespace App\Http\Resources;
 
 use App\Domain\Scheduling\Models\ShiftRecurrence;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * RF-06.03 rule. Eager load `user` and `template`; a deleted template comes as null ("plantilla eliminada").
  *
  * @mixin ShiftRecurrence
  */
-class ShiftRecurrenceResource extends JsonResource
+class ShiftRecurrenceResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
