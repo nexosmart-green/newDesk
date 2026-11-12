@@ -77,3 +77,10 @@
 - Backend: `GET /time-entries` (mis registros de todos los proyectos, `user_id` solo con `time.manage`, `meta.editable_since`); `CorrectTimeEntry` acepta `task` y mueve el registro entre bolsas (R-7: los dos proyectos por id y después el registro; la destino absorbe todo el tiempo; actividad en los dos); `TimeEntryPolicy::delete` = dueño o `time.manage`; el dueño no borra un registro con comentario pendiente (`comment_pending`, mantiene RF-05.17). Scope `TimeEntry::startedOnLocalDays` arregla también el filtro de fechas de la pestaña Horas, que comparaba texto contra UTC.
 - Frontend: página `/mis-horas` ("Mi trabajo"), `EntryList` compartida con la pestaña Horas, candado por `editable_since`, Proyecto y Tarea en "Corregir registro".
 - Tests: `MyHoursTest` (CA-05.20a–g) y `MoveEntryConcurrencyTest` (QA-19 con procesos reales).
+
+## 2026-11-12 — Mis horas: vista Calendario (RF-05.20, CA-05.20h/i)
+
+- Pedido: ver en un calendario cuánto se trabajó cada día. Decisiones del usuario: solo el total por día (fondo más intenso cuanto más), total de semana y de mes; tocar un día abre la lista de ese día; sin comparar contra el turno por ahora.
+- Backend: `GET /time-entries/days` (totales por día local de la persona mirada, hasta 62 días, filtros de persona y proyecto) reusando `Queries/Timesheet` con `projectId` opcional; helper `personAsked` compartido con `index`, que ahora corta los días con la zona de la persona mirada.
+- Frontend: selector Lista | Calendario en `MyHoursPage`, `MonthGrid` extraída de `CalendarMonthView` (la usan "Mi calendario" y "Mis horas"), `HoursCalendar` con 4 niveles de intensidad y columna Semana.
+- Tests: 2 nuevos en `MyHoursTest` (CA-05.20h y permisos/rango).

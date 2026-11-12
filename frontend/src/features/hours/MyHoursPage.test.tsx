@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as authApi from '@/features/auth/authApi'
+import { datesBetween } from '@/features/timesheet/week'
 import * as peopleApi from '@/features/people/peopleApi'
 import * as projectsApi from '@/features/projects/projectsApi'
 import { buildPerson, buildProject, buildTimeEntry, entryPage, page } from '@/test/fixtures'
@@ -52,5 +53,56 @@ describe('MyHoursPage', () => {
     await userEvent.selectOptions(await screen.findByLabelText('Persona'), await screen.findByRole('option', { name: 'Juan Pérez' }))
 
     expect(fetchEntries).toHaveBeenLastCalledWith({ ...emptyMyEntryFilters, user_id: 2 })
+  })
+
+  describe('Calendario', () => {
+    const worked: Record<string, number> = {
+      '2026-10-27': 2 * 3600, // previous month, still in the grid
+      '2026-11-03': 5 * 3600,
+      '2026-11-04': 3.5 * 3600,
+      '2026-11-30': 3600,
+      '2026-12-01': 4 * 3600, // next month
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date(2026, 10, 6, 12))
+    })
+    afterEach(() => vi.useRealTimers())
+
+    function openCalendar() {
+      const spies = renderPage([])
+      const fetchDailyHours = vi.spyOn(hoursApi, 'fetchDailyHours').mockResolvedValue({
+        timezone: 'America/Argentina/Buenos_Aires',
+        total_seconds: 15.5 * 3600,
+        days: datesBetween('2026-10-26', '2026-12-06').map((date) => ({ date, total_seconds: worked[date] ?? 0 })),
+      })
+      return { ...spies, fetchDailyHours }
+    }
+
+    it('shows each day, each week and only this month in the month total', async () => {
+      const { fetchDailyHours } = openCalendar()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Calendario' }))
+
+      expect(await screen.findByRole('button', { name: 'Ver registros del 3/11: 5h 00m' })).toHaveTextContent('5h 00m')
+      expect(fetchDailyHours).toHaveBeenCalledWith({ user_id: null, project_id: null, from: '2026-10-26', to: '2026-12-06' })
+      expect(screen.getByRole('button', { name: 'Ver registros del 5/11' })).toBeEmptyDOMElement()
+      expect(within(screen.getByRole('region', { name: /semana hasta el domingo 8\/11/i })).getByText('8h 30m')).toBeInTheDocument()
+      expect(within(screen.getByRole('region', { name: /semana hasta el domingo 6\/12/i })).getByText('5h 00m')).toBeInTheDocument()
+      expect(screen.getByText(/Total del mes/)).toHaveTextContent('9h 30m')
+      expect(screen.queryByLabelText('Desde')).not.toBeInTheDocument()
+    })
+
+    it('opens a day in the list', async () => {
+      const { fetchEntries } = openCalendar()
+      await userEvent.click(screen.getByRole('button', { name: 'Calendario' }))
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Ver registros del 4/11: 3h 30m' }))
+
+      expect(screen.getByRole('button', { name: 'Lista' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByLabelText('Desde')).toHaveValue('2026-11-04')
+      expect(fetchEntries).toHaveBeenLastCalledWith({ ...emptyMyEntryFilters, from: '2026-11-04', to: '2026-11-04' })
+    })
   })
 })

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\TimeTracking;
 
 use App\Domain\Identity\Enums\Permission;
+use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\TimeTracking\Actions\CompletePendingComment;
 use App\Domain\TimeTracking\Actions\CorrectTimeEntry;
@@ -21,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 class TimeEntryController extends Controller
 {
@@ -33,21 +35,17 @@ class TimeEntryController extends Controller
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d'],
         ]);
-        $viewer = $request->user();
-        $userId = $request->integer('user_id') ?: $viewer->id;
-        if ($userId !== $viewer->id && ! $viewer->hasPermission(Permission::TimeManage)) {
-            throw new AuthorizationException('Solo un administrador ve las horas de otras personas.');
-        }
+        $person = $this->personAsked($request);
 
-        $entries = TimeEntry::query()->where('user_id', $userId)
+        $entries = TimeEntry::query()->where('user_id', $person->id)
             ->when($request->integer('project_id'), fn (Builder $q, int $id) => $q->where('project_id', $id))
-            ->startedOnLocalDays($request->query('from'), $request->query('to'), $viewer->effectiveTimezone())
+            ->startedOnLocalDays($request->query('from'), $request->query('to'), $person->effectiveTimezone())
             ->with(['task', 'project', 'user'])
             ->latest('started_at')
             ->paginate(50);
 
         return TimeEntryResource::collection($entries)->additional([
-            'meta' => ['editable_since' => $window->editableSince($viewer)?->toIso8601String()],
+            'meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()],
             'message' => null,
             'errors' => null,
         ]);
@@ -107,6 +105,27 @@ class TimeEntryController extends Controller
         return ApiResponse::ok(TimeEntryResource::make($entry), 'Comentario guardado.');
     }
 
+    /** RF-05.20 "Mis horas" calendar: what the person worked on each of their local days. */
+    public function days(Request $request, Timesheet $timesheet): JsonResponse
+    {
+        $request->validate([
+            'user_id' => ['nullable', 'integer'],
+            'project_id' => ['nullable', 'integer'],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ]);
+        if ($request->date('from')->diffInDays($request->date('to')) > 62) {
+            throw ValidationException::withMessages(['to' => 'Elegí un rango de hasta 62 días.']);
+        }
+
+        $sheet = $timesheet($this->personAsked($request), $request->string('from')->value(), $request->string('to')->value(), $request->integer('project_id') ?: null);
+
+        return ApiResponse::ok([
+            ...$sheet,
+            'days' => array_map(fn (array $day) => ['date' => $day['date'], 'total_seconds' => $day['total_seconds']], $sheet['days']),
+        ]);
+    }
+
     /** RF-05.12 "Mi semana". */
     public function timesheet(Request $request, Timesheet $timesheet): JsonResponse
     {
@@ -116,6 +135,21 @@ class TimeEntryController extends Controller
         ]);
 
         return ApiResponse::ok($timesheet($request->user(), $request->string('from')->value(), $request->string('to')->value()));
+    }
+
+    /** RF-05.20: me by default; someone else's hours only for `time.manage`. */
+    private function personAsked(Request $request): User
+    {
+        $viewer = $request->user();
+        $userId = $request->integer('user_id') ?: $viewer->id;
+        if ($userId === $viewer->id) {
+            return $viewer;
+        }
+        if (! $viewer->hasPermission(Permission::TimeManage)) {
+            throw new AuthorizationException('Solo un administrador ve las horas de otras personas.');
+        }
+
+        return User::query()->where('company_id', $viewer->company_id)->findOrFail($userId);
     }
 
     /** @return array{0: Carbon, 1: Carbon} */

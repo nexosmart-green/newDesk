@@ -62,6 +62,16 @@ export interface MyEntryFilters {
 
 export const emptyMyEntryFilters: MyEntryFilters = { user_id: null, project_id: null, from: '', to: '', page: 1 }
 
+/** "Mis horas" calendar: same person/project filters, `from`–`to` both required (62 days max). */
+export type DailyHoursFilters = Omit<MyEntryFilters, 'page'>
+
+/** Seconds worked per date (in `timezone`), one item per date of the range; running timers included. */
+export interface DailyHours {
+  timezone: string
+  total_seconds: number
+  days: { date: string; total_seconds: number }[]
+}
+
 /** RF-05.15: entries started before `editable_since` are out of this viewer's window; null = no limit. */
 export type EntryPage = Paginated<TimeEntry, { editable_since: string | null }>
 

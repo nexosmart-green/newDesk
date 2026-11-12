@@ -7,13 +7,14 @@ use App\Domain\TimeTracking\Models\TimeEntry;
 use Illuminate\Support\Carbon;
 
 /**
- * RF-05.12 "Mi semana": the person's entries between two local dates, grouped by local day with totals.
+ * RF-05.12 "Mi semana" and the RF-05.20 calendar: the person's entries between two local dates (of one project
+ * if given), grouped by local day with totals.
  * Comments are included (RF-05.18: they explain what the client's hours were used for).
  */
 final class Timesheet
 {
     /** @return array{timezone: string, total_seconds: int, days: list<array{date: string, total_seconds: int, entries: list<array<string, mixed>>}>} */
-    public function __invoke(User $user, string $fromDate, string $toDate): array
+    public function __invoke(User $user, string $fromDate, string $toDate, ?int $projectId = null): array
     {
         $timezone = $user->effectiveTimezone();
         $from = Carbon::parse($fromDate, $timezone)->startOfDay();
@@ -21,6 +22,7 @@ final class Timesheet
 
         $entries = TimeEntry::query()->forCompany($user->company_id)
             ->where('user_id', $user->id)
+            ->when($projectId, fn ($query) => $query->where('project_id', $projectId))
             ->whereBetween('started_at', [$from->copy()->utc(), $to->copy()->utc()])
             ->with(['task:id,code,title', 'project:id,name'])
             ->orderBy('started_at')

@@ -32,7 +32,7 @@ El corazón del sistema. Es lo que Worksuite no resuelve.
 | RF-05.17 | **Cortes automáticos** (sin horas, olvidado, tarea cerrada, proyecto finalizado, baja): el registro queda con **comentario pendiente**. El usuario no puede iniciar un nuevo timer hasta completarlo (banner en web, aviso en `whoami`/`start_timer` por MCP). | M |
 | RF-05.18 | El comentario del registro se muestra en la tab Horas, en "Mi semana" y en el reporte: es el detalle de qué se hizo con las horas del cliente. | M |
 | RF-05.19 | **Reloj del día** (pedido 2026-11-10): alternativa al ▶ por tarea. Un reloj por persona y por día, sin tarea, que se inicia y se frena desde el header. Al frenarlo se **reparte** en partes (desde–hasta, proyecto, tarea mía o nueva, "¿qué hiciste?"); cada parte es un registro de horas normal (`source = day_clock`). Los huecos no se cuentan. Una parte puede dejar la bolsa en negativo: se guarda igual y se avisa a Admin + líder. Convive con el ▶ (nunca los dos a la vez) y un día sin repartir bloquea el ▶ y otro día. Si se olvida, se corta a la medianoche local. Solo web (MCP lo muestra en `whoami`). | M |
-| RF-05.20 | **Mis horas** (pedido 2026-11-10): todos mis registros de horas, de todos los proyectos, del más nuevo al más viejo, con filtros por proyecto y fechas; desde ahí los corrijo y los borro (RF-05.15). Los que quedaron fuera de la ventana se ven con candado. Admin elige la persona. | M |
+| RF-05.20 | **Mis horas** (pedido 2026-11-10): todos mis registros de horas, de todos los proyectos, del más nuevo al más viejo, con filtros por proyecto y fechas; desde ahí los corrijo y los borro (RF-05.15). Los que quedaron fuera de la ventana se ven con candado. Admin elige la persona. Vista **Calendario** (pedido 2026-11-12): un mes con el total trabajado de cada día, de cada semana y del mes. | M |
 
 ## Reglas de concurrencia (lo que suele romperse)
 
@@ -67,3 +67,5 @@ El corazón del sistema. Es lo que Worksuite no resuelve.
 - **CA-05.20e** Corregir a una tarea que no es del dueño del registro (`task_not_assigned`), a una tarea o proyecto cerrados (`task_closed` / `project_closed`) o a un proyecto donde el tiempo no entra (`manual_exceeds_bag`) se rechaza sin cambiar nada.
 - **CA-05.20f** Borro un registro mío dentro de la ventana: las horas vuelven a la bolsa y queda en Actividad. Un registro de otra persona no lo veo ni lo borro (404).
 - **CA-05.20g** Admin elige la persona en "Mis horas" y corrige o borra sus registros (a tareas asignadas a esa persona); otro rol que pida las horas de otra persona recibe 403.
+- **CA-05.20h** En la vista Calendario de "Mis horas" veo un mes (semanas de lunes a domingo) con el total trabajado de cada día de mi zona horaria, el de cada semana y el del mes; respeta los filtros de persona y proyecto, y un ▶ corriendo suma lo que lleva.
+- **CA-05.20i** Tocar un día del calendario abre la lista de registros de ese día.

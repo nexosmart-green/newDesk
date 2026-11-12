@@ -27,6 +27,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: `fea
 - [x] RF-04.12 Mover tareas entre proyectos con sus horas (pedido 2026-11-06) — confirmar defaults P-27
 - [x] RF-05.19 Reloj del día: un reloj por día, se reparte entre proyectos al frenarlo (pedido 2026-11-10) — QA-15..18 con procesos reales; probado en vivo (reparto con hueco y tarea nueva). Sin probar en vivo: negativo con ▶ ajeno corriendo y "Repartir más tarde" (cubiertos por tests)
 - [x] RF-05.20 Mis horas: todos mis registros, corregir (también de tarea/proyecto) y borrar dentro de la ventana; admin con filtro por persona (pedido 2026-11-10) — QA-19 con procesos reales; probado en vivo (mover entre bolsas, candado, borrar, vista del admin)
+- [x] RF-05.20 Mis horas, vista Calendario: total por día, semana y mes; tocar un día abre la lista (pedido 2026-11-12)
 
 ## Pendientes / mejoras chicas detectadas
 

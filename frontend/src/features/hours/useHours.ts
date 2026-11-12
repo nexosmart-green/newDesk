@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   allocateHours,
   approveExtension,
+  fetchDailyHours,
   fetchEntries,
   fetchExtensionRequests,
   fetchProjectEntries,
@@ -9,7 +10,7 @@ import {
   rejectExtension,
   requestExtension,
 } from './hoursApi'
-import type { AllocationInput, MyEntryFilters, ProjectEntryFilters } from './types'
+import type { AllocationInput, DailyHoursFilters, MyEntryFilters, ProjectEntryFilters } from './types'
 
 export const hoursKey = ['hours'] as const
 const projectHoursKey = (projectId: number) => [...hoursKey, projectId] as const
@@ -31,6 +32,14 @@ export function useEntries(filters: MyEntryFilters) {
   return useQuery({
     queryKey: [...hoursKey, 'entries', filters],
     queryFn: () => fetchEntries(filters),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useDailyHours(filters: DailyHoursFilters) {
+  return useQuery({
+    queryKey: [...hoursKey, 'days', filters],
+    queryFn: () => fetchDailyHours(filters),
     placeholderData: keepPreviousData,
   })
 }

@@ -1,6 +1,8 @@
 import { api, dataOf, pageOf, queryParams, type ApiEnvelope } from '@/lib/api'
 import type {
   AllocationInput,
+  DailyHours,
+  DailyHoursFilters,
   EntryPage,
   ExtensionRequest,
   HourBag,
@@ -20,6 +22,10 @@ export async function fetchProjectEntries(projectId: number, filters: ProjectEnt
 /** "Mis horas": my entries across projects (or someone else's with `time.manage`). */
 export async function fetchEntries(filters: MyEntryFilters): Promise<EntryPage> {
   return pageOf(api.get<EntryPage>('/time-entries', { params: queryParams({ ...filters }) }))
+}
+
+export async function fetchDailyHours(filters: DailyHoursFilters): Promise<DailyHours> {
+  return dataOf(api.get<ApiEnvelope<DailyHours>>('/time-entries/days', { params: queryParams({ ...filters }) }))
 }
 
 export async function allocateHours(projectId: number, input: AllocationInput): Promise<HourBag> {

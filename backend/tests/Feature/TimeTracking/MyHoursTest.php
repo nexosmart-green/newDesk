@@ -145,3 +145,42 @@ it('lets people delete their own entries inside the window, explained, and never
     expect($project->fresh()->consumed_seconds)->toBe(3 * 3600)
         ->and(ActivityLog::query()->where('event', 'time.deleted')->count())->toBe(1);
 });
+
+// CA-05.20h
+it('adds up each local day for the calendar, by project and with the running ▶', function () {
+    $admin = adminUser();
+    $dev = userWithRole($admin);
+    ['task' => $bhn, 'project' => $bhnProject] = bagProject($admin, [$dev], 10 * 3600);
+    ['task' => $cdos] = bagProject($admin, [$dev], 10 * 3600, 'cdos');
+    myHoursEntry($dev, $bhn, 2, '09:00', '11:00');
+    myHoursEntry($dev, $bhn, 1, '23:30', '23:50'); // 02:30 UTC of the next day: still yesterday here
+    myHoursEntry($dev, $cdos, 1, '09:00', '10:00');
+    $from = today('America/Argentina/Buenos_Aires')->subDays(2)->toDateString();
+    $to = today('America/Argentina/Buenos_Aires')->toDateString();
+    startTimer($dev, $bhn)->assertOk();
+    $this->travel(30)->minutes();
+
+    $all = $this->actingAs($dev)->getJson("/api/v1/time-entries/days?from={$from}&to={$to}")->assertOk();
+    expect(array_column($all->json('data.days'), 'total_seconds'))->toBe([7200, 1200 + 3600, 1800])
+        ->and($all->json('data.days.0.date'))->toBe($from)
+        ->and($all->json('data.total_seconds'))->toBe(7200 + 4800 + 1800);
+
+    $bhnOnly = $this->actingAs($dev)->getJson("/api/v1/time-entries/days?from={$from}&to={$to}&project_id={$bhnProject->id}")->assertOk();
+    expect(array_column($bhnOnly->json('data.days'), 'total_seconds'))->toBe([7200, 1200, 1800]);
+});
+
+// CA-05.20g/h
+it('shows someone else\'s calendar only to time.manage, for at most 62 days', function () {
+    $admin = adminUser();
+    [$dev, $mate] = [userWithRole($admin), userWithRole($admin)];
+    ['task' => $task] = bagProject($admin, [$dev, $mate], 10 * 3600);
+    myHoursEntry($dev, $task);
+    $from = today('America/Argentina/Buenos_Aires')->subDays(5)->toDateString();
+    $to = today('America/Argentina/Buenos_Aires')->toDateString();
+
+    $this->actingAs($mate)->getJson("/api/v1/time-entries/days?from={$from}&to={$to}&user_id={$dev->id}")->assertForbidden();
+    $this->actingAs($admin)->getJson("/api/v1/time-entries/days?from={$from}&to={$to}&user_id={$dev->id}")
+        ->assertOk()->assertJsonPath('data.total_seconds', 3600);
+    $this->actingAs($dev)->getJson('/api/v1/time-entries/days?from=2026-01-01&to=2026-03-15')->assertUnprocessable()->assertJsonValidationErrors('to');
+    $this->actingAs($dev)->getJson('/api/v1/time-entries/days?from=ayer&to=hoy')->assertUnprocessable();
+});
