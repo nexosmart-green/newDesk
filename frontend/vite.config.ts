@@ -13,6 +13,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Fail instead of silently moving to 5174+: only :5173 is in SANCTUM_STATEFUL_DOMAINS, so a stray second
+    // dev server on another port serves an app whose login dies with "Session store not set on request".
+    strictPort: true,
     // Same-origin in dev so Sanctum's SPA cookie auth works without CORS juggling.
     proxy: {
       '/api': backendUrl,
