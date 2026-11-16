@@ -30,7 +30,7 @@ export function InvitationPage() {
     const message =
       invitation.error instanceof ApiError && invitation.error.status === 404
         ? invitation.error.message
-        : 'No pudimos cargar la invitación. Probá de nuevo en un rato.'
+        : 'No se pudo cargar la invitación. Revisá la conexión y probá de nuevo en un rato.'
     return <InvalidInvitation message={message} />
   }
 

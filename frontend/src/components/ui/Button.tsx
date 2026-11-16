@@ -1,15 +1,21 @@
 import { LoaderCircle } from 'lucide-react'
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'link'
+type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'live' | 'icon' | 'link'
+
+/** 36px with a mouse, 44px on touch screens (RNF-13): one density for desk work, one for fingers. */
+const control = 'min-h-9 rounded-md px-3.5 py-1.5 coarse:min-h-11 coarse:px-4'
 
 const variants: Record<Variant, string> = {
-  // Brand teal from desk.nexosmart.es, the AA-safe shade for white text.
-  primary: 'min-h-11 rounded-lg bg-brand-strong px-4 py-2 text-white shadow-sm transition-colors hover:bg-brand active:bg-brand-strong',
-  secondary:
-    'min-h-11 rounded-lg border border-border bg-surface px-4 py-2 text-text transition-colors hover:border-muted/50 hover:bg-surface-2',
-  danger: 'min-h-11 rounded-lg bg-danger px-4 py-2 text-white transition-opacity hover:opacity-90',
-  ghost: 'min-h-11 rounded-lg px-3 py-2 text-muted transition-colors hover:bg-surface-2 hover:text-text',
+  // Brand teal from desk.nexosmart.es, the AA-safe shade for white text. Flat: tone, not shadow.
+  primary: `${control} bg-brand-strong text-white transition-colors hover:bg-brand active:bg-brand-strong`,
+  secondary: `${control} border border-border bg-surface text-text transition-colors hover:border-muted/50 hover:bg-surface-2`,
+  danger: `${control} bg-danger-strong text-white transition-opacity hover:opacity-90`,
+  ghost: `${control} text-muted transition-colors hover:bg-surface-2 hover:text-text`,
+  /** Only for the running timer: desk's pink means "running now" and nothing else. */
+  live: `${control} bg-live text-on-live transition-opacity hover:opacity-90`,
+  /** Square, icon only: always pass an `aria-label`. */
+  icon: 'size-9 shrink-0 rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-text coarse:size-11',
   link: 'text-accent underline-offset-2 hover:underline',
 }
 

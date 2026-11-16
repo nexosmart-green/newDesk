@@ -17,7 +17,6 @@ use App\Domain\Support\Contracts\ClaudeRunner;
 use App\Domain\Support\Events\ReportSubmitted;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\TimeTracking\Listeners\StopTimersOnDomainEvents;
-use App\Domain\TimeTracking\Support\HourBagRegistry;
 use App\Http\Responses\ApiResponse;
 use App\Infrastructure\Agent\CurlAgentGateway;
 use App\Infrastructure\Claude\UnixSocketClaudeRunner;
@@ -33,6 +32,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -41,7 +41,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
-        $this->app->scoped(HourBagRegistry::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
         $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
         $this->app->bind(DiscordGateway::class, fn () => filled($token = config('newdesk.monitoring.discord.bot_token'))
@@ -65,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
+        $this->registerValidationReplacers();
 
         Event::subscribe(StopTimersOnDomainEvents::class);
         Event::subscribe(SendDomainNotifications::class);
@@ -72,6 +72,16 @@ class AppServiceProvider extends ServiceProvider
         $this->registerAuthorization();
         $this->registerRouteBindings();
         $this->registerRateLimiters();
+    }
+
+    /** `date_format:Y-m-d` reads as "AAAA-MM-DD" in messages (lang/es/validation.php), not as PHP format codes. */
+    private function registerValidationReplacers(): void
+    {
+        Validator::replacer('date_format', fn (string $message, string $attribute, string $rule, array $parameters) => str_replace(
+            ':format',
+            strtr($parameters[0] ?? '', ['Y' => 'AAAA', 'm' => 'MM', 'd' => 'DD', 'H' => 'HH', 'i' => 'MM', 's' => 'SS']),
+            $message,
+        ));
     }
 
     private function registerAuthorization(): void
@@ -123,6 +133,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('guest', fn (Request $request) => Limit::perMinute(20)->by('guest|'.$request->ip()));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
+
+        // RF-04.09: up to 20 MB each, so a runaway client cannot fill the disk.
+        RateLimiter::for('task-attachments', fn (Request $request) => Limit::perMinute(30)->by('attachments|'.($request->user()?->id ?: $request->ip())));
 
         // NexoSmart standard: at most one e-mail per second (Resend).
         RateLimiter::for('mail', fn () => Limit::perSecond(1));

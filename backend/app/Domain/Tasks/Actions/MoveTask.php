@@ -2,12 +2,12 @@
 
 namespace App\Domain\Tasks\Actions;
 
-use App\Domain\Identity\Enums\UserStatus;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\Tasks\Models\TaskImage;
 use App\Domain\TimeTracking\Actions\TransferTaskHours;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +27,7 @@ final class MoveTask
     public function __invoke(User $actor, Task $task, Project $destination): array
     {
         if ($task->project_id === $destination->id) {
-            throw new BusinessRuleViolation("{$task->code} ya está en {$destination->name}.", 'same_project');
+            throw new BusinessRuleViolation("{$task->code} ya está en {$destination->name}. Elegí otro proyecto de destino.", 'same_project');
         }
 
         return DB::transaction(function () use ($actor, $task, $destination) {
@@ -38,7 +38,7 @@ final class MoveTask
             $task = Task::query()->forCompany($task->company_id)->lockForUpdate()->findOrFail($task->id);
 
             if ($to->status->isClosed()) {
-                throw new BusinessRuleViolation("{$to->name} está {$to->status->label()}: no admite tareas.", 'project_closed');
+                throw new BusinessRuleViolation("{$to->name} está {$to->status->label()}: no admite tareas. Elegí otro proyecto de destino o reabrilo.", 'project_closed');
             }
 
             $seconds = ($this->transferHours)($task, $from, $to);
@@ -53,6 +53,7 @@ final class MoveTask
 
             $task->forceFill(['project_id' => $to->id, 'number' => $to->task_sequence, 'code' => $newCode])->save();
             $unassigned = $this->keepOnlyDestinationMembers($task, $to);
+            $this->moveReferencedImages($task, $from, $to);
 
             $details = ['from' => $oldCode, 'to' => $newCode, 'seconds' => $seconds, 'unassigned' => $unassigned];
             ($this->recordActivity)('task.moved_out', $task, $actor, after: [...$details, 'project' => $to->name], projectId: $from->id);
@@ -62,10 +63,26 @@ final class MoveTask
         });
     }
 
+    /**
+     * Images are authorized by their project: the ones the description and the comments show travel with
+     * the task, or the destination's members would get broken images. Attachments hang from the task itself.
+     */
+    private function moveReferencedImages(Task $task, Project $from, Project $to): void
+    {
+        $texts = $task->comments()->pluck('body')->push((string) $task->description)->implode("\n");
+        preg_match_all('#/api/v1/task-images/([0-9a-f-]{36})#i', $texts, $matches);
+        if ($matches[1] === []) {
+            return;
+        }
+
+        TaskImage::query()->forCompany($task->company_id)->where('project_id', $from->id)
+            ->whereIn('uuid', array_unique($matches[1]))->update(['project_id' => $to->id]);
+    }
+
     /** @return list<string> names removed because they are not active members of the destination */
     private function keepOnlyDestinationMembers(Task $task, Project $destination): array
     {
-        $memberIds = $destination->members()->where('users.status', UserStatus::Active)->pluck('users.id')->all();
+        $memberIds = $destination->members()->active()->pluck('users.id')->all();
         $leaving = $task->assignees()->whereKeyNot($memberIds)->get();
 
         if ($leaving->isNotEmpty()) {

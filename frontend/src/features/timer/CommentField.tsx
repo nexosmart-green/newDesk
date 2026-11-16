@@ -25,7 +25,7 @@ export function CommentField({ label = '¿Qué hiciste?', value, onChange, error
       />
       <p className={`text-xs ${missing > 0 ? 'text-muted' : 'text-success'}`} aria-live="polite">
         {missing > 0
-          ? `${length}/${MIN_COMMENT_LENGTH} caracteres · faltan ${missing}`
+          ? `${length} de ${MIN_COMMENT_LENGTH} caracteres: faltan ${missing}`
           : `${length} caracteres`}
       </p>
     </div>

@@ -7,6 +7,7 @@ use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskStatus;
+use App\Domain\Tasks\Support\EnsureStatusSetIsUsable;
 use Illuminate\Support\Facades\DB;
 
 final class DeleteTaskStatus

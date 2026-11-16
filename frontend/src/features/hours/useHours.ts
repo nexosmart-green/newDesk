@@ -1,4 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { dashboardKey, extensionRequestsKey, hoursKey, projectHoursKey, projectKey, projectListsKey, timerKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
 import {
   allocateHours,
   approveExtension,
@@ -11,10 +13,6 @@ import {
   requestExtension,
 } from './hoursApi'
 import type { AllocationInput, DailyHoursFilters, MyEntryFilters, ProjectEntryFilters } from './types'
-
-export const hoursKey = ['hours'] as const
-const projectHoursKey = (projectId: number) => [...hoursKey, projectId] as const
-const extensionRequestsKey = [...hoursKey, 'extension-requests'] as const
 
 export function useProjectHours(projectId: number) {
   return useQuery({ queryKey: [...projectHoursKey(projectId), 'bag'], queryFn: () => fetchProjectHours(projectId) })
@@ -44,23 +42,25 @@ export function useDailyHours(filters: DailyHoursFilters) {
   })
 }
 
-/** A bag change moves the hours tab, the project header/list (%) and unblocks timers. */
-function useRefreshBags() {
+/**
+ * A bag change moves the hours tab (awaited: the dialog closes onto the new balance); the project header
+ * and list (%), the Panel's bags and blocked timers follow in the background.
+ */
+function useRefreshBag() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: hoursKey }),
-      queryClient.invalidateQueries({ queryKey: ['projects'] }),
-      queryClient.invalidateQueries({ queryKey: ['timer'] }),
-    ])
+  return (projectId: number, now: readonly (readonly unknown[])[] = [projectHoursKey(projectId)]) =>
+    refreshQueries(queryClient, {
+      now,
+      later: [projectHoursKey(projectId), projectKey(projectId), projectListsKey, dashboardKey, timerKey],
+    })
 }
 
 export function useAllocateHours(projectId: number) {
-  const refresh = useRefreshBags()
+  const refresh = useRefreshBag()
   return useMutation({
     meta: { successMessage: 'Horas cargadas en la bolsa.' },
     mutationFn: (input: AllocationInput) => allocateHours(projectId, input),
-    onSuccess: refresh,
+    onSuccess: () => refresh(projectId),
   })
 }
 
@@ -70,7 +70,7 @@ export function useRequestExtension() {
     // Shown where it was asked (the timer block): the button turns into the confirmation.
     meta: { silentError: true },
     mutationFn: ({ projectId, message }: { projectId: number; message?: string }) => requestExtension(projectId, message),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: extensionRequestsKey }),
+    onSuccess: () => refreshQueries(queryClient, { later: [extensionRequestsKey] }),
   })
 }
 
@@ -79,11 +79,11 @@ export function useExtensionRequests(enabled: boolean) {
 }
 
 export function useApproveExtension() {
-  const refresh = useRefreshBags()
+  const refresh = useRefreshBag()
   return useMutation({
     meta: { successMessage: 'Ampliación aprobada.' },
     mutationFn: ({ requestId, input }: { requestId: number; input: AllocationInput }) => approveExtension(requestId, input),
-    onSuccess: refresh,
+    onSuccess: (request) => refresh(request.project.id, [projectHoursKey(request.project.id), extensionRequestsKey]),
   })
 }
 
@@ -92,6 +92,6 @@ export function useRejectExtension() {
   return useMutation({
     meta: { successMessage: 'Pedido rechazado.' },
     mutationFn: (requestId: number) => rejectExtension(requestId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: extensionRequestsKey }),
+    onSuccess: () => refreshQueries(queryClient, { now: [extensionRequestsKey] }),
   })
 }

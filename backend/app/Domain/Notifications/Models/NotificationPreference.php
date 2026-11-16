@@ -26,9 +26,15 @@ class NotificationPreference extends Model
         return ['event' => NotificationEvent::class, 'email' => 'boolean'];
     }
 
+    /** RF-09: Admins cannot mute the hour-block e-mail. */
+    public static function isLocked(User $user, NotificationEvent $event): bool
+    {
+        return $event->isMandatoryForAdmins() && $user->requiresTwoFactor();
+    }
+
     public static function wantsEmail(User $user, NotificationEvent $event): bool
     {
-        if ($event->isMandatoryForAdmins() && $user->requiresTwoFactor()) {
+        if (self::isLocked($user, $event)) {
             return true;
         }
 

@@ -24,7 +24,7 @@ export function ListSkeleton({ rows = 5, label = 'Cargando…' }: { rows?: numbe
             <Skeleton className={`h-4 ${index % 2 === 0 ? 'w-3/5' : 'w-2/5'}`} />
             <Skeleton className="h-3 w-1/3" />
           </div>
-          <Skeleton className="size-11 shrink-0 rounded-lg" />
+          <Skeleton className="size-9 shrink-0 rounded-md" />
         </div>
       ))}
     </Loading>

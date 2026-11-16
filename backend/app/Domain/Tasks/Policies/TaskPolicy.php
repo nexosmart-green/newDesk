@@ -42,7 +42,7 @@ class TaskPolicy
             return Response::denyAsNotFound();
         }
 
-        return $user->hasPermission(Permission::TasksAssign) ? Response::allow() : Response::deny();
+        return $user->hasPermission(Permission::TasksAssign) ? Response::allow() : Response::deny('Tu rol no permite asignar tareas. Pedíselo a quien gestiona el proyecto.');
     }
 
     /**

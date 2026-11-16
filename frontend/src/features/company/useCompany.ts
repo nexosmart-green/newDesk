@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { currentUserKey } from '@/features/auth/useAuth'
 import { fetchCompany, updateCompany, uploadCompanyLogo } from './companyApi'
+import { companyKey, currentUserKey } from '@/lib/queryKeys'
 import type { CompanyProfile, UpdateCompanyInput } from './types'
-
-export const companyKey = ['company'] as const
 
 export function useCompany() {
   return useQuery({ queryKey: companyKey, queryFn: fetchCompany })

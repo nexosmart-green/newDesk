@@ -4,7 +4,6 @@ namespace App\Domain\Notifications\Listeners;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
-use App\Domain\Notifications\Actions\Recipients;
 use App\Domain\Notifications\Notifications\ExtensionRequestedNotification;
 use App\Domain\Notifications\Notifications\HoursOverdrawnNotification;
 use App\Domain\Notifications\Notifications\HoursThresholdNotification;
@@ -12,6 +11,7 @@ use App\Domain\Notifications\Notifications\MentionedNotification;
 use App\Domain\Notifications\Notifications\ShiftChangedNotification;
 use App\Domain\Notifications\Notifications\TaskAssignedNotification;
 use App\Domain\Notifications\Notifications\TimerCutNotification;
+use App\Domain\Notifications\Queries\NotificationRecipients;
 use App\Domain\Scheduling\Events\ShiftsChanged;
 use App\Domain\Tasks\Events\CommentPosted;
 use App\Domain\Tasks\Events\TaskAssigned;
@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Notification;
  */
 final class SendDomainNotifications
 {
-    public function __construct(private readonly Recipients $recipients) {}
+    public function __construct(private readonly NotificationRecipients $recipients) {}
 
     public function onTaskAssigned(TaskAssigned $event): void
     {
@@ -90,7 +90,7 @@ final class SendDomainNotifications
     /** RF-09.07: one message per person per bulk change, never to the person who made it. */
     public function onShiftsChanged(ShiftsChanged $event): void
     {
-        $people = User::query()->whereKey(array_keys($event->datesByUserId))->where('status', 'active')->get();
+        $people = User::query()->whereKey(array_keys($event->datesByUserId))->active()->get();
 
         foreach ($people as $person) {
             if (! $person->is($event->actor)) {

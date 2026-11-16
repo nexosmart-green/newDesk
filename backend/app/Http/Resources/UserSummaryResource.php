@@ -4,14 +4,13 @@ namespace App\Http\Resources;
 
 use App\Domain\Identity\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * User as seen in admin lists. Profile details (RF-01.04) live in E1's profile resource.
  *
  * @mixin User
  */
-class UserSummaryResource extends JsonResource
+class UserSummaryResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

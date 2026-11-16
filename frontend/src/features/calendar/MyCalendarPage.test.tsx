@@ -1,7 +1,9 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { ApiError } from '@/lib/api'
 import { renderRoutes } from '@/test/renderWithProviders'
 import * as calendarApi from './calendarApi'
+import * as teamCalendarApi from './teamCalendarApi'
 import { MyCalendarPage } from './MyCalendarPage'
 import type { MyCalendar } from './types'
 
@@ -26,6 +28,7 @@ const calendar: MyCalendar = {
 }
 
 function renderCalendar(feedActive = false) {
+  vi.spyOn(teamCalendarApi, 'fetchTeamCalendar').mockRejectedValue(new ApiError(403, 'Sin gente a cargo.'))
   vi.spyOn(calendarApi, 'fetchCalendarFeedStatus').mockResolvedValue(feedActive)
   const fetch = vi.spyOn(calendarApi, 'fetchMyCalendar').mockResolvedValue(calendar)
   renderRoutes([{ path: '/calendario', element: <MyCalendarPage /> }], '/calendario')
@@ -45,12 +48,16 @@ describe('MyCalendarPage', () => {
     const monday = await screen.findByRole('region', { name: /lunes 2\/11/i })
     expect(fetch).toHaveBeenCalledWith('2026-11-02', '2026-11-08')
     expect(within(monday).getByText('Completo')).toBeInTheDocument()
-    expect(within(monday).getByText(/09:00–18:00/)).toBeInTheDocument()
-    expect(within(monday).getByText(/Remoto/)).toBeInTheDocument()
+    expect(within(monday).getByText('9–18')).toBeInTheDocument()
+    expect(within(monday).getByText('Remoto')).toBeInTheDocument()
     const wednesday = screen.getByRole('region', { name: /miércoles 4\/11/i })
-    expect(within(wednesday).getByRole('link', { name: 'bhn-60' })).toHaveAttribute('href', '/tareas/bhn-60')
+    expect(within(wednesday).getByRole('link', { name: 'bhn-60 Arreglar el login' })).toHaveAttribute('href', '/tareas/bhn-60')
     expect(within(screen.getByRole('region', { name: /jueves 5\/11/i })).getByText('Feriado: Día del equipo')).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: /martes 3\/11/i })).getByText('Nada agendado')).toBeInTheDocument()
+    // One row per day; empty days are a short muted line, and a run of them collapses into one.
+    expect(screen.queryByRole('region', { name: /martes 3\/11/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Mar 3: nada agendado')).toBeInTheDocument()
+    expect(screen.getByText('Vie 6 (hoy): nada agendado')).toBeInTheDocument()
+    expect(screen.getByText('Sáb 7 a dom 8: nada agendado')).toBeInTheDocument()
   })
 
   it('switches to the month view fetching whole weeks', async () => {
@@ -82,7 +89,7 @@ describe('MyCalendarPage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Revocar suscripción' }))
     expect(revoke).not.toHaveBeenCalled()
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revocar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revocar suscripción' }))
     expect(revoke).toHaveBeenCalled()
     expect(await screen.findByText(/Suscripción revocada/)).toBeInTheDocument()
     await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Revocar suscripción' })).not.toBeInTheDocument())

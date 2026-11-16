@@ -33,8 +33,8 @@ const grid: ShiftGrid = {
   holidays: [{ id: 8, date: '2026-11-05', name: 'Día del equipo', scope: 'company' }],
 }
 
-function renderShifts(permissions = ['shifts.manage']) {
-  vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions }))
+function renderShifts(permissions = ['shifts.manage'], timezone = 'America/Argentina/Buenos_Aires') {
+  vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions, timezone }))
   const fetchGrid = vi.spyOn(shiftsApi, 'fetchShiftGrid').mockResolvedValue(grid)
   vi.spyOn(shiftsApi, 'fetchShiftTemplates').mockResolvedValue(templates)
   renderRoutes([{ path: '/turnos', element: <ShiftsPage /> }], '/turnos')
@@ -53,10 +53,36 @@ describe('ShiftsPage', () => {
   it('renders each person × day with its shift and the holidays in the header (RF-06.02)', async () => {
     const fetchGrid = renderShifts()
 
-    expect(await screen.findByRole('button', { name: /Ana García, lunes 2\/11: Completo 09:00–18:00 \(Oficina\)/ })).toBeInTheDocument()
+    const anaMonday = await screen.findByRole('button', { name: /Ana García, lunes 2\/11: Completo 9–18 \(Oficina\)/ })
     expect(fetchGrid).toHaveBeenCalledWith('2026-11-02', '2026-11-08')
     expect(cell(/Juan Pérez, lunes 2\/11: sin turno/)).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /jueves 5\/11.*Feriado: Día del equipo/ })).toBeInTheDocument()
+    // The chip fits whole: compact hours and the mode icon; the template name is the tooltip.
+    expect(within(anaMonday).getByText('9–18')).toBeInTheDocument()
+    expect(within(anaMonday).getByTitle('Completo 9–18, oficina')).toBeInTheDocument()
+  })
+
+  it('leaves empty days blank, with a "+" that only shows on hover or focus', async () => {
+    renderShifts()
+
+    const empty = await screen.findByRole('button', { name: /Juan Pérez, lunes 2\/11: sin turno/ })
+    expect(empty).toHaveTextContent('')
+    expect(screen.queryByText('—')).not.toBeInTheDocument()
+    expect(within(empty).getByTestId('assign-affordance')).toHaveClass('opacity-0', 'group-hover:opacity-100', 'group-focus-visible:opacity-100')
+  })
+
+  it('names the company time zone only to someone in another one', async () => {
+    renderShifts(['shifts.manage'], 'Europe/Madrid')
+
+    expect(await screen.findByText('Hora de Buenos Aires')).toBeInTheDocument()
+  })
+
+  it('says nothing about the time zone when it is the viewer’s own', async () => {
+    renderShifts()
+
+    await screen.findByRole('table', { name: 'Turnos de la semana por persona' })
+    expect(screen.queryByText(/Hora de/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/America\//)).not.toBeInTheDocument()
   })
 
   it('assigns a template to every selected cell in one request', async () => {
@@ -114,10 +140,12 @@ describe('ShiftsPage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Copiar semana anterior' }))
     expect(copy).not.toHaveBeenCalled()
-    await userEvent.click(within(screen.getByRole('dialog', { name: 'Copiar semana anterior' })).getByRole('button', { name: 'Copiar' }))
+    const confirm = screen.getByRole('dialog', { name: '¿Reemplazar con la semana anterior?' })
+    expect(within(confirm).getByText(/se les borran los que ya tienen cargados/)).toBeInTheDocument()
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Reemplazar con la semana anterior' }))
 
     expect(copy).toHaveBeenCalledWith('2026-11-02')
-    expect(await screen.findByText('Se copiaron 5 turnos.')).toBeInTheDocument()
+    expect(await screen.findByText('Semana reemplazada con 5 turnos de la semana anterior.')).toBeInTheDocument()
   })
 
   it('does not show the grid without shifts.manage', async () => {

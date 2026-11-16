@@ -1,3 +1,4 @@
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { formatDateTime } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
 import { CommentDialog } from './CommentDialog'
@@ -28,10 +29,13 @@ export function PendingCommentDialog({ entry, position, onDone, onClose }: Pendi
     >
       {position && <p className="text-xs text-muted">{position}</p>}
       <p>
-        <span className="font-mono uppercase">{entry.taskCode}</span> · {entry.taskTitle}
+        <TaskCode code={entry.taskCode} className="mr-1.5" />
+        {entry.taskTitle}
       </p>
-      <p className="text-muted">
-        {entry.project} · {formatDateTime(entry.startedAt)} · {formatDuration(entry.seconds)}
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-muted">
+        <span>{entry.project}</span>
+        <span>{formatDateTime(entry.startedAt)}</span>
+        <span className="tabular">{formatDuration(entry.seconds)}</span>
       </p>
       {entry.stopReasonLabel && <p className="text-muted">Se cortó: {entry.stopReasonLabel}</p>}
     </CommentDialog>

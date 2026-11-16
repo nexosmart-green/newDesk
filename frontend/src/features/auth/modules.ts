@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { currentUserKey } from '@/lib/queryKeys'
 import { fetchCurrentUser } from './authApi'
 import type { CurrentUser } from './types'
 
@@ -25,6 +26,6 @@ export function isModulePermission(value: string): value is ModulePermission {
  * inside the app shell RequireAuth already loaded it; while unknown, nothing is hidden.
  */
 export function useHasModule(module: ModulePermission): boolean {
-  const { data } = useQuery<CurrentUser | null>({ queryKey: ['me'], queryFn: fetchCurrentUser, enabled: false })
+  const { data } = useQuery<CurrentUser | null>({ queryKey: currentUserKey, queryFn: fetchCurrentUser, enabled: false })
   return data ? data.permissions.includes(module) : true
 }

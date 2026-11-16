@@ -25,7 +25,7 @@ final class ConfirmTwoFactor
         }
 
         if ($user->two_factor_secret === null || ! $this->authenticator->verifyCode($user->two_factor_secret, $code, $user->id)) {
-            throw new BusinessRuleViolation('El código no es válido. Revisá la hora del celular y probá de nuevo.', 'two_factor_invalid_code');
+            throw new BusinessRuleViolation('El código no coincide. Usá el que muestra ahora tu app de autenticación (cambia cada 30 segundos); si sigue fallando, revisá que la hora del celular sea automática.', 'two_factor_invalid_code');
         }
 
         $recoveryCodes = $this->authenticator->generateRecoveryCodes();

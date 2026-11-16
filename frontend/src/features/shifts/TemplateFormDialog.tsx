@@ -4,6 +4,7 @@ import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
+import { hasChanges } from '@/lib/formState'
 import { workModeLabels, type ShiftTemplate, type ShiftTemplateInput, type WorkMode } from './types'
 import { useSaveShiftTemplate } from './useShifts'
 
@@ -18,7 +19,10 @@ interface TemplateFormDialogProps {
 /** RF-06.01: name, start, end, color and mode. */
 export function TemplateFormDialog({ template, onClose }: TemplateFormDialogProps) {
   const save = useSaveShiftTemplate()
-  const [form, setForm] = useState<ShiftTemplateInput>(() => (template ? { ...template } : emptyTemplate))
+  const [initial] = useState<ShiftTemplateInput>(() =>
+    template ? { name: template.name, starts_at: template.starts_at, ends_at: template.ends_at, color: template.color, mode: template.mode } : emptyTemplate,
+  )
+  const [form, setForm] = useState(initial)
   const set = (changes: Partial<ShiftTemplateInput>) => setForm({ ...form, ...changes })
 
   function handleSubmit(event: FormEvent) {
@@ -27,7 +31,7 @@ export function TemplateFormDialog({ template, onClose }: TemplateFormDialogProp
   }
 
   return (
-    <Dialog title={template ? `Editar ${template.name}` : 'Nueva plantilla'} size="lg" onClose={onClose}>
+    <Dialog title={template ? `Editar ${template.name}` : 'Nueva plantilla'} size="md" dirty={hasChanges(initial, form)} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TextField label="Nombre" required maxLength={60} value={form.name} onChange={(event) => set({ name: event.target.value })} error={fieldErrorOf(save.error, 'name')} />
         <div className="grid grid-cols-2 gap-3">
@@ -50,7 +54,7 @@ export function TemplateFormDialog({ template, onClose }: TemplateFormDialogProp
             Cancelar
           </Button>
           <Button type="submit" disabled={!form.name.trim()} loading={save.isPending}>
-            Guardar
+            {template ? 'Guardar cambios' : 'Crear plantilla'}
           </Button>
         </DialogFooter>
       </form>

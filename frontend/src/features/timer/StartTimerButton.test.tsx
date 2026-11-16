@@ -88,6 +88,24 @@ describe('StartTimerButton', () => {
     expect(await within(dialog).findByText('Pedido de ampliación enviado.')).toBeInTheDocument()
   })
 
+  it('blocked by an entry without comment offers "Completar comentario" right there (RF-05.17)', async () => {
+    const cut = buildTimeEntry({ id: 33, task: { id: 12, code: 'bhn-12', title: 'Maquetar home' } })
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState({ pending_comments: [cut] }))
+    vi.spyOn(timerApi, 'startTimer').mockRejectedValue(new ApiError(422, 'Completá el comentario pendiente antes de iniciar otro.', {}, 'comment_pending'))
+    const complete = vi.spyOn(timerApi, 'completeEntryComment').mockResolvedValue(cut)
+    renderButton()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar cronómetro en bhn-60' }))
+    const blocked = await screen.findByRole('dialog', { name: 'No se pudo iniciar el cronómetro' })
+    await userEvent.click(within(blocked).getByRole('button', { name: 'Completar comentario' }))
+
+    const prompt = await screen.findByRole('dialog', { name: 'Completá el comentario' })
+    await userEvent.type(within(prompt).getByRole('textbox'), previousComment)
+    await userEvent.click(within(prompt).getByRole('button', { name: 'Guardar comentario' }))
+
+    expect(complete).toHaveBeenCalledWith(33, previousComment)
+  })
+
   it('on a project already out of hours says so before any click and asks for an extension (RF-05.05)', async () => {
     vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
     const start = vi.spyOn(timerApi, 'startTimer')
@@ -114,5 +132,22 @@ describe('StartTimerButton', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Detener' }))
 
     expect(stop).toHaveBeenCalledWith('Arreglé el login')
+  })
+
+  it('on the running task shows the elapsed time on pink, never as a danger button', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState({ active: buildTimeEntry({ elapsed_seconds: 3725 }) }))
+    renderButton()
+
+    const button = await screen.findByRole('button', { name: 'Detener cronómetro de bhn-60' })
+    await vi.waitFor(() => expect(button).toHaveTextContent('01:02:05'))
+    expect(button).toHaveClass('bg-live')
+    expect(button.className).not.toMatch(/danger/)
+  })
+
+  it('takes another start verb when asked ("Seguir")', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
+    renderAt(<StartTimerButton task={task} startLabel="Seguir" />)
+
+    expect(await screen.findByRole('button', { name: 'Iniciar cronómetro en bhn-60' })).toHaveTextContent('Seguir')
   })
 })

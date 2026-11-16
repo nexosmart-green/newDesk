@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey } from '@/lib/queryKeys'
 import { ManualTimeForm } from '@/features/tasks/ManualTimeForm'
 import * as timerApi from '@/features/timer/timerApi'
 import { buildTimeEntry } from '@/test/fixtures'
@@ -43,7 +43,7 @@ describe('entry times use the profile timezone, not the browser one', () => {
 
     await userEvent.clear(screen.getByLabelText('Desde'))
     await userEvent.type(screen.getByLabelText('Desde'), '08:00')
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Corregir registro' }))
 
     expect(correct).toHaveBeenCalledWith(300, { date: '2026-11-10', from: '08:00', to: '10:30', comment: 'Revisé el formulario de login' })
   })

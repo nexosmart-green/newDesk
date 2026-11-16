@@ -2,6 +2,8 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Touch screens: controls grow from 36px to 44px (RNF-13 touch targets). */
+@custom-variant coarse (@media (pointer: coarse));
 
 /*
  * Design tokens — palette taken from desk.nexosmart.es (the Worksuite NexoSmart uses today):
@@ -15,6 +17,12 @@
   --color-surface: #232b36;
   --color-surface-2: #2b3441;
   --color-border: #364151;
+  /* Quiet separators (rows, sections) and the inputs' own surface. */
+  --color-line: #2f3946;
+  --color-field: #1b222c;
+  --color-field-border: #3a4656;
+  /* Only what floats: popovers and dialogs. */
+  --color-raised: #2b3441;
   --color-text: #f3f5f7;
   --color-muted: #99a5b5;
   /* Teal readable as text/icon on dark surfaces (6.4:1 on bg). */
@@ -26,6 +34,8 @@
   --color-live: #f6beb6;
   --color-on-live: #4a1d17;
   --color-danger: #f27474;
+  /* Filled destructive buttons: white text passes AA (5.6:1); #f27474 would not (2.8:1). */
+  --color-danger-strong: #b93030;
   --color-warning: #fcbd01;
   --color-success: #4cc46a;
 
@@ -40,6 +50,11 @@
   --color-surface: #ffffff;
   --color-surface-2: #f3f6f9;
   --color-border: #d3dbe3;
+  --color-line: #d3dbe3;
+  /* White with a visible edge: grey-filled inputs read as disabled. */
+  --color-field: #ffffff;
+  --color-field-border: #c3ced9;
+  --color-raised: #ffffff;
   --color-text: #28313c;
   --color-muted: #56626f;
   --color-accent: #1f7071;
@@ -48,6 +63,7 @@
   --color-live: #f6beb6;
   --color-on-live: #4a1d17;
   --color-danger: #c41616;
+  --color-danger-strong: #c41616;
   --color-warning: #8a6500;
   --color-success: #1e7e34;
   /* The sidebar stays dark in light mode, like desk. */
@@ -59,6 +75,10 @@
   --color-surface: var(--color-surface);
   --color-surface-2: var(--color-surface-2);
   --color-border: var(--color-border);
+  --color-line: var(--color-line);
+  --color-field: var(--color-field);
+  --color-field-border: var(--color-field-border);
+  --color-raised: var(--color-raised);
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-accent: var(--color-accent);
@@ -67,12 +87,19 @@
   --color-live: var(--color-live);
   --color-on-live: var(--color-on-live);
   --color-danger: var(--color-danger);
+  --color-danger-strong: var(--color-danger-strong);
   --color-warning: var(--color-warning);
   --color-success: var(--color-success);
   --color-sidebar: var(--color-sidebar);
   --color-sidebar-text: var(--color-sidebar-text);
   --color-sidebar-muted: var(--color-sidebar-muted);
   --color-sidebar-hover: var(--color-sidebar-hover);
+  /* Radius by role: 4 chips/checks/bars · 6 inputs/buttons · 10 containers · 14 dialogs/popovers. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 0.875rem;
 }
 
 /* "Repartir el día" (RF-05.19): one fill per project, dark ink on it (6.2:1 or more). Same in both themes. */
@@ -242,4 +269,114 @@ body {
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/*
+ * Rendered markdown (task descriptions, comments). Tailwind's preflight resets every element, so the
+ * reading styles live here, in tokens, instead of a typography plugin.
+ */
+.markdown {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  max-width: 72ch;
+}
+.markdown > * + * {
+  margin-top: 0.75em;
+}
+.markdown :where(h1, h2, h3, h4) {
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  margin-top: 1.25em;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown h1 {
+  font-size: 1.25rem;
+}
+.markdown h2 {
+  font-size: 1.125rem;
+}
+.markdown :where(h3, h4) {
+  font-size: 1rem;
+}
+.markdown :where(ul, ol) {
+  padding-left: 1.4em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li + li {
+  margin-top: 0.25em;
+}
+.markdown li::marker {
+  color: var(--color-muted);
+}
+/* GFM checklists: no bullet, the checkbox is the marker. */
+.markdown li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.4em;
+}
+.markdown input[type="checkbox"] {
+  accent-color: var(--color-brand);
+  margin-right: 0.5em;
+  vertical-align: -0.1em;
+}
+.markdown a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown strong {
+  font-weight: 600;
+}
+.markdown blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding-left: 0.9em;
+  color: var(--color-muted);
+}
+.markdown :not(pre) > code {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 0.3rem;
+  padding: 0.05em 0.35em;
+  font-size: 0.875em;
+}
+.markdown pre {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+.markdown hr {
+  border-color: var(--color-border);
+}
+.markdown table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.markdown :where(th, td) {
+  border: 1px solid var(--color-border);
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+}
+.markdown th {
+  background: var(--color-surface-2);
+  font-weight: 600;
 }

@@ -1,5 +1,6 @@
 import { Disclosure } from '@/components/ui/Disclosure'
 import { OptionalDateField } from '@/components/ui/OptionalDateField'
+import { AsyncSelectField } from '@/components/ui/AsyncSelectField'
 import { SelectField } from '@/components/ui/SelectField'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
@@ -63,15 +64,21 @@ export function ProjectFormFields({ form, onChange, error, project }: ProjectFor
             </option>
           ))}
         </SelectField>
-        <SelectField label="Cliente" value={form.client_id} error={errorOf('client_id')} onChange={(event) => onChange({ client_id: event.target.value })}>
-          <option value="">{clients.isPending ? 'Cargando…' : 'Sin cliente'}</option>
+        <AsyncSelectField
+          label="Cliente"
+          loading={clients.isPending}
+          emptyLabel="Sin cliente"
+          value={form.client_id}
+          error={errorOf('client_id')}
+          onChange={(event) => onChange({ client_id: event.target.value })}
+        >
           {currentClient && <option value={currentClient.id}>{currentClient.name} (inactivo)</option>}
           {activeClients.map((client) => (
             <option key={client.id} value={client.id}>
               {client.display_name}
             </option>
           ))}
-        </SelectField>
+        </AsyncSelectField>
         <PersonSelect
           label="Responsable"
           emptyLabel="Sin responsable"

@@ -116,3 +116,19 @@ it('filters the list by client and status (RF-03.07)', function () {
     $this->actingAs($admin)->getJson("/api/v1/projects?client_id={$clientId}")->assertJsonCount(1, 'data');
     $this->actingAs($admin)->getJson('/api/v1/projects?status=finished')->assertJsonCount(0, 'data');
 });
+
+it('lists each project with its leader and a few member faces, and the full member count (RF-03.07)', function () {
+    $admin = adminUser();
+    $leader = userWithRole($admin);
+    $id = createProject($admin, ['leader_user_id' => $leader->id]);
+    foreach (range(1, 5) as $ignored) {
+        $this->actingAs($admin)->postJson("/api/v1/projects/{$id}/members", ['user_id' => userWithRole($admin)->id])->assertCreated();
+    }
+
+    $row = $this->actingAs($admin)->getJson('/api/v1/projects')->assertOk()->json('data.0');
+
+    expect($row['leader'])->toMatchArray(['id' => $leader->id, 'full_name' => $leader->fullName(), 'avatar' => null])
+        ->and($row['members_count'])->toBe(6)
+        ->and($row['member_faces'])->toHaveCount(Project::MEMBER_FACES)
+        ->and(array_keys($row['member_faces'][0]))->toBe(['id', 'full_name', 'avatar']);
+});

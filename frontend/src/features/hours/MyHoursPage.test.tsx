@@ -33,7 +33,7 @@ describe('MyHoursPage', () => {
     const { fetchEntries } = renderPage([])
 
     expect(await screen.findByText('Revisé el formulario')).toBeInTheDocument()
-    expect(screen.getAllByText(/Bahía Web ·/)).toHaveLength(2)
+    expect(within(screen.getByRole('list', { name: 'Registros de horas' })).getAllByText('Bahía Web')).toHaveLength(2)
     expect(screen.queryByLabelText('Persona')).not.toBeInTheDocument()
     expect(fetchEntries).toHaveBeenCalledWith(emptyMyEntryFilters)
   })

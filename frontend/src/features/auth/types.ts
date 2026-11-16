@@ -5,7 +5,7 @@ export interface Company {
   timezone: string
 }
 
-export interface TwoFactorStatus {
+interface TwoFactorStatus {
   enabled: boolean
   /** Admins must have it (RF-01.02); until enabled, every other endpoint answers 403. */
   required: boolean

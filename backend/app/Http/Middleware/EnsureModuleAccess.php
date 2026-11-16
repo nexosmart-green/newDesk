@@ -21,7 +21,7 @@ class EnsureModuleAccess
         $user = $request->user();
 
         if ($user instanceof User && ! $user->hasPermission($permission)) {
-            return ApiResponse::error("Tu rol no tiene acceso a: {$permission->label()}.", 403, data: ['code' => 'module_disabled', 'module' => $module]);
+            return ApiResponse::error("Tu rol no tiene acceso a: {$permission->label()}. Pedile a un administrador que habilite el módulo para tu rol.", 403, data: ['code' => 'module_disabled', 'module' => $module]);
         }
 
         return $next($request);

@@ -2,6 +2,8 @@
 
 namespace App\Domain\Tasks\Actions;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\TaskStatus;
 use Illuminate\Support\Facades\DB;
@@ -11,20 +13,24 @@ use Illuminate\Support\Facades\DB;
  */
 final class ReorderTaskStatuses
 {
-    /** @param  list<int>  $orderedIds */
-    public function __invoke(int $companyId, array $orderedIds): void
-    {
-        DB::transaction(function () use ($companyId, $orderedIds) {
-            $current = TaskStatus::query()->forCompany($companyId)->lockForUpdate()->pluck('id')->sort()->values()->all();
-            $requested = collect($orderedIds)->sort()->values()->all();
+    public function __construct(private readonly RecordActivity $recordActivity) {}
 
-            if ($current !== $requested) {
+    /** @param  list<int>  $orderedIds */
+    public function __invoke(User $actor, array $orderedIds): void
+    {
+        DB::transaction(function () use ($actor, $orderedIds) {
+            $companyId = $actor->company_id;
+            $previousOrder = TaskStatus::query()->forCompany($companyId)->orderBy('position')->lockForUpdate()->pluck('id')->all();
+
+            if (collect($previousOrder)->sort()->values()->all() !== collect($orderedIds)->sort()->values()->all()) {
                 throw new BusinessRuleViolation('El orden tiene que incluir todos los estados, una sola vez.', 'status_order_incomplete');
             }
 
             foreach ($orderedIds as $index => $id) {
                 TaskStatus::query()->forCompany($companyId)->whereKey($id)->update(['position' => $index + 1]);
             }
+
+            ($this->recordActivity)('task_status.reordered', $actor->company, $actor, ['ids' => $previousOrder], ['ids' => $orderedIds]);
         });
     }
 }

@@ -6,6 +6,8 @@ use App\Domain\People\Actions\ReplaceAvatar;
 use App\Domain\People\Actions\SetUserSkills;
 use App\Domain\People\Actions\UpdateOwnProfile;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\People\ReplaceAvatarRequest;
+use App\Http\Requests\People\SetUserSkillsRequest;
 use App\Http\Requests\People\UpdateOwnProfileRequest;
 use App\Http\Resources\PersonResource;
 use App\Http\Resources\ProfileResource;
@@ -28,29 +30,19 @@ class MyProfileController extends Controller
         return ApiResponse::ok(ProfileResource::make($updateOwnProfile($request->user(), $request->validated())), 'Perfil actualizado.');
     }
 
-    public function avatar(Request $request, ReplaceAvatar $replaceAvatar): JsonResponse
+    public function avatar(ReplaceAvatarRequest $request, ReplaceAvatar $replaceAvatar): JsonResponse
     {
-        $request->validate(['avatar' => ['required', 'file', 'max:5120']]);
-
         return ApiResponse::ok(ProfileResource::make($replaceAvatar($request->user(), $request->file('avatar'))), 'Foto actualizada.');
     }
 
-    public function skills(Request $request, SetUserSkills $setSkills): JsonResponse
+    public function skills(SetUserSkillsRequest $request, SetUserSkills $setSkills): JsonResponse
     {
-        $request->validate([
-            'skills' => ['present', 'array', 'max:50'],
-            'skills.*.id' => ['required', 'integer', 'distinct'],
-            'skills.*.level' => ['required', 'integer', 'between:0,100'],
-        ]);
-
-        $levels = collect($request->input('skills'))->mapWithKeys(fn (array $skill) => [(int) $skill['id'] => (int) $skill['level']])->all();
-
-        return ApiResponse::ok(ProfileResource::make($setSkills($request->user(), $levels)), 'Habilidades guardadas.');
+        return ApiResponse::ok(ProfileResource::make($setSkills($request->user(), $request->levelsBySkillId())), 'Habilidades guardadas.');
     }
 
     public function team(Request $request): JsonResponse
     {
-        $team = $request->user()->directReports()->where('users.status', 'active')
+        $team = $request->user()->directReports()->active()
             ->with(['profile.jobTitle', 'profile.area'])
             ->orderBy('first_name')->get();
 

@@ -8,7 +8,7 @@ export interface TextFieldConfig {
   required?: boolean
 }
 
-export interface CatalogFieldConfig {
+interface CatalogFieldConfig {
   name: 'job_title_id' | 'area_id' | 'employment_type_id'
   label: string
   catalog: CatalogType
@@ -44,7 +44,7 @@ export const sensitiveFields: (TextFieldConfig & { name: keyof SensitiveProfileF
 
 const ID_FIELDS = ['job_title_id', 'area_id', 'employment_type_id', 'reports_to_user_id']
 
-export type EmployeeForm = Record<string, string>
+type EmployeeForm = Record<string, string>
 
 export function initialEmployeeForm(person: PersonProfile): EmployeeForm {
   const text = (value: string | null | undefined) => value ?? ''

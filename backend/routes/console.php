@@ -55,3 +55,5 @@ Schedule::command('status-page:check')->everyMinute()->withoutOverlapping()->run
 Schedule::command('support:retention')->hourly()->withoutOverlapping();
 Schedule::command('status-page:domains')->hourly()->withoutOverlapping()->runInBackground();
 Schedule::command('status-page:pagespeed')->hourly()->withoutOverlapping()->runInBackground();
+// RF-06.03: recurring shifts stay generated 8 weeks ahead (idempotent).
+Schedule::command('shifts:extend-recurrences')->dailyAt('02:30')->onOneServer();

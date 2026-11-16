@@ -1,6 +1,7 @@
 import { CircleAlert, CircleCheck } from 'lucide-react'
 import { ApiError } from '@/lib/api'
 import { errorTextOf } from '@/lib/errorText'
+import { claimAllFieldErrors } from '@/lib/fieldErrors'
 
 interface ErrorAlertProps {
   error: unknown
@@ -17,6 +18,8 @@ export function ErrorAlert({ error, showFieldErrors = false }: ErrorAlertProps) 
   const apiError = error instanceof ApiError ? error : null
   if (apiError?.hasFieldErrors() && !showFieldErrors) return null
 
+  // Shown here, so the hidden-field toast (lib/queryClient.ts) doesn't repeat it.
+  if (apiError && showFieldErrors) claimAllFieldErrors(apiError)
   const firstFieldMessage = Object.values(apiError?.fieldErrors ?? {})[0]?.[0]
   const message = (showFieldErrors ? firstFieldMessage : undefined) ?? errorTextOf(error).message
 

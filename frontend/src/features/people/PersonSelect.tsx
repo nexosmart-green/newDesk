@@ -1,4 +1,4 @@
-import { SelectField } from '@/components/ui/SelectField'
+import { AsyncSelectField } from '@/components/ui/AsyncSelectField'
 import { emptyDirectoryFilters } from './types'
 import { usePeople } from './usePeople'
 
@@ -21,20 +21,21 @@ export function PersonSelect({ label, value, onChange, emptyLabel, excludeIds = 
   const showCurrent = current && !options.some((person) => person.id === current.id)
 
   return (
-    <SelectField
+    <AsyncSelectField
       label={label}
+      loading={people.isPending}
+      emptyLabel={emptyLabel}
       value={value ?? ''}
       error={error}
       disabled={disabled || people.isPending}
       onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
     >
-      <option value="">{people.isPending ? 'Cargando…' : emptyLabel}</option>
       {showCurrent && <option value={current.id}>{current.full_name}</option>}
       {options.map((person) => (
         <option key={person.id} value={person.id}>
           {person.full_name}
         </option>
       ))}
-    </SelectField>
+    </AsyncSelectField>
   )
 }

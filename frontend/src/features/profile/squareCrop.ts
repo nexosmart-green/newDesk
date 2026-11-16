@@ -1,4 +1,4 @@
-export interface CropRect {
+interface CropRect {
   sx: number
   sy: number
   side: number
@@ -7,7 +7,7 @@ export interface CropRect {
 export const MIN_ZOOM = 1
 export const MAX_ZOOM = 3
 /** Backend resizes to 256px and 64px; 512px leaves room for retina without a heavy upload. */
-export const OUTPUT_SIZE = 512
+const OUTPUT_SIZE = 512
 
 /** Centered square of the image; zoom > 1 tightens it around the center. */
 export function centeredSquareCrop(width: number, height: number, zoom: number): CropRect {

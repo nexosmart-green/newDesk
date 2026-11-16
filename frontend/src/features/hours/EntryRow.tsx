@@ -1,7 +1,9 @@
 import { Lock } from 'lucide-react'
 import { Link } from 'react-router'
+import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { entrySourceLabels, type TimeEntry } from '@/features/timer/types'
 import { formatDuration } from '@/lib/duration'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
@@ -26,17 +28,26 @@ export function EntryRow({ entry, canChange, locked, showProject = false, onEdit
     <li className="grid gap-2 p-3 sm:grid-cols-[1fr_auto] sm:items-start">
       <div className="space-y-1 text-sm">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-medium">{formatDuration(entry.elapsed_seconds)}</span>
+          <span className="tabular font-medium">{formatDuration(entry.elapsed_seconds)}</span>
           <span className="text-muted">{formatEntryRange(entry.started_at, entry.ended_at, timeZone)}</span>
           <Badge>{entrySourceLabels[entry.source]}</Badge>
           {entry.is_running && <Badge tone="accent">En curso</Badge>}
         </p>
-        <p>
-          {showProject ? entry.project.name : entry.user.full_name} ·{' '}
-          <Link to={`/tareas/${entry.task.code}`} className="font-mono uppercase text-accent">
-            {entry.task.code}
-          </Link>{' '}
-          {entry.task.title}
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {showProject ? (
+            <span>{entry.project.name}</span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <Avatar name={entry.user.full_name} url={null} size="xs" />
+              {entry.user.full_name}
+            </span>
+          )}
+          <span className="min-w-0">
+            <TaskCode code={entry.task.code} className="mr-1.5" />
+            <Link to={`/tareas/${entry.task.code}`} className="hover:text-accent hover:underline">
+              {entry.task.title}
+            </Link>
+          </span>
         </p>
         {entry.comment_pending ? (
           <Badge tone="warning">Comentario pendiente</Badge>

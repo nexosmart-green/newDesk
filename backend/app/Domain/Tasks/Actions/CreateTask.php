@@ -9,6 +9,8 @@ use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Events\TaskAssigned;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskStatus;
+use App\Domain\Tasks\Support\ResolveProjectMembers;
+use App\Domain\Tasks\Support\ResolveTaskClassification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -20,11 +22,12 @@ final class CreateTask
 {
     public function __construct(
         private readonly ResolveProjectMembers $resolveMembers,
+        private readonly ResolveTaskClassification $classification,
         private readonly RecordActivity $recordActivity,
     ) {}
 
     /**
-     * @param  array<string, mixed>  $data  Task::EDITABLE fields
+     * @param  array<string, mixed>  $data  Task::EDITABLE fields, plus optional `label_ids` (list<int>)
      * @param  list<int>  $assigneeIds
      */
     public function __invoke(User $actor, Project $project, array $data, array $assigneeIds = []): Task
@@ -40,6 +43,8 @@ final class CreateTask
             }
 
             $assignees = ($this->resolveMembers)($project, $assigneeIds);
+            $category = $this->classification->category($project->company_id, $data['category_id'] ?? null);
+            $labels = $this->classification->labels($project->company_id, $data['label_ids'] ?? []);
 
             $project->task_sequence++;
             $project->save();
@@ -54,11 +59,14 @@ final class CreateTask
                 'created_by' => $actor->id,
             ]);
             $task->assignees()->attach(array_map(fn (User $user) => $user->id, $assignees));
+            $task->labels()->attach($labels->modelKeys());
 
             ($this->recordActivity)('task.created', $task, $actor, after: [
                 'code' => $task->code,
                 'title' => $task->title,
                 'assignees' => array_map(fn (User $user) => $user->fullName(), $assignees),
+                'category' => $category?->name,
+                'labels' => $labels->pluck('name')->all(),
             ], projectId: $project->id);
 
             return [$task, $assignees];

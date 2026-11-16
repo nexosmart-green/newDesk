@@ -11,8 +11,13 @@ use App\Domain\TimeTracking\Actions\DeleteTimeEntry;
 use App\Domain\TimeTracking\Actions\LogManualTime;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Domain\TimeTracking\Queries\Timesheet;
+use App\Domain\TimeTracking\Support\LocalDateRange;
 use App\Domain\TimeTracking\Support\ManualEntryWindow;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TimeTracking\CompletePendingCommentRequest;
+use App\Http\Requests\TimeTracking\CorrectTimeEntryRequest;
+use App\Http\Requests\TimeTracking\LogManualTimeRequest;
+use App\Http\Requests\TimeTracking\TimesheetRequest;
 use App\Http\Resources\TimeEntryResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -20,7 +25,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
@@ -37,49 +41,30 @@ class TimeEntryController extends Controller
         ]);
         $person = $this->personAsked($request);
 
-        $entries = TimeEntry::query()->where('user_id', $person->id)
-            ->when($request->integer('project_id'), fn (Builder $q, int $id) => $q->where('project_id', $id))
-            ->startedOnLocalDays($request->query('from'), $request->query('to'), $person->effectiveTimezone())
+        $query = TimeEntry::query()->where('user_id', $person->id)
+            ->when($request->integer('project_id'), fn (Builder $q, int $id) => $q->where('project_id', $id));
+        $entries = LocalDateRange::of($request->query('from'), $request->query('to'), $person->effectiveTimezone())->apply($query)
             ->with(['task', 'project', 'user'])
             ->latest('started_at')
             ->paginate(50);
 
-        return TimeEntryResource::collection($entries)->additional([
-            'meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()],
-            'message' => null,
-            'errors' => null,
-        ]);
+        return TimeEntryResource::collection($entries)
+            ->additional(['meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()]]);
     }
 
-    /** RF-05.09: date + from/to are in the person's timezone; stored in UTC. */
-    public function store(Request $request, Task $task, LogManualTime $logManualTime): JsonResponse
+    /** RF-05.09 */
+    public function store(LogManualTimeRequest $request, Task $task, LogManualTime $logManualTime): JsonResponse
     {
-        Gate::authorize('view', $task);
-        $request->validate([
-            'date' => ['required', 'date_format:Y-m-d'],
-            'from' => ['required', 'date_format:H:i'],
-            'to' => ['required', 'date_format:H:i'],
-            'comment' => ['nullable', 'string', 'max:5000'],
-        ]);
-
-        [$startedAt, $endedAt] = $this->toUtcRange($request);
-        $entry = $logManualTime($request->user(), $task, $startedAt, $endedAt, $request->input('comment'));
+        [$startedAt, $endedAt] = $request->utcRange();
+        $entry = $logManualTime($request->user(), $task, $startedAt, $endedAt, $request->validated('comment'));
 
         return ApiResponse::ok(TimeEntryResource::make($entry), 'Horas cargadas.', 201);
     }
 
-    public function update(Request $request, TimeEntry $timeEntry, CorrectTimeEntry $correct): JsonResponse
+    /** RF-05.15; RF-05.20 may also move it to another task. */
+    public function update(CorrectTimeEntryRequest $request, TimeEntry $timeEntry, CorrectTimeEntry $correct): JsonResponse
     {
-        Gate::authorize('update', $timeEntry);
-        $request->validate([
-            'date' => ['required_with:from,to', 'date_format:Y-m-d'],
-            'from' => ['required_with:date', 'date_format:H:i'],
-            'to' => ['required_with:date', 'date_format:H:i'],
-            'comment' => ['required', 'string', 'max:5000'],
-            'task_id' => ['nullable', 'integer'],
-        ]);
-
-        [$startedAt, $endedAt] = $request->filled('date') ? $this->toUtcRange($request) : [null, null];
+        [$startedAt, $endedAt] = $request->utcRange();
         $task = $request->filled('task_id') ? Task::query()->findOrFail($request->integer('task_id')) : null;
         $entry = $correct($request->user(), $timeEntry, $startedAt, $endedAt, $request->string('comment')->value(), $task);
 
@@ -92,15 +77,13 @@ class TimeEntryController extends Controller
 
         $delete($request->user(), $timeEntry);
 
-        return ApiResponse::ok(message: 'Registro borrado.');
+        return ApiResponse::ok(message: "Registro de {$timeEntry->task->code} borrado: sus horas vuelven a la bolsa.");
     }
 
     /** RF-05.17 */
-    public function completeComment(Request $request, TimeEntry $timeEntry, CompletePendingComment $complete): JsonResponse
+    public function completeComment(CompletePendingCommentRequest $request, TimeEntry $timeEntry, CompletePendingComment $complete): JsonResponse
     {
-        $request->validate(['comment' => ['nullable', 'string', 'max:5000']]);
-
-        $entry = $complete($request->user(), $timeEntry, $request->input('comment'));
+        $entry = $complete($request->user(), $timeEntry, $request->validated('comment'));
 
         return ApiResponse::ok(TimeEntryResource::make($entry), 'Comentario guardado.');
     }
@@ -127,14 +110,11 @@ class TimeEntryController extends Controller
     }
 
     /** RF-05.12 "Mi semana". */
-    public function timesheet(Request $request, Timesheet $timesheet): JsonResponse
+    public function timesheet(TimesheetRequest $request, Timesheet $timesheet): JsonResponse
     {
-        $request->validate([
-            'from' => ['required', 'date_format:Y-m-d'],
-            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
-        ]);
+        $range = $request->range();
 
-        return ApiResponse::ok($timesheet($request->user(), $request->string('from')->value(), $request->string('to')->value()));
+        return ApiResponse::ok($timesheet($request->user(), $range->from, $range->to));
     }
 
     /** RF-05.20: me by default; someone else's hours only for `time.manage`. */
@@ -150,17 +130,5 @@ class TimeEntryController extends Controller
         }
 
         return User::query()->where('company_id', $viewer->company_id)->findOrFail($userId);
-    }
-
-    /** @return array{0: Carbon, 1: Carbon} */
-    private function toUtcRange(Request $request): array
-    {
-        $timezone = $request->user()->effectiveTimezone();
-        $date = $request->string('date')->value();
-
-        return [
-            Carbon::createFromFormat('Y-m-d H:i', "{$date} {$request->string('from')}", $timezone)->utc(),
-            Carbon::createFromFormat('Y-m-d H:i', "{$date} {$request->string('to')}", $timezone)->utc(),
-        ];
     }
 }

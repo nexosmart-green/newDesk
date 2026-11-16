@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use App\Domain\Clients\Models\Client;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin Client
  */
-class ClientResource extends JsonResource
+class ClientResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

@@ -1,10 +1,10 @@
 interface AvatarProps {
   name: string
   url: string | null | undefined
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 
-const sizes = { sm: 'size-8 text-xs', md: 'size-12 text-sm', lg: 'size-24 text-2xl' } as const
+const sizes = { xs: 'size-6 text-[10px]', sm: 'size-8 text-xs', md: 'size-12 text-sm', lg: 'size-24 text-2xl' } as const
 
 function initialsOf(name: string): string {
   return name

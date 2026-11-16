@@ -1,4 +1,6 @@
-export type WorkMode = 'office' | 'remote' | 'hybrid'
+import { timeRange } from './shiftTime'
+
+export type WorkMode ='office' | 'remote' | 'hybrid'
 
 export const workModeLabels: Record<WorkMode, string> = { office: 'Oficina', remote: 'Remoto', hybrid: 'Híbrido' }
 
@@ -78,10 +80,15 @@ export const weekdayOptions: readonly { value: number; label: string }[] = [
   { value: 7, label: 'Dom' },
 ]
 
-/** "Mañana 09:00–13:00" (or just the times when the template was deleted). */
+/** "Mañana 9–13" (or just the times when the template was deleted). */
 export function shiftLabel(shift: Pick<Shift, 'name' | 'starts_at' | 'ends_at'>): string {
-  const times = `${shift.starts_at}–${shift.ends_at}`
+  const times = timeRange(shift.starts_at, shift.ends_at)
   return shift.name ? `${shift.name} ${times}` : times
+}
+
+/** "Mañana 9–13, remoto": a template as one line of plain text (select options can't hold markup). */
+export function templateOptionLabel(template: Pick<ShiftTemplate, 'name' | 'starts_at' | 'ends_at' | 'mode'>): string {
+  return `${shiftLabel(template)}, ${workModeLabels[template.mode].toLowerCase()}`
 }
 
 /** `''` in the template select = clear the days (`shift_template_id: null`). */

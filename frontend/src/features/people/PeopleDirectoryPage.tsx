@@ -1,6 +1,10 @@
 import { useState } from 'react'
+import { UserSearch } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { PeopleFilters } from './PeopleFilters'
@@ -19,23 +23,27 @@ export function PeopleDirectoryPage() {
   }
 
   return (
-    <section className="max-w-5xl space-y-4">
-      <h1 className="text-lg font-semibold">Personas</h1>
+    <section className="max-w-5xl space-y-6">
+      <PageHeader title="Personas" />
       <PeopleFilters filters={filters} canSeeInactive={canManageUsers} onChange={handleChange} />
       {!people.data ? (
         <PageState isPending={people.isPending} error={people.error} shape="cards" onRetry={() => void people.refetch()} />
-      ) : people.data.data.length === 0 ? (
-        <p className="text-sm text-muted">No hay personas que coincidan con la búsqueda.</p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Personas">
-          {people.data.data.map((person) => (
-            <li key={person.id}>
-              <PersonCard person={person} />
-            </li>
-          ))}
-        </ul>
+        <StaleContent stale={people.isPlaceholderData} className="space-y-4">
+          {people.data.data.length === 0 ? (
+            <EmptyState icon={UserSearch}>No hay personas que coincidan con la búsqueda.</EmptyState>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Personas">
+              {people.data.data.map((person) => (
+                <li key={person.id}>
+                  <PersonCard person={person} />
+                </li>
+              ))}
+            </ul>
+          )}
+          <Pagination meta={people.data.meta} onPageChange={(page) => handleChange({ page })} />
+        </StaleContent>
       )}
-      {people.data && <Pagination meta={people.data.meta} onPageChange={(page) => handleChange({ page })} />}
     </section>
   )
 }

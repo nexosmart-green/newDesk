@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
-import { SelectField } from '@/components/ui/SelectField'
+import { AsyncSelectField } from '@/components/ui/AsyncSelectField'
 import { useCatalog } from '@/features/catalogs/useCatalogs'
 import type { SkillLevel } from '@/features/people/types'
 import { useSaveMySkills } from './useMyProfile'
@@ -63,14 +63,20 @@ export function SkillsEditor({ skills: initialSkills }: { skills: SkillLevel[] }
         </ul>
       )}
       <div className="flex items-end gap-2">
-        <SelectField label="Agregar habilidad" className="flex-1" value={toAdd} onChange={(event) => setToAdd(event.target.value)}>
-          <option value="">{catalog.isPending ? 'Cargando…' : 'Elegí una habilidad'}</option>
+        <AsyncSelectField
+          label="Agregar habilidad"
+          className="flex-1"
+          loading={catalog.isPending}
+          emptyLabel="Elegí una habilidad"
+          value={toAdd}
+          onChange={(event) => setToAdd(event.target.value)}
+        >
           {available.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
           ))}
-        </SelectField>
+        </AsyncSelectField>
         <Button variant="secondary" disabled={!toAdd} onClick={addSkill}>
           Agregar
         </Button>

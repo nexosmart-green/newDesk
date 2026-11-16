@@ -5,14 +5,13 @@ namespace App\Http\Resources;
 use App\Domain\Identity\Models\User;
 use App\Domain\People\Actions\ReplaceAvatar;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Public card of a person (directory, assignees, avatars). No sensitive data.
  *
  * @mixin User
  */
-class PersonResource extends JsonResource
+class PersonResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

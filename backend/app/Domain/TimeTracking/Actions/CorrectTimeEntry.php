@@ -38,8 +38,11 @@ final class CorrectTimeEntry
 
         $startedAt ??= $entry->started_at;
         $endedAt ??= $entry->ended_at;
-        if ($endedAt->lessThanOrEqualTo($startedAt) || $endedAt->isFuture()) {
-            throw new BusinessRuleViolation('El rango horario no es válido.', 'invalid_range');
+        if ($endedAt->lessThanOrEqualTo($startedAt)) {
+            throw new BusinessRuleViolation('La hora «Hasta» tiene que ser posterior a «Desde».', 'invalid_range');
+        }
+        if ($endedAt->isFuture()) {
+            throw new BusinessRuleViolation('No se pueden cargar horas futuras: elegí una hora «Hasta» que ya haya pasado.', 'invalid_range');
         }
         // Both the original and the new start must be inside the window: old entries cannot be moved into it.
         $this->window->assertAllows($actor, $entry->started_at);
@@ -65,7 +68,7 @@ final class CorrectTimeEntry
 
             $bag = HourBag::of($destination);
             if ($added > 0 && $bag->hasCap() && $added > $bag->available()) {
-                throw new BusinessRuleViolation("La corrección supera lo disponible en {$destination->name}.", 'manual_exceeds_bag');
+                throw new BusinessRuleViolation("La corrección supera lo disponible en {$destination->name}. Pedí una ampliación o acortá el registro.", 'manual_exceeds_bag');
             }
 
             $origin->consumed_seconds -= (int) $entry->seconds;

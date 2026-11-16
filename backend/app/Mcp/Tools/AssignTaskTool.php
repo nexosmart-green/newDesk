@@ -5,6 +5,7 @@ namespace App\Mcp\Tools;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\AssignTask;
+use App\Domain\Tasks\Support\TaskLimits;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -27,13 +28,13 @@ class AssignTaskTool extends NewDeskTool
 
     protected function run(Request $request, User $user): Response
     {
-        $input = $request->validate(['code' => 'required|string', 'assignees' => 'present|array|max:20', 'assignees.*' => 'string']);
+        $input = $request->validate(['code' => 'required|string', 'assignees' => 'present|array|max:'.TaskLimits::ASSIGNEES_MAX, 'assignees.*' => 'string']);
         $task = $this->lookup->task($user, $input['code']);
         Gate::forUser($user)->authorize('assign', $task);
 
         $task = ($this->assignTask)($user, $task, $this->lookup->userIds($user, $input['assignees']));
 
-        return $this->json(['updated' => McpPresenter::task($task)]);
+        return $this->json(['updated' => McpPresenter::task($task, $user)]);
     }
 
     public function schema(JsonSchema $schema): array

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { currentUserKey } from '@/features/auth/useAuth'
+import { currentUserKey } from '@/lib/queryKeys'
 import { confirmTwoFactor, disableTwoFactor, startTwoFactorSetup } from './securityApi'
 
 export function useStartTwoFactorSetup() {

@@ -44,7 +44,7 @@ export function AllocationFormDialog(props: AllocationFormDialogProps) {
   }
 
   return (
-    <Dialog title={title} size="md" onClose={onClose}>
+    <Dialog title={title} size="md" dirty={[hours, reason, reference].some((value) => value.trim() !== '')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {children}
         <HoursInput value={hours} onChange={setHours} allowNegative={allowSubtract} error={problem ?? fieldErrorOf(error, 'seconds')} />

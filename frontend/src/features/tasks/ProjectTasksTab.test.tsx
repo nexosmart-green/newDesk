@@ -7,6 +7,7 @@ import * as projectsApi from '@/features/projects/projectsApi'
 import * as timerApi from '@/features/timer/timerApi'
 import { ApiError } from '@/lib/api'
 import { buildProject, buildTask, buildTimerState, page, taskStatuses } from '@/test/fixtures'
+import { mockTaskCatalogs } from '@/test/mockTaskCatalogs'
 import { buildUser, renderRoutes } from '@/test/renderWithProviders'
 import { ProjectTasksTab } from './ProjectTasksTab'
 import * as tasksApi from './tasksApi'
@@ -20,6 +21,7 @@ function renderTab(tasks = [task]) {
   vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
   vi.spyOn(tasksApi, 'fetchTaskStatuses').mockResolvedValue(taskStatuses)
   vi.spyOn(tasksApi, 'fetchProjectTasks').mockResolvedValue(page(tasks))
+  mockTaskCatalogs()
   renderRoutes(
     [{ path: '/proyectos/:projectId', element: <ProjectPage />, children: [{ path: 'tareas', element: <ProjectTasksTab /> }] }],
     '/proyectos/9/tareas',
@@ -33,6 +35,8 @@ const newTaskInput: SaveTaskInput = {
   starts_on: null,
   due_on: null,
   estimate_seconds: null,
+  category_id: null,
+  label_ids: [],
   assignee_ids: [],
 }
 

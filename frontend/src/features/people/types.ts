@@ -1,6 +1,6 @@
 import type { CatalogItem } from '@/features/catalogs/types'
 
-export type PersonStatus = 'invited' | 'active' | 'inactive'
+type PersonStatus = 'invited' | 'active' | 'inactive'
 
 export interface AvatarUrls {
   /** 64px */

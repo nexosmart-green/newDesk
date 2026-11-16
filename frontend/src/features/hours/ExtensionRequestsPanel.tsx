@@ -34,7 +34,7 @@ export function ExtensionRequestsPanel({ projectId }: { projectId: number }) {
           <li key={request.id} className="flex flex-wrap items-start justify-between gap-2">
             <div className="text-sm">
               <p className="font-medium">{request.requested_by.full_name}</p>
-              <p className="text-muted">{request.message ?? 'Sin mensaje.'}</p>
+              <p className="text-muted">{request.message ?? 'No dejó un motivo.'}</p>
               {request.created_at && <p className="text-xs text-muted">{formatDateTime(request.created_at)}</p>}
             </div>
             <div className="flex gap-2">
@@ -60,15 +60,15 @@ export function ExtensionRequestsPanel({ projectId }: { projectId: number }) {
       )}
       {resolving?.action === 'reject' && (
         <ConfirmDialog
-          title="Rechazar pedido"
-          confirmLabel="Rechazar"
+          title={`¿Rechazar el pedido de ${resolving.request.requested_by.full_name}?`}
+          confirmLabel="Rechazar pedido"
           danger
           pending={reject.isPending}
           error={reject.error}
           onConfirm={() => reject.mutate(resolving.request.id, { onSuccess: close })}
           onClose={close}
         >
-          <p>¿Rechazás el pedido de {resolving.request.requested_by.full_name}?</p>
+          <p>No se suman horas al proyecto. Si hacen falta más, hay que pedir otra ampliación.</p>
         </ConfirmDialog>
       )}
     </section>

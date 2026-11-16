@@ -13,7 +13,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A worked stretch. `ended_at` NULL means it is the person's running timer (RF-05.03: lives on the server).
@@ -91,19 +94,44 @@ class TimeEntry extends Model
         return max(0, (int) $this->started_at->diffInSeconds($now ?? now(), true));
     }
 
+    /**
+     * SQL twin of elapsedSeconds() for aggregates: stored seconds, or "now − started_at" while running.
+     * The instant is generated here (digits only), never user input.
+     */
+    public static function elapsedSecondsExpression(?Carbon $now = null, string $table = 'time_entries'): Expression
+    {
+        $instant = ($now ?? now())->copy()->utc()->format('Y-m-d H:i:s');
+
+        return DB::raw("COALESCE({$table}.seconds, GREATEST(0, TIMESTAMPDIFF(SECOND, {$table}.started_at, '{$instant}')))");
+    }
+
+    /**
+     * Correlated `COALESCE(SUM(elapsed), 0)` of the entries whose `$foreignKey` matches `$outerColumn`,
+     * for lists that bring worked time in the same query (tasks: `task_id` = `tasks.id`).
+     */
+    public static function elapsedSecondsSubquery(string $foreignKey, string $outerColumn): QueryBuilder
+    {
+        return DB::table('time_entries')
+            ->whereColumn("time_entries.{$foreignKey}", $outerColumn)
+            ->whereNull('time_entries.deleted_at')
+            ->selectRaw('COALESCE(SUM('.self::elapsedSecondsExpression()->getValue(DB::connection()->getQueryGrammar()).'), 0)');
+    }
+
+    /** Same as elapsedSecondsSubquery() but only running timers ("Consumidas" adds them to the stored total). */
+    public static function runningSecondsSubquery(string $foreignKey, string $outerColumn): QueryBuilder
+    {
+        return self::elapsedSecondsSubquery($foreignKey, $outerColumn)->whereNull('time_entries.ended_at');
+    }
+
     public function scopeRunning(Builder $query): Builder
     {
         return $query->whereNull($query->qualifyColumn('ended_at'));
     }
 
-    /** Entries that started on the local days $from..$to (Y-m-d, inclusive, either may be null) of $timezone. */
-    public function scopeStartedOnLocalDays(Builder $query, ?string $from, ?string $to, string $timezone): Builder
+    /** The person's running timer (at most one, RF-05.03), without relying on the session's company scope. */
+    public function scopeRunningFor(Builder $query, User $user): Builder
     {
-        $column = $query->qualifyColumn('started_at');
-
-        return $query
-            ->when($from, fn (Builder $q, string $day) => $q->where($column, '>=', Carbon::createFromFormat('!Y-m-d', $day, $timezone)->utc()))
-            ->when($to, fn (Builder $q, string $day) => $q->where($column, '<', Carbon::createFromFormat('!Y-m-d', $day, $timezone)->addDay()->utc()));
+        return $query->forCompany($user->company_id)->where($query->qualifyColumn('user_id'), $user->id)->running();
     }
 
     public static function isValidComment(?string $comment): bool

@@ -39,7 +39,7 @@ export function EntryFilters({ project, filters, onChange }: EntryFiltersProps) 
         <option value="">Todas</option>
         {tasks.data?.data.map((task) => (
           <option key={task.id} value={task.id}>
-            {task.code.toUpperCase()} · {task.title}
+            {task.code} {task.title}
           </option>
         ))}
       </SelectField>

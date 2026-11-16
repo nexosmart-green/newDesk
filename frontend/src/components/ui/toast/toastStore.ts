@@ -13,7 +13,7 @@ export interface Toast {
   duration: number
 }
 
-export interface ToastOptions {
+interface ToastOptions {
   title?: string
   duration?: number
 }

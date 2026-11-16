@@ -56,7 +56,11 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
   }
 
   return (
-    <Dialog title={`Corregir registro de ${entry.task.code}`} description={entry.task.title} size="lg" onClose={onClose}>
+    <Dialog title={`Corregir registro de ${entry.task.code}`} description={entry.task.title}
+      size="md"
+      dirty={timesChanged || comment !== (entry.comment ?? '')}
+      onClose={onClose}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectField
@@ -127,7 +131,7 @@ export function EditEntryDialog({ entry, onClose }: EditEntryDialogProps) {
             Cancelar
           </Button>
           <Button type="submit" loading={correct.isPending} disabled={!isValidComment(comment) || taskId === null}>
-            Guardar
+            Corregir registro
           </Button>
         </DialogFooter>
       </form>

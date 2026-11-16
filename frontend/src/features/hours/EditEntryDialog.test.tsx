@@ -33,7 +33,7 @@ describe('EditEntryDialog: moving an entry to another task', () => {
     const { correct, fetchTasks } = renderDialog()
 
     await userEvent.selectOptions(screen.getByLabelText('Tarea'), await screen.findByRole('option', { name: 'BHN-61 · Otra' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Corregir registro' }))
 
     expect(fetchTasks).toHaveBeenCalledWith(9, { ...defaultTaskFilters, assignee_id: 2 })
     expect(correct).toHaveBeenCalledWith(300, { task_id: 61, comment: 'Revisé el formulario de login' })
@@ -43,9 +43,9 @@ describe('EditEntryDialog: moving an entry to another task', () => {
     const { correct } = renderDialog()
 
     await userEvent.selectOptions(screen.getByLabelText('Proyecto'), await screen.findByRole('option', { name: 'Interno' }))
-    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Corregir registro' })).toBeDisabled()
     await userEvent.selectOptions(screen.getByLabelText('Tarea'), await screen.findByRole('option', { name: 'INT-80 · Soporte' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Corregir registro' }))
 
     expect(correct).toHaveBeenCalledWith(300, { task_id: 80, comment: 'Revisé el formulario de login' })
   })
@@ -54,7 +54,7 @@ describe('EditEntryDialog: moving an entry to another task', () => {
     const { correct } = renderDialog()
 
     await userEvent.type(screen.getByLabelText('Comentario'), ' y el logout')
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Corregir registro' }))
 
     expect(correct).toHaveBeenCalledWith(300, { comment: 'Revisé el formulario de login y el logout' })
   })

@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import { useCurrentUser, useLogout } from '@/features/auth/useAuth'
 
 const itemClassName =
-  'flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-text hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none'
+  'flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm text-text hover:bg-text/5 focus-visible:bg-text/5 focus-visible:outline-none'
 
 const initials = (firstName = '', lastName = '') => `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || '?'
 
@@ -58,7 +58,7 @@ export function UserMenu({ theme, onToggleTheme }: UserMenuProps) {
         aria-controls={menuId}
         aria-label={`Cuenta de ${user?.full_name ?? 'usuario'}`}
         onClick={() => setOpen(!open)}
-        className="flex min-h-11 items-center gap-2 rounded-lg px-1.5 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent sm:px-2"
+        className="flex min-h-9 items-center gap-2 rounded-md px-1.5 coarse:min-h-11 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent sm:px-2"
       >
         <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-brand-strong text-xs font-semibold text-white">
           {initials(user?.first_name, user?.last_name)}
@@ -70,7 +70,7 @@ export function UserMenu({ theme, onToggleTheme }: UserMenuProps) {
         <ChevronDown aria-hidden="true" className="hidden size-4 text-muted md:block" />
       </button>
       {open && (
-        <div id={menuId} className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+        <div id={menuId} className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-border bg-raised shadow-lg">
           <div className="border-b border-border px-3 py-3">
             <p className="truncate text-sm font-medium">{user?.full_name}</p>
             <p className="truncate text-xs text-muted">{user?.email}</p>

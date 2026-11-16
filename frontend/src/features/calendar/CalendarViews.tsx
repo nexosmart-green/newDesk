@@ -1,6 +1,7 @@
 import { Fragment, useState, type ReactNode } from 'react'
 import { dayLabel, toLocalDateString } from '@/features/timesheet/week'
 import { CalendarDayItems } from './CalendarDayItems'
+import { CalendarDayList } from './CalendarDayList'
 import { isEmptyDay } from './calendarDays'
 import type { CalendarDay } from './types'
 
@@ -9,24 +10,9 @@ interface CalendarViewProps {
   days: ReadonlyMap<string, CalendarDay>
 }
 
-/** Week: one section per day (stacks on mobile). */
+/** Week: one row per day, empty days collapsed. */
 export function CalendarWeekView({ dates, days }: CalendarViewProps) {
-  return (
-    <div className="space-y-3">
-      {dates.map((date) => {
-        const day = days.get(date)
-        const title = dayLabel(date)
-        return (
-          <section key={date} aria-label={title} className="rounded-lg border border-border bg-surface">
-            <h2 className="border-b border-border px-3 py-2 text-sm font-semibold capitalize">{title}</h2>
-            <div className="px-3 py-2">
-              {day && !isEmptyDay(day) ? <CalendarDayItems day={day} /> : <p className="text-xs text-muted">Nada agendado</p>}
-            </div>
-          </section>
-        )
-      })}
-    </div>
-  )
+  return <CalendarDayList dates={dates} days={days} />
 }
 
 const weekdayHeaders = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']

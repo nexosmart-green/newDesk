@@ -4,6 +4,7 @@ namespace App\Domain\Projects\Actions;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
+use App\Domain\Projects\Support\EnsureProjectAssignable;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use Illuminate\Support\Arr;

@@ -3,7 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Domain\Shared\Activity\ActivityContext;
-use App\Domain\TimeTracking\Actions\AutoStopTimers;
+use App\Domain\TimeTracking\Actions\CutExhaustedBagTimers;
+use App\Domain\TimeTracking\Actions\CutForgottenTimers;
 use App\Domain\TimeTracking\Actions\StopDayClock;
 use Illuminate\Console\Command;
 
@@ -16,15 +17,15 @@ class CutTimers extends Command
 
     protected $description = 'Stop timers on exhausted hour bags and forgotten timers';
 
-    public function handle(AutoStopTimers $autoStop, StopDayClock $stopDayClock, ActivityContext $context): int
+    public function handle(CutForgottenTimers $cutForgotten, CutExhaustedBagTimers $cutExhausted, StopDayClock $stopDayClock, ActivityContext $context): int
     {
         $context->useSystem();
         $now = now();
 
         // Forgotten first: it cuts at its own (earlier) deadline. After a scheduler outage, evaluating the
         // budget first would charge the whole elapsed time (up to the full bag) to a forgotten timer.
-        $forgotten = $autoStop->forgotten($now);
-        $budget = $autoStop->exhaustedBudgets($now);
+        $forgotten = $cutForgotten($now);
+        $budget = $cutExhausted($now);
         // RF-05.19 / CA-05.19h: a forgotten day clock ends at its local midnight.
         $days = $stopDayClock->overdue($now);
 

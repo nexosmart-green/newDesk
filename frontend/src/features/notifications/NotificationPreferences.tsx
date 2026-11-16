@@ -1,21 +1,17 @@
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { PageState } from '@/components/ui/PageState'
-import type { NotificationPreference } from './types'
-import { useNotificationPreferences, useUpdateNotificationPreferences } from './useNotifications'
+import { useNotificationPreferences, useSavingPreferenceEvents, useToggleEmailPreference } from './useNotifications'
 
 const LOCKED_EXPLANATION = 'Obligatoria para administradores: avisa cuando un proyecto se queda sin horas o se corta un cronómetro.'
 
 /** RF-09: which events also arrive by e-mail. The bell always gets everything. */
 export function NotificationPreferences() {
   const preferences = useNotificationPreferences()
-  const update = useUpdateNotificationPreferences()
+  const toggle = useToggleEmailPreference()
+  const saving = useSavingPreferenceEvents()
 
   if (!preferences.data) return <PageState isPending={preferences.isPending} error={preferences.error} onRetry={() => void preferences.refetch()} />
   const list = preferences.data
-
-  function toggle(changed: NotificationPreference, email: boolean) {
-    update.mutate(list.map(({ event, email: current }) => ({ event, email: event === changed.event ? email : current })))
-  }
 
   return (
     <section className="space-y-3" aria-label="Preferencias de notificaciones">
@@ -37,10 +33,10 @@ export function NotificationPreferences() {
                 <input
                   type="checkbox"
                   checked={preference.email}
-                  disabled={preference.locked || update.isPending}
+                  disabled={preference.locked || saving.includes(preference.event)}
                   aria-describedby={preference.locked ? hintId : undefined}
                   aria-label={`Recibir por e-mail: ${preference.label}`}
-                  onChange={(event) => toggle(preference, event.target.checked)}
+                  onChange={(event) => toggle.mutate({ event: preference.event, email: event.target.checked })}
                 />
                 <span aria-hidden="true">E-mail</span>
               </label>
@@ -48,7 +44,7 @@ export function NotificationPreferences() {
           )
         })}
       </ul>
-      <FieldErrorsAlert error={update.error} />
+      <FieldErrorsAlert error={toggle.error} />
     </section>
   )
 }

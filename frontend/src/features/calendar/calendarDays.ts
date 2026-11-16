@@ -1,4 +1,4 @@
-import { parseLocalDate, toLocalDateString, weekOf, type Week } from '@/features/timesheet/week'
+import { parseLocalDate, toLocalDateString, weekOf, type Week } from '@/lib/week'
 import type { CalendarDay, MyCalendar } from './types'
 
 const emptyDay = (): CalendarDay => ({ shifts: [], tasks: [], holidays: [] })

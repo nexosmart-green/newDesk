@@ -9,6 +9,8 @@ export interface TaskFormValues {
   due_on: string
   /** Hours as typed ("1.5"); stored as integer seconds (R-5). */
   estimate_hours: string
+  category_id: number | null
+  label_ids: number[]
 }
 
 export const emptyTaskForm: TaskFormValues = {
@@ -18,6 +20,8 @@ export const emptyTaskForm: TaskFormValues = {
   starts_on: '',
   due_on: '',
   estimate_hours: '',
+  category_id: null,
+  label_ids: [],
 }
 
 function hoursOf(seconds: number | null): string {
@@ -33,6 +37,8 @@ export function taskFormValuesOf(task: Task): TaskFormValues {
     starts_on: task.starts_on ?? '',
     due_on: task.due_on ?? '',
     estimate_hours: hoursOf(task.estimate_seconds),
+    category_id: task.category?.id ?? null,
+    label_ids: (task.labels ?? []).map((label) => label.id),
   }
 }
 
@@ -41,7 +47,7 @@ export function hasOptionalValues(values: TaskFormValues): boolean {
   return values.starts_on !== '' || values.due_on !== '' || values.estimate_hours.trim() !== ''
 }
 
-export function estimateSecondsOf(hours: string): number | null {
+function estimateSecondsOf(hours: string): number | null {
   const parsed = Number(hours.replace(',', '.'))
   return hours.trim() === '' || !Number.isFinite(parsed) || parsed < 0 ? null : Math.round(parsed * 3600)
 }
@@ -54,5 +60,7 @@ export function toSaveTaskInput(values: TaskFormValues): Omit<SaveTaskInput, 'as
     starts_on: values.starts_on || null,
     due_on: values.due_on || null,
     estimate_seconds: estimateSecondsOf(values.estimate_hours),
+    category_id: values.category_id,
+    label_ids: values.label_ids,
   }
 }

@@ -1,5 +1,6 @@
+import type { BadgeTone } from '@/components/ui/badgeStyles'
 import type { HourBag } from '@/features/hours/types'
-import type { PersonSummary } from '@/features/people/types'
+import type { AvatarUrls, PersonSummary } from '@/features/people/types'
 
 export type ProjectStatus = 'active' | 'paused' | 'finished' | 'cancelled'
 
@@ -10,7 +11,22 @@ export const projectStatusLabels: Record<ProjectStatus, string> = {
   cancelled: 'Cancelado',
 }
 
+/** One verb per status change, shared by the button, its confirm and its toast. */
+export const projectStatusVerbs: Record<ProjectStatus, { action: string; done: string }> = {
+  active: { action: 'Reactivar', done: 'reactivado' },
+  paused: { action: 'Pausar', done: 'pausado' },
+  finished: { action: 'Finalizar', done: 'finalizado' },
+  cancelled: { action: 'Cancelar', done: 'cancelado' },
+}
+
 export const projectStatuses = Object.keys(projectStatusLabels) as ProjectStatus[]
+
+export const projectStatusTones: Record<ProjectStatus, BadgeTone> = {
+  active: 'success',
+  paused: 'warning',
+  finished: 'accent',
+  cancelled: 'neutral',
+}
 
 /** RF-03.08: closed projects accept no new tasks nor timers. */
 export function isClosedStatus(status: ProjectStatus): boolean {
@@ -29,6 +45,13 @@ export const projectTypeLabels: Record<ProjectType, string> = {
   internal: 'Interno',
 }
 
+/** Who someone is at a glance: name and face (initials when there's no photo). */
+export interface PersonFace {
+  id: number
+  full_name: string
+  avatar?: AvatarUrls | null
+}
+
 export interface ProjectSummary {
   id: number
   name: string
@@ -37,8 +60,10 @@ export interface ProjectSummary {
   status: ProjectStatus
   status_label: string
   client?: { id: number; name: string } | null
-  leader?: { id: number; full_name: string } | null
+  leader?: PersonFace | null
   members_count?: number
+  /** Lists only: the first few members, for the row's faces (`members_count` is the total). */
+  member_faces?: PersonFace[]
   /** RF-03.05/07: the bag, always computed by the server. */
   hours: HourBag
   starts_on: string | null
@@ -77,7 +102,7 @@ export interface CreateProjectInput extends SaveProjectInput {
   member_ids: number[]
 }
 
-export type ActivitySource = 'web' | 'mcp' | 'system'
+type ActivitySource = 'web' | 'mcp' | 'system'
 
 export interface ActivityEntry {
   id: number

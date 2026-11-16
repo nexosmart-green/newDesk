@@ -8,34 +8,36 @@ import {
   issueCalendarFeed,
   revokeCalendarFeed,
 } from './calendarApi'
+import { calendarFeedKey, calendarKey, holidaysKey, myCalendarKey, shiftsKey } from '@/lib/queryKeys'
+import { refreshQueries } from '@/lib/refreshQueries'
+import { toast } from '@/components/ui/toast/toastStore'
+import type { Holiday } from '@/features/shifts/types'
 import type { HolidayInput } from './types'
 
-const calendarKey = ['calendar'] as const
-const feedKey = ['calendar-feed'] as const
-
-export function useMyCalendar(from: string, to: string) {
+export function useMyCalendar(from: string, to: string, enabled = true) {
   return useQuery({
-    queryKey: [...calendarKey, 'mine', from, to],
+    queryKey: myCalendarKey(from, to),
     queryFn: () => fetchMyCalendar(from, to),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
 export function useHolidays(year: number) {
   return useQuery({
-    queryKey: [...calendarKey, 'holidays', year],
+    queryKey: holidaysKey(year),
     queryFn: () => fetchHolidays(year),
     placeholderData: keepPreviousData,
   })
 }
 
 export function useCalendarFeedStatus() {
-  return useQuery({ queryKey: feedKey, queryFn: fetchCalendarFeedStatus })
+  return useQuery({ queryKey: calendarFeedKey, queryFn: fetchCalendarFeedStatus })
 }
 
 function useRefreshFeedStatus() {
   const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: feedKey })
+  return () => queryClient.invalidateQueries({ queryKey: calendarFeedKey })
 }
 
 export function useIssueCalendarFeed() {
@@ -53,22 +55,30 @@ export function useRevokeCalendarFeed() {
   })
 }
 
-/** Holidays show in every calendar and in the team grid. */
+/** The holidays tab waits for its list; every calendar and the team grid show them too and follow behind. */
 function useRefreshHolidays() {
   const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: calendarKey }),
-      queryClient.invalidateQueries({ queryKey: ['shifts'] }),
-    ])
+  return () => refreshQueries(queryClient, { now: [[...calendarKey, 'holidays']], later: [calendarKey, shiftsKey] })
 }
 
 export function useCreateHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (input: HolidayInput) => createHoliday(input), onSuccess: refresh, meta: { successMessage: 'Feriado guardado.' } })
+  return useMutation({
+    mutationFn: (input: HolidayInput) => createHoliday(input),
+    onSuccess: (_holiday, input) => {
+      toast.success(`Feriado «${input.name.trim()}» agregado.`)
+      return refresh()
+    },
+  })
 }
 
 export function useDeleteHoliday() {
   const refresh = useRefreshHolidays()
-  return useMutation({ mutationFn: (id: number) => deleteHoliday(id), onSuccess: refresh, meta: { successMessage: 'Feriado borrado.' } })
+  return useMutation({
+    mutationFn: (holiday: Holiday) => deleteHoliday(holiday.id),
+    onSuccess: (_result, holiday) => {
+      toast.success(`Feriado «${holiday.name}» borrado.`)
+      return refresh()
+    },
+  })
 }

@@ -4,6 +4,7 @@ import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { TextAreaField } from '@/components/ui/TextAreaField'
 import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
+import { hasChanges } from '@/lib/formState'
 import type { Client, SaveClientInput } from './types'
 import { useSaveClient } from './useClients'
 
@@ -51,7 +52,8 @@ function toInput(form: FormState): SaveClientInput {
 
 /** RF-02.01 create / edit. */
 export function ClientFormDialog({ client, onClose, onSaved }: ClientFormDialogProps) {
-  const [form, setForm] = useState(() => initialForm(client))
+  const [initial] = useState(() => initialForm(client))
+  const [form, setForm] = useState(initial)
   const mutation = useSaveClient(client?.id ?? null)
 
   function handleSubmit(event: FormEvent) {
@@ -60,7 +62,7 @@ export function ClientFormDialog({ client, onClose, onSaved }: ClientFormDialogP
   }
 
   return (
-    <Dialog title={client ? `Editar ${client.display_name}` : 'Nuevo cliente'} size="lg" onClose={onClose}>
+    <Dialog title={client ? `Editar ${client.display_name}` : 'Nuevo cliente'} size="lg" dirty={hasChanges(initial, form)} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           {textFields.map((field) => (

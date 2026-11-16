@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import type { ProjectDetail } from '@/features/projects/types'
 import { EntryFilters } from './EntryFilters'
 import { EntryList } from './EntryList'
@@ -23,7 +24,9 @@ export function ProjectEntries({ project }: { project: ProjectDetail }) {
       {!entries.data ? (
         <PageState isPending={entries.isPending} error={entries.error} onRetry={() => void entries.refetch()} />
       ) : (
-        <EntryList page={entries.data} empty="No hay registros con estos filtros." onPageChange={(page) => change({ page })} />
+        <StaleContent stale={entries.isPlaceholderData} className="space-y-3">
+          <EntryList page={entries.data} empty="No hay registros con estos filtros." onPageChange={(page) => change({ page })} />
+        </StaleContent>
       )}
     </section>
   )

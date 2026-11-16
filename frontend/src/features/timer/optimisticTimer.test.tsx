@@ -39,7 +39,7 @@ describe('optimistic timer', () => {
 
     // Before the server answers: the header already runs, the row button is busy.
     expect(screen.getByRole('timer')).toHaveTextContent('00:00:00')
-    expect(screen.getByRole('link', { name: 'bhn-60' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Arreglar el login' })).toBeInTheDocument()
     for (const stop of screen.getAllByRole('button', { name: 'Detener cronómetro de bhn-60' })) {
       expect(stop).toHaveAttribute('aria-busy', 'true')
     }
@@ -92,7 +92,7 @@ describe('optimistic timer', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Detener' }))
 
     expect(await screen.findByText('El cronómetro sigue corriendo')).toBeInTheDocument()
-    expect(screen.getByText('Revisá tu conexión a internet y probá de nuevo.')).toBeInTheDocument()
+    expect(screen.getByText('No se pudo llegar al servidor. Revisá la red y probá de nuevo.')).toBeInTheDocument()
     expect(screen.getByRole('timer')).toBeInTheDocument()
   })
 })

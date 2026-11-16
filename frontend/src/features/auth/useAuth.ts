@@ -10,10 +10,12 @@ import {
   submitTwoFactorChallenge,
   type LoginInput,
 } from './authApi'
+import { currentUserKey, invitationKey } from '@/lib/queryKeys'
 import { browserTimeZone } from '@/lib/timezone'
 import type { CurrentUser, NewPasswordInput, ResetPasswordInput, TwoFactorChallengeInput } from './types'
 
-export const currentUserKey = ['me'] as const
+/** Re-exported for code that still imports it from here (feat/monitoreo); new code imports `@/lib/queryKeys`. */
+export { currentUserKey }
 
 export function useCurrentUser() {
   return useQuery({ queryKey: currentUserKey, queryFn: fetchCurrentUser, staleTime: 60_000 })
@@ -84,7 +86,7 @@ export function useResetPassword() {
 }
 
 export function useInvitation(token: string) {
-  return useQuery({ queryKey: ['invitations', token], queryFn: () => fetchInvitation(token), staleTime: Infinity })
+  return useQuery({ queryKey: invitationKey(token), queryFn: () => fetchInvitation(token), staleTime: Infinity })
 }
 
 export function useAcceptInvitation(token: string) {

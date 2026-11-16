@@ -4,6 +4,7 @@ import { Dialog, DialogFooter } from '@/components/ui/Dialog'
 import { inputClassName, TextField } from '@/components/ui/TextField'
 import type { Role } from '@/features/roles/types'
 import { fieldErrorOf } from '@/lib/api'
+import { hasChanges } from '@/lib/formState'
 import type { UserSummary } from './types'
 import { useInviteUser } from './useUsers'
 
@@ -13,8 +14,10 @@ interface InviteUserDialogProps {
   onInvited: (user: UserSummary) => void
 }
 
+const emptyInvite = { first_name: '', last_name: '', email: '', role_id: '' }
+
 export function InviteUserDialog({ roles, onClose, onInvited }: InviteUserDialogProps) {
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', role_id: '' })
+  const [form, setForm] = useState(emptyInvite)
   const mutation = useInviteUser()
   const roleSelectId = useId()
 
@@ -26,7 +29,7 @@ export function InviteUserDialog({ roles, onClose, onInvited }: InviteUserDialog
   const roleError = fieldErrorOf(mutation.error, 'role_id')
 
   return (
-    <Dialog title="Invitar usuario" description="Le llega un email para crear su contraseña." size="lg" onClose={onClose}>
+    <Dialog title="Invitar usuario" description="Le llega un email para crear su contraseña." size="md" dirty={hasChanges(emptyInvite, form)} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField

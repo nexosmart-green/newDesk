@@ -1,30 +1,35 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { CreateTaskDialog } from './CreateTaskDialog'
 import { TaskFiltersBar } from './TaskFiltersBar'
 import { TaskList } from './TaskList'
+import { TasksEmptyState } from './TasksEmptyState'
+import { defaultTaskFilters } from './types'
 import { useMyTasks, useTaskStatuses } from './useTasks'
 import { useTaskFilters } from './useTaskFilters'
 
-/** RF-04.07 "Mis tareas": what each person opens in the morning, across projects (mobile first). */
+/** RF-04.07 "Mis tareas": what each person works on, across projects (mobile first). `?vencidas=1` opens on the overdue ones. */
 export function MyTasksPage() {
   const { data: user } = useCurrentUser()
-  const { filters, change } = useTaskFilters('mine')
+  const [searchParams] = useSearchParams()
+  const { filters, change } = useTaskFilters('mine', searchParams.has('vencidas') ? { overdue: true } : undefined)
   const statuses = useTaskStatuses()
   const tasks = useMyTasks({ ...filters, search: useDebouncedValue(filters.search) })
   const canCreate = useHasModule(MODULES.projects)
   const [creating, setCreating] = useState(false)
 
   return (
-    <section className="max-w-3xl space-y-4">
+    <section className="max-w-4xl space-y-4">
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-semibold">Hola, {user?.first_name}</h1>
-          <h2 className="text-sm text-muted">Mis tareas</h2>
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold leading-tight tracking-tight">Mis tareas</h1>
+          <p className="text-sm text-muted">Las tareas que tenés asignadas, de todos tus proyectos.</p>
         </div>
         {/* CA-04.07b: create here, picking the project; "Crear e iniciar" starts its timer. */}
         {canCreate && <Button onClick={() => setCreating(true)}>Nueva tarea</Button>}
@@ -33,7 +38,14 @@ export function MyTasksPage() {
       {!tasks.data ? (
         <PageState isPending={tasks.isPending} error={tasks.error} shape="list" onRetry={() => void tasks.refetch()} />
       ) : (
-        <TaskList tasks={tasks.data.data} userId={user?.id} showProject />
+        <StaleContent stale={tasks.isPlaceholderData}>
+          <TaskList
+            tasks={tasks.data.data}
+            userId={user?.id}
+            showProject
+            empty={<TasksEmptyState filters={filters} onReset={() => change({ ...defaultTaskFilters })} />}
+          />
+        </StaleContent>
       )}
       {creating && <CreateTaskDialog onClose={() => setCreating(false)} />}
     </section>

@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Domain\TimeTracking\Models\TimeEntry;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * A worked stretch or the running timer. Times are UTC ISO-8601; `elapsed_seconds` is computed by the
@@ -12,7 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * @mixin TimeEntry
  */
-class TimeEntryResource extends JsonResource
+class TimeEntryResource extends ApiResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array

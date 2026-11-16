@@ -84,3 +84,16 @@
 - Backend: `GET /time-entries/days` (totales por día local de la persona mirada, hasta 62 días, filtros de persona y proyecto) reusando `Queries/Timesheet` con `projectId` opcional; helper `personAsked` compartido con `index`, que ahora corta los días con la zona de la persona mirada.
 - Frontend: selector Lista | Calendario en `MyHoursPage`, `MonthGrid` extraída de `CalendarMonthView` (la usan "Mi calendario" y "Mis horas"), `HoursCalendar` con 4 niveles de intensidad y columna Semana.
 - Tests: 2 nuevos en `MyHoursTest` (CA-05.20h y permisos/rango).
+
+## 2026-11-16 — Unión final de `feat/monitoreo` con `main` y cierre de la rama
+
+- Pedido del usuario: traer lo último de `main` (acb36a6: paridad con desk, rediseño, turnos fijos, pasada de calidad), unirlo a `feat/monitoreo`, pasar todo a `main` y borrar la rama de monitoreo.
+- 41 archivos en conflicto. Criterio: la estructura nueva de main (FormRequests, Queries, `ActiveCompanyPeople`, `TimerCutter` + `Cut*`, `McpConnectionSnippet`, `LocalDateRange`, textos de error con `$fallback`) + lo de monitoreo encima:
+  - Usuarios del portal fuera del equipo: `->team()` en `ActiveCompanyPeople`, `UserList` y el calendario; `client_id => null` en el reset de contraseña (`ResetPassword`); `canLogin()` en `EnsureUserIsActive`.
+  - Reloj del día: `StopDayClock` sigue en `timers:cut`; la excepción `uncapped` (R-6) pasó a `TimerCutter` (main borró `AutoStopTimers`); `day_clock` en `/me/timer` sobre `TimerState`; etiqueta `EntrySource::DayClock` = "Reloj del día"; insignia en `TimesheetDayEntries` (main borró `TimesheetDaySection`).
+  - Mis horas: `GET /time-entries` y `/time-entries/days` conviven con el `/me/time-entries` (Historial) de main; `index` usa `LocalDateRange` (se quitó el scope `startedOnLocalDays`, duplicado); `task_id` va en `CorrectTimeEntryRequest`; `meta.editable_since` también en `ProjectTimeEntries`.
+  - Conexiones de IA: `McpConnectionSnippet` suma `monitoreoEndpoint()` y el servidor `monitoreo` en el comando y en `.mcp.json`.
+  - Front: header sin título (main) con el botón del reloj del día; `EntryList` compartida dentro de `StaleContent`; "Nueva tarea" en el header nuevo de Mis tareas; `MoveTaskDialog` usa `ACTIVE_PROJECTS` de `useProjects`.
+- Arreglado después de unir: `McpPresenter::dayClock` usaba `self::hours()` (main lo borró) → `Duration::humanize`.
+- Verificación: backend 515 ok / 1 falla conocida (`/health` sin Redis local); front typecheck, lint, build y vitest ok (también con `TZ=UTC`).
+- Queda para hablar: Mis horas (`/mis-horas`) y el Historial de horas de main (`/me/time-entries`) muestran casi lo mismo; unificar es decisión de producto.

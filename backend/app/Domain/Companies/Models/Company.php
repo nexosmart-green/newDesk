@@ -44,6 +44,12 @@ class Company extends Model
         return ($this->settings ?? [])[$key] ?? self::DEFAULT_SETTINGS[$key] ?? null;
     }
 
+    /** RF-05.07 first alert: from here on a bag is "por agotarse" (project list filter and Inicio). */
+    public function firstHourAlertThreshold(): int
+    {
+        return (int) min($this->setting('hour_alert_thresholds'));
+    }
+
     /** @return HasMany<User, $this> */
     public function users(): HasMany
     {

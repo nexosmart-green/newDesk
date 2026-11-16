@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { TabNav } from '@/components/ui/TabNav'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { visibleSettingsTabs } from './settingsTabs'
@@ -17,8 +18,8 @@ export function SettingsPage() {
   }
 
   return (
-    <section className="max-w-5xl space-y-4">
-      <h1 className="text-lg font-semibold">Configuración</h1>
+    <section className="max-w-5xl space-y-6">
+      <PageHeader title="Configuración" />
       <TabNav label="Secciones de configuración" tabs={tabs} />
       <Outlet />
     </section>

@@ -19,6 +19,8 @@ use Laravel\Mcp\Server\Tool;
  */
 abstract class NewDeskTool extends Tool
 {
+    private const NOT_FOUND = 'No existe o no tenés acceso. Usá list_my_tasks o list_projects para obtener códigos válidos.';
+
     abstract protected function run(Request $request, User $user): Response;
 
     /** The module this tool belongs to (same switch as the web routes), or null if always available. */
@@ -34,7 +36,7 @@ abstract class NewDeskTool extends Tool
 
         $module = $this->module();
         if ($module !== null && ! $user->hasPermission($module)) {
-            return Response::error("Tu rol no tiene acceso a: {$module->label()}.");
+            return Response::error("Tu rol no tiene acceso a: {$module->label()}. Pedile a un administrador que habilite el módulo para tu rol; no reintentes.");
         }
 
         try {
@@ -43,10 +45,10 @@ abstract class NewDeskTool extends Tool
             return Response::error($e->getMessage());
         } catch (AuthorizationException $e) {
             return Response::error($e->status() === 404
-                ? 'No encontrado.'
-                : (PolicyDenialMessage::of($e) ?? 'No tenés permiso para esta acción con tu rol actual.'));
+                ? self::NOT_FOUND
+                : (PolicyDenialMessage::of($e) ?? 'Tu rol actual no permite esta acción. Pedíselo a un administrador; no reintentes.'));
         } catch (ModelNotFoundException) {
-            return Response::error('No encontrado.');
+            return Response::error(self::NOT_FOUND);
         }
     }
 

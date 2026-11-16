@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { BackLink } from '@/components/ui/BackLink'
 import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { useCan } from '@/features/auth/useAuth'
@@ -22,7 +23,7 @@ export function PersonPage() {
   if (person.error instanceof ApiError && person.error.status === 404) {
     return (
       <section className="space-y-2">
-        <h1 className="text-lg font-semibold">Persona no encontrada</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">Persona no encontrada</h1>
         <Link to="/personas" className="text-sm text-accent">
           Volver a Personas
         </Link>
@@ -37,10 +38,8 @@ export function PersonPage() {
   const currentTab = canViewRates ? tab : 'perfil'
 
   return (
-    <section className="max-w-3xl space-y-4">
-      <Link to="/personas" className="text-sm text-accent">
-        ← Personas
-      </Link>
+    <section className="max-w-3xl space-y-6">
+      <BackLink to="/personas">Personas</BackLink>
       <PersonHeader person={person.data} canManage={canManage} />
       <Tabs label="Secciones de la persona" tabs={tabs} selected={currentTab} onSelect={setTab}>
         {currentTab === 'perfil' &&

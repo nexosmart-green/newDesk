@@ -29,7 +29,7 @@ it('answers 401 without a token and lists every R1 tool in one page', function (
         ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => (object) []])
         ->json('result.tools.*.name');
 
-    expect($tools)->toContain('whoami', 'start_timer', 'stop_timer', 'allocate_hours', 'project_hours_report')->toHaveCount(19);
+    expect($tools)->toContain('whoami', 'start_timer', 'stop_timer', 'allocate_hours', 'project_hours_report', 'update_checklist')->toHaveCount(20);
 });
 
 it('answers whoami with role, permissions and timer; revoked token → 401 (CA-12.02)', function () {

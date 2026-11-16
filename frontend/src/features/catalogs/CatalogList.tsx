@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { inputClassName } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { CatalogItemRow } from './CatalogItemRow'
-import { catalogLabels, type CatalogType } from './types'
+import { catalogLabels, newCatalogItemLabel, type CatalogType } from './types'
 import { useCatalog, useCreateCatalogItem } from './useCatalogs'
 
 export function CatalogList({ type }: { type: CatalogType }) {
@@ -29,15 +29,8 @@ export function CatalogList({ type }: { type: CatalogType }) {
       <h2 id={headingId} className="font-semibold">
         {labels.title}
       </h2>
-      {catalog.isPending ? (
-        <div role="status" className="space-y-3 py-1">
-          <span className="sr-only">Cargando…</span>
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-3/5" />
-        </div>
-      ) : catalog.isError ? (
-        <PageState isPending={false} error={catalog.error} onRetry={() => void catalog.refetch()} />
+      {!catalog.data ? (
+        <PageState isPending={catalog.isPending} error={catalog.error} skeleton={<CatalogSkeleton />} onRetry={() => void catalog.refetch()} />
       ) : catalog.data.length === 0 ? (
         <p className="text-sm text-muted">Todavía no hay valores.</p>
       ) : (
@@ -49,13 +42,13 @@ export function CatalogList({ type }: { type: CatalogType }) {
       )}
       <form onSubmit={handleSubmit} className="space-y-1" noValidate>
         <label htmlFor={inputId} className="sr-only">
-          Nuevo {labels.singular}
+          {newCatalogItemLabel(type)}
         </label>
         <div className="flex gap-2">
           <input
             id={inputId}
             value={name}
-            placeholder={`Nuevo ${labels.singular}`}
+            placeholder={newCatalogItemLabel(type)}
             maxLength={80}
             aria-invalid={nameError ? true : undefined}
             onChange={(event) => setName(event.target.value)}
@@ -68,5 +61,16 @@ export function CatalogList({ type }: { type: CatalogType }) {
         {nameError && <p className="text-sm text-danger">{nameError}</p>}
       </form>
     </section>
+  )
+}
+
+function CatalogSkeleton() {
+  return (
+    <div role="status" className="space-y-3 py-1">
+      <span className="sr-only">Cargando…</span>
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-3/5" />
+    </div>
   )
 }

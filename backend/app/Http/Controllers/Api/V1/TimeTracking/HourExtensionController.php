@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1\TimeTracking;
 
-use App\Domain\Identity\Enums\Permission;
 use App\Domain\Projects\Models\Project;
+use App\Domain\TimeTracking\Actions\ApproveHourExtension;
+use App\Domain\TimeTracking\Actions\RejectHourExtension;
 use App\Domain\TimeTracking\Actions\RequestHourExtension;
-use App\Domain\TimeTracking\Actions\ResolveHourExtension;
 use App\Domain\TimeTracking\Models\HourExtensionRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TimeTracking\ApproveHourExtensionRequest;
+use App\Http\Requests\TimeTracking\RequestHourExtensionRequest;
+use App\Http\Resources\HourExtensionRequestResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -18,54 +22,35 @@ use Illuminate\Support\Facades\Gate;
  */
 class HourExtensionController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        Gate::authorize(Permission::HoursAllocate->value);
+    private const RELATIONS = ['project', 'requester'];
 
-        return ApiResponse::ok(HourExtensionRequest::query()->where('status', 'pending')->with(['project', 'requester'])->oldest()->get()
-            ->map(fn (HourExtensionRequest $request) => $this->present($request)));
+    public function index(): AnonymousResourceCollection
+    {
+        Gate::authorize('viewAny', HourExtensionRequest::class);
+
+        return HourExtensionRequestResource::collection(HourExtensionRequest::query()->pending()->with(self::RELATIONS)->oldest()->get());
     }
 
-    public function store(Request $request, Project $project, RequestHourExtension $requestExtension): JsonResponse
+    public function store(RequestHourExtensionRequest $request, Project $project, RequestHourExtension $requestExtension): JsonResponse
     {
-        Gate::authorize('view', $project);
-        $request->validate(['message' => ['nullable', 'string', 'max:2000']]);
+        $extension = $requestExtension($request->user(), $project, $request->validated('message'));
 
-        $extension = $requestExtension($request->user(), $project, $request->input('message'));
-
-        return ApiResponse::ok($this->present($extension->load(['project', 'requester'])), 'Pedido de ampliación enviado.', 201);
+        return ApiResponse::ok(HourExtensionRequestResource::make($extension->load(self::RELATIONS)), 'Pedido de ampliación enviado.', 201);
     }
 
-    public function approve(Request $request, HourExtensionRequest $extensionRequest, ResolveHourExtension $resolve): JsonResponse
+    public function approve(ApproveHourExtensionRequest $request, HourExtensionRequest $extensionRequest, ApproveHourExtension $approve): JsonResponse
     {
-        $request->validate([
-            'seconds' => ['required', 'integer', 'min:1', 'max:36000000'],
-            'reason' => ['required', 'string', 'max:255'],
-            'reference' => ['nullable', 'string', 'max:120'],
-        ]);
+        $extension = $approve($request->user(), $extensionRequest, $request->integer('seconds'), $request->string('reason')->value(), $request->validated('reference'));
 
-        $extension = $resolve->approve($request->user(), $extensionRequest, $request->integer('seconds'), $request->string('reason')->value(), $request->input('reference'));
-
-        return ApiResponse::ok($this->present($extension->load(['project', 'requester'])), 'Ampliación aprobada.');
+        return ApiResponse::ok(HourExtensionRequestResource::make($extension->load(self::RELATIONS)), 'Ampliación aprobada.');
     }
 
-    public function reject(Request $request, HourExtensionRequest $extensionRequest, ResolveHourExtension $resolve): JsonResponse
+    public function reject(Request $request, HourExtensionRequest $extensionRequest, RejectHourExtension $reject): JsonResponse
     {
-        $extension = $resolve->reject($request->user(), $extensionRequest);
+        Gate::authorize('reject', $extensionRequest);
 
-        return ApiResponse::ok($this->present($extension->load(['project', 'requester'])), 'Pedido rechazado.');
-    }
+        $extension = $reject($request->user(), $extensionRequest);
 
-    /** @return array<string, mixed> */
-    private function present(HourExtensionRequest $request): array
-    {
-        return [
-            'id' => $request->id,
-            'status' => $request->status,
-            'message' => $request->message,
-            'project' => ['id' => $request->project->id, 'name' => $request->project->name],
-            'requested_by' => ['id' => $request->requester->id, 'full_name' => $request->requester->fullName()],
-            'created_at' => $request->created_at?->toIso8601String(),
-        ];
+        return ApiResponse::ok(HourExtensionRequestResource::make($extension->load(self::RELATIONS)), 'Pedido rechazado.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Domain\Notifications\Notifications;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Notifications\Enums\NotificationEvent;
+use App\Domain\Shared\Support\Duration;
 
 /** RF-09.05 / RF-05.06 / RF-05.10 */
 final class TimerCutNotification extends AppNotification
@@ -31,7 +32,7 @@ final class TimerCutNotification extends AppNotification
 
     protected function body(User $notifiable): string
     {
-        $hours = intdiv($this->seconds, 3600).'h '.str_pad((string) intdiv($this->seconds % 3600, 60), 2, '0', STR_PAD_LEFT).'m';
+        $hours = Duration::humanize($this->seconds);
 
         return $this->toOwner
             ? "Motivo: {$this->reason}. Se registraron {$hours}: completá qué hiciste para poder iniciar otro cronómetro."

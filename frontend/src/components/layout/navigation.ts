@@ -8,6 +8,8 @@ import {
   Clock,
   FolderKanban,
   History,
+  LayoutDashboard,
+  ListTodo,
   Settings,
   Users,
   type LucideIcon,
@@ -36,7 +38,7 @@ export interface NavGroup {
  * Feature modules register their top-level entries here. Visibility is a UI hint only;
  * the backend policies decide (RNF-05).
  */
-export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
+export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
   // Module switches (per role) first; then the finer permission inside the module.
   const hasProjects = useHasModule(MODULES.projects)
   const hasTime = useHasModule(MODULES.time)
@@ -57,7 +59,9 @@ export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
       {
         label: 'Mi trabajo',
         items: visible([
-          hasProjects && { to: '/', label: 'Mis tareas', icon: CheckSquare, exact: true },
+          { to: '/', label: 'Inicio', icon: LayoutDashboard, exact: true },
+          hasProjects && { to: '/mis-tareas', label: 'Mis tareas', icon: CheckSquare },
+          hasProjects && { to: '/tareas', label: 'Tareas', icon: ListTodo, exact: true },
           hasTime && { to: '/mi-semana', label: 'Mi semana', icon: Clock },
           hasTime && { to: '/mis-horas', label: 'Mis horas', icon: History },
           hasCalendar && { to: '/calendario', label: 'Calendario', icon: CalendarDays },
@@ -82,11 +86,12 @@ export function useNavigation(): { groups: NavGroup[]; footer: NavItem[] } {
   }
 }
 
-/** Title for the header: the nav entry that owns the current path (longest prefix wins). */
+/** The browser tab's title: the nav entry that owns the current path (longest prefix wins). */
 export function sectionTitle(pathname: string, groups: NavGroup[], footer: NavItem[]): string {
+  // `/tareas` lists them all; `/tareas/:code` is one task.
+  if (pathname.startsWith('/tareas/')) return 'Tarea'
   const items = [...groups.flatMap((group) => group.items), ...footer]
   const extra: NavItem[] = [
-    { to: '/tareas', label: 'Tarea', icon: CheckSquare },
     { to: '/perfil', label: 'Mi perfil', icon: Users },
     { to: '/seguridad', label: 'Seguridad', icon: Settings },
   ]

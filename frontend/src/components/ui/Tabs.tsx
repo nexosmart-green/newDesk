@@ -3,6 +3,8 @@ import { useId, type KeyboardEvent, type ReactNode } from 'react'
 export interface TabItem<T extends string> {
   id: T
   label: string
+  /** A counter next to the label (e.g. how many files); hidden when undefined or 0. */
+  count?: number
 }
 
 interface TabsProps<T extends string> {
@@ -46,6 +48,11 @@ export function Tabs<T extends string>({ label, tabs, selected, onSelect, childr
               className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm ${isSelected ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-text'}`}
             >
               {tab.label}
+              {tab.count !== undefined && tab.count > 0 && (
+                <span className="tabular ml-1.5 inline-grid min-w-5 place-items-center rounded-full bg-surface-2 px-1.5 text-xs font-medium text-muted">
+                  {tab.count}
+                </span>
+              )}
             </button>
           )
         })}

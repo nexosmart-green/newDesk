@@ -57,7 +57,7 @@ export function EntryList({ page, empty, showProject = false, onPageChange }: En
       )}
       {changing?.action === 'delete' && (
         <ConfirmDialog
-          title="Borrar registro"
+          title={`¿Borrar ${changing.entry.user.id === user?.id ? 'tu registro' : `el registro de ${changing.entry.user.full_name}`} en ${changing.entry.task.code}?`}
           confirmLabel="Borrar"
           danger
           pending={remove.isPending}
@@ -65,10 +65,7 @@ export function EntryList({ page, empty, showProject = false, onPageChange }: En
           onConfirm={() => remove.mutate(changing.entry.id, { onSuccess: close })}
           onClose={close}
         >
-          <p>
-            ¿Borrás {changing.entry.user.id === user?.id ? 'tu registro' : `el registro de ${changing.entry.user.full_name}`} en{' '}
-            <span className="font-mono uppercase">{changing.entry.task.code}</span>? Queda en Actividad.
-          </p>
+          <p>Sus horas vuelven a la bolsa del proyecto. El borrado queda registrado en Actividad.</p>
         </ConfirmDialog>
       )}
     </>

@@ -11,7 +11,9 @@ import { CommentDialog } from '@/features/timer/CommentDialog'
 import { TimerBlockedNotice } from '@/features/timer/TimerBlockedNotice'
 import { timerRule } from '@/features/timer/types'
 import { ApiError } from '@/lib/api'
+import { hasChanges } from '@/lib/formState'
 import { AssigneeCheckboxes } from './AssigneeCheckboxes'
+import { TaskCode } from './TaskCode'
 import { emptyTaskForm, toSaveTaskInput, type TaskFormValues } from './taskForm'
 import { TaskFormFields } from './TaskFormFields'
 import type { CreateAndStartResult, SaveTaskInput } from './types'
@@ -90,19 +92,19 @@ export function CreateTaskDialog({ project, onClose }: CreateTaskDialogProps) {
     return (
       <Dialog title="Tarea creada" size="sm" onClose={onClose}>
         <p className="text-sm">
-          Tarea <span className="font-mono uppercase">{task.code}</span> creada, pero el cronómetro no arrancó.
+          Tarea <TaskCode code={task.code} /> creada, pero el cronómetro no arrancó.
         </p>
         <TimerBlockedNotice code={timerError.code} message={timerError.message} projectId={projectId} />
         <DialogFooter>
-          <Link
-            to={`/tareas/${task.code}`}
-            className="inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium text-accent hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            Abrir {task.code}
-          </Link>
           <Button variant="secondary" onClick={onClose}>
             Cerrar
           </Button>
+          <Link
+            to={`/tareas/${task.code}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-strong px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Abrir {task.code}
+          </Link>
         </DialogFooter>
       </Dialog>
     )
@@ -129,7 +131,13 @@ export function CreateTaskDialog({ project, onClose }: CreateTaskDialogProps) {
   const inlineError = createAndStart.error
 
   return (
-    <Dialog title="Nueva tarea" description="Solo el título es obligatorio." size="lg" onClose={onClose}>
+    <Dialog
+      title="Nueva tarea"
+      description="Solo el título es obligatorio."
+      size="lg"
+      dirty={hasChanges(emptyTaskForm, values) || assigneeIds.length > 0}
+      onClose={onClose}
+    >
       <form onSubmit={handleCreate} className="space-y-4">
         {!project && (
           <SelectField label="Proyecto" value={projectId || ''} onChange={(event) => pickProject(Number(event.target.value))} required>
@@ -147,6 +155,7 @@ export function CreateTaskDialog({ project, onClose }: CreateTaskDialogProps) {
         <TaskFormFields
           values={values}
           error={error}
+          projectId={projectId}
           onChange={(changes) => {
             setTitleMissing(false)
             setValues((current) => ({ ...current, ...changes }))
@@ -160,7 +169,7 @@ export function CreateTaskDialog({ project, onClose }: CreateTaskDialogProps) {
             Cancelar
           </Button>
           <Button type="submit" variant="secondary" loading={create.isPending} disabled={pending}>
-            Crear
+            Crear tarea
           </Button>
           <Button loading={createAndStart.isPending} disabled={pending} onClick={() => startWith()}>
             <Play aria-hidden="true" className="size-4 fill-current" />

@@ -1,0 +1,73 @@
+import { CalendarOff, CalendarPlus } from 'lucide-react'
+import { Link } from 'react-router'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
+import { useCan } from '@/features/auth/useAuth'
+import { CompanyTimeNote } from '@/features/shifts/CompanyTimeNote'
+import { SHIFTS_PERMISSION } from '@/features/shifts/types'
+import type { Week } from '@/lib/week'
+import { WeekNav } from '@/components/ui/WeekNav'
+import { todayIn } from '@/lib/timezone'
+import { TeamTodayBoard, TeamTodaySkeleton } from './TeamTodayBoard'
+import { TeamWeekGrid } from './TeamWeekGrid'
+import { useTeamCalendar, useTeamToday } from './useTeamCalendar'
+
+interface TeamCalendarViewProps {
+  week: Week
+  isCurrentWeek: boolean
+  onWeekChange: (monday: string | null) => void
+}
+
+/** RF-06.05 "Calendario de equipo": who is working now, later and today, then the week. */
+export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCalendarViewProps) {
+  const today = useTeamToday()
+  const weekCalendar = useTeamCalendar(week.from, week.to)
+  const canManage = useCan(SHIFTS_PERMISSION)
+  const nobodyWorks = weekCalendar.data?.days.every((day) => day.shifts.length === 0) ?? false
+
+  return (
+    <div className="space-y-6">
+      {today.data ? (
+        <TeamTodayBoard calendar={today.data} />
+      ) : (
+        <PageState isPending={today.isPending} error={today.error} skeleton={<TeamTodaySkeleton />} onRetry={() => void today.refetch()} />
+      )}
+
+      <section aria-labelledby="team-week-title" className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="team-week-title" className="text-base font-semibold">
+            Semana del equipo
+          </h2>
+          <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={onWeekChange} />
+        </div>
+        {!weekCalendar.data ? (
+          <PageState isPending={weekCalendar.isPending} error={weekCalendar.error} shape="table" onRetry={() => void weekCalendar.refetch()} />
+        ) : (
+          <StaleContent stale={weekCalendar.isPlaceholderData} className="space-y-3">
+            {nobodyWorks && (
+              <EmptyState
+                icon={CalendarOff}
+                action={
+                  canManage && (
+                    <Link
+                      to="/turnos"
+                      className="inline-flex min-h-9 items-center gap-2 rounded-md bg-brand-strong px-3.5 text-sm font-medium text-white hover:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent coarse:min-h-11"
+                    >
+                      <CalendarPlus aria-hidden="true" className="size-4" />
+                      Armar turnos
+                    </Link>
+                  )
+                }
+              >
+                Nadie del equipo tiene turnos esta semana.
+              </EmptyState>
+            )}
+            <TeamWeekGrid calendar={weekCalendar.data} today={todayIn(weekCalendar.data.timezone)} canAssign={canManage} />
+            <CompanyTimeNote timeZone={weekCalendar.data.timezone} />
+          </StaleContent>
+        )}
+      </section>
+    </div>
+  )
+}

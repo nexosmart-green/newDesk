@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { claimFieldError } from './fieldErrors'
 
 /** Every backend response follows `{ data, message, errors }`. */
 export interface ApiEnvelope<T> {
@@ -58,12 +59,14 @@ export function toApiError(error: unknown): ApiError {
     const body = error.response.data as Partial<ApiEnvelope<unknown>> | undefined
     return new ApiError(
       error.response.status,
-      body?.message ?? 'Error inesperado',
+      // HTML pages (proxy 413/502) and empty bodies carry no message: `errorTextOf` words it by status.
+      body?.message ?? '',
       body?.errors ?? {},
       businessCodeOf(body?.data),
     )
   }
-  return new ApiError(0, 'No se pudo conectar con el servidor')
+  // No response: `code` keeps axios' reason (ECONNABORTED, ERR_NETWORK…) for `errorTextOf`.
+  return new ApiError(0, '', {}, error instanceof AxiosError ? (error.code ?? null) : null)
 }
 
 /** Awaits a request and returns the whole envelope, normalizing failures to `ApiError`. */
@@ -82,7 +85,7 @@ export async function dataOf<T>(request: Promise<{ data: ApiEnvelope<T> }>): Pro
 }
 
 export function fieldErrorOf(error: unknown, field: string): string | undefined {
-  return error instanceof ApiError ? error.fieldErrors[field]?.[0] : undefined
+  return error instanceof ApiError ? claimFieldError(error, field) : undefined
 }
 
 /** Awaits a paginated Laravel resource collection (`{ data, meta, links }`) and keeps `data` + `meta`. */
@@ -106,4 +109,19 @@ export function queryParams(values: Record<string, QueryValue>): Record<string, 
     params[key] = value === true ? 1 : typeof value === 'string' ? value.trim() : value
   }
   return params
+}
+
+/** Time-entry lists also total the whole filter (not just the page) in `meta.total_seconds`. */
+export interface TimedPage<T> {
+  data: T[]
+  meta: Paginated<T>['meta'] & { total_seconds: number }
+}
+
+export async function timedPageOf<T>(request: Promise<{ data: TimedPage<T> }>): Promise<TimedPage<T>> {
+  try {
+    const response = await request
+    return { data: response.data.data, meta: response.data.meta }
+  } catch (error) {
+    throw toApiError(error)
+  }
 }

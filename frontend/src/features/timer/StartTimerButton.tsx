@@ -2,22 +2,55 @@ import { Play, Square } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { ApiError } from '@/lib/api'
+import { errorTextOf } from '@/lib/errorText'
+import { formatClock } from '@/lib/duration'
 import { CommentDialog } from './CommentDialog'
+import { PendingCommentDialog } from './PendingCommentDialog'
+import { toPendingSummary } from './pendingEntry'
 import { RequestExtensionButton } from './RequestExtensionButton'
 import { StopTimerDialog } from './StopTimerDialog'
-import { isProvisional } from './timerOptimistic'
 import { TimerBlockedNotice } from './TimerBlockedNotice'
 import { timerRule } from './types'
+import { useRunningElapsedSeconds, useRunningTimer } from './useRunningTimer'
 import { useStartTimer, useTimerState } from './useTimer'
 
 interface StartTimerButtonProps {
   task: { code: string; title: string; project?: { id: number; name?: string; hours_exhausted: boolean } }
   /** Compact icon-only rendering for cards and rows. */
   compact?: boolean
+  /** The start verb when it isn't a plain "Iniciar" (e.g. "Seguir" on the last task worked on). */
+  startLabel?: string
 }
 
 const sameCode = (left: string, right: string) => left.toLowerCase() === right.toLowerCase()
+
+/** The ticking time, only inside the one running row (the other rows never re-render with it). */
+function RunningElapsed() {
+  return <span className="tabular font-semibold">{formatClock(useRunningElapsedSeconds() ?? 0)}</span>
+}
+
+/** The full entry (with its ticking time) only while the stop dialog is open. */
+function StopRunningDialog({ onClose }: { onClose: () => void }) {
+  const active = useTimerState().data?.active
+  return active ? <StopTimerDialog entry={active} onClose={onClose} /> : null
+}
+
+/** A start blocked by an automatically cut entry: complete its comment right here (RF-05.17). */
+function CompletePendingDialog({ onClose }: { onClose: () => void }) {
+  const pending = useTimerState().data?.pending_comments ?? []
+  const current = pending[0]
+  if (!current) return null
+  return (
+    <PendingCommentDialog
+      entry={toPendingSummary(current)}
+      position={pending.length > 1 ? `Registro 1 de ${pending.length}` : undefined}
+      onDone={() => pending.length <= 1 && onClose()}
+      onClose={onClose}
+    />
+  )
+}
 const asksForComment = (error: ApiError) =>
   error.code === timerRule.previousCommentRequired || error.code === timerRule.commentRequired || error.hasFieldErrors()
 
@@ -26,15 +59,15 @@ const asksForComment = (error: ApiError) =>
  * there first (RF-05.16); a block (no hours, closed task…) explains why and how to get out (RF-05.05/08).
  * A project already out of hours says so before the click, with the extension request at hand.
  */
-export function StartTimerButton({ task, compact = false }: StartTimerButtonProps) {
-  const timer = useTimerState()
+export function StartTimerButton({ task, compact = false, startLabel = 'Iniciar' }: StartTimerButtonProps) {
+  const active = useRunningTimer()
   const start = useStartTimer()
   const noHoursId = useId()
   const [askingPrevious, setAskingPrevious] = useState(false)
   const [blocked, setBlocked] = useState<ApiError | null>(null)
   const [stoppingId, setStoppingId] = useState<number | null>(null)
-  const active = timer.data?.active ?? null
-  const runningHere = active !== null && sameCode(active.task.code, task.code)
+  const [completingPending, setCompletingPending] = useState(false)
+  const runningHere = active !== null && sameCode(active.code, task.code)
   const projectId = task.project?.id
 
   function begin(previousComment?: string) {
@@ -65,9 +98,9 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   if (!runningHere && task.project?.hours_exhausted) {
     return (
       <div className="flex flex-wrap items-start justify-end gap-2">
-        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'min-w-11 px-0' : undefined}>
+        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'min-w-9 px-0 coarse:min-w-11' : undefined}>
           <Play aria-hidden="true" className="size-4 fill-current" />
-          {!compact && <span>Iniciar</span>}
+          {!compact && <span>{startLabel}</span>}
         </Button>
         <p id={noHoursId} className="self-center text-xs text-danger">
           Sin horas disponibles — pedir ampliación
@@ -80,17 +113,18 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   return (
     <>
       <Button
-        variant={runningHere ? 'danger' : 'secondary'}
+        // Running here: the time on desk's pink, never danger (stopping ends work, it doesn't destroy it).
+        variant={runningHere ? 'live' : 'secondary'}
         aria-label={label}
         title={label}
         loading={start.isPending}
         // A just-started (optimistic) entry can't be stopped until the server confirms it.
-        disabled={runningHere && active !== null && isProvisional(active)}
+        disabled={runningHere && active.provisional}
         onClick={handleClick}
-        className={compact ? 'min-w-11 px-0' : undefined}
+        className={compact && !runningHere ? 'min-w-9 px-0 coarse:min-w-11' : undefined}
       >
-        {runningHere ? <Square aria-hidden="true" className="size-3.5 fill-current" /> : <Play aria-hidden="true" className="size-4 fill-current" />}
-        {!compact && <span>{runningHere ? 'Detener' : 'Iniciar'}</span>}
+        {runningHere ? <Square aria-hidden="true" className="size-3 fill-current" /> : <Play aria-hidden="true" className="size-4 fill-current" />}
+        {runningHere ? <RunningElapsed /> : !compact && <span>{startLabel}</span>}
       </Button>
       {askingPrevious && (
         <CommentDialog
@@ -103,24 +137,33 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
         >
           <p>
             Tenés el cronómetro corriendo en{' '}
-            {active ? <span className="font-mono uppercase">{active.task.code}</span> : 'otra tarea'}. Contá qué
-            hiciste ahí para detenerlo y arrancar <span className="font-mono uppercase">{task.code}</span>.
+            {active ? <TaskCode code={active.code} /> : 'otra tarea'}. Contá qué
+            hiciste ahí para detenerlo y arrancar <TaskCode code={task.code} />.
           </p>
         </CommentDialog>
       )}
       {blocked && (
         <Dialog title="No se pudo iniciar el cronómetro" size="sm" onClose={() => setBlocked(null)}>
-          <TimerBlockedNotice code={blocked.code} message={blocked.message} projectId={projectId} />
+          <TimerBlockedNotice code={blocked.code} message={errorTextOf(blocked).message} projectId={projectId} />
           <DialogFooter>
             <Button variant="secondary" onClick={() => setBlocked(null)}>
               Cerrar
             </Button>
+            {blocked.code === timerRule.commentPending && (
+              <Button
+                onClick={() => {
+                  setBlocked(null)
+                  setCompletingPending(true)
+                }}
+              >
+                Completar comentario
+              </Button>
+            )}
           </DialogFooter>
         </Dialog>
       )}
-      {active && stoppingId === active.id && (
-        <StopTimerDialog entry={active} onClose={() => setStoppingId(null)} />
-      )}
+      {completingPending && <CompletePendingDialog onClose={() => setCompletingPending(false)} />}
+      {active && stoppingId === active.id && <StopRunningDialog onClose={() => setStoppingId(null)} />}
     </>
   )
 }

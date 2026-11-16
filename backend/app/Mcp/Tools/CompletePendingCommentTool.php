@@ -6,8 +6,10 @@ use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\TimeTracking\Actions\CompletePendingComment;
 use App\Domain\TimeTracking\Models\TimeEntry;
+use App\Domain\TimeTracking\Support\TimeTrackingLimits;
 use App\Mcp\Support\McpPresenter;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -26,8 +28,9 @@ class CompletePendingCommentTool extends NewDeskTool
 
     protected function run(Request $request, User $user): Response
     {
-        $input = $request->validate(['time_entry_id' => 'required|integer', 'comment' => 'nullable|string|max:5000']);
-        $entry = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->findOrFail($input['time_entry_id']);
+        $input = $request->validate(['time_entry_id' => ['required', 'integer'], 'comment' => ['nullable', 'string', 'max:'.TimeTrackingLimits::ENTRY_COMMENT_MAX]]);
+        $entry = TimeEntry::query()->forCompany($user->company_id)->findOrFail($input['time_entry_id']);
+        Gate::forUser($user)->authorize('completeComment', $entry);
 
         return $this->json(['completed' => McpPresenter::entry(($this->complete)($user, $entry, $input['comment'] ?? null))]);
     }

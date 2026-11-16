@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Events\CommentPosted;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskComment;
+use App\Domain\Tasks\Support\ResolveProjectMembers;
 use Illuminate\Support\Facades\DB;
 
 /**

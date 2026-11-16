@@ -17,7 +17,8 @@ export function RequireAuth() {
       </p>
     )
   }
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  // Keeps the query too, so a filtered list or an open tab survives a lost session.
+  if (!user) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />
   // A client's user only has the monitoring portal (D-037); the portal sends the team back here.
   if (user.client) return <Navigate to="/portal" replace />
   // RF-01.02: until the mandatory 2FA is on, the backend rejects everything else (403).

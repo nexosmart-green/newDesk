@@ -81,10 +81,10 @@ final class LogManualTime
     private function assertValidRange(Carbon $startedAt, Carbon $endedAt): void
     {
         if ($endedAt->lessThanOrEqualTo($startedAt)) {
-            throw new BusinessRuleViolation('La hora de fin tiene que ser posterior a la de inicio.', 'invalid_range');
+            throw new BusinessRuleViolation('La hora «Hasta» tiene que ser posterior a «Desde».', 'invalid_range');
         }
         if ($endedAt->isFuture()) {
-            throw new BusinessRuleViolation('No se pueden cargar horas futuras.', 'invalid_range');
+            throw new BusinessRuleViolation('No se pueden cargar horas futuras: elegí una hora «Hasta» que ya haya pasado.', 'invalid_range');
         }
     }
 }

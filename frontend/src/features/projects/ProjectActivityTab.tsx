@@ -23,9 +23,9 @@ export function ProjectActivityTab() {
           return (
             <li key={entry.id} className="border-l-2 border-border pl-3">
               <p className="text-sm">{describeActivity(entry)}</p>
-              <p className="text-xs text-muted">
+              <p className="flex flex-wrap gap-x-3 text-xs text-muted">
                 <time dateTime={entry.created_at}>{formatDateTime(entry.created_at)}</time>
-                {source && ` · ${source}`}
+                {source && <span>{source}</span>}
               </p>
             </li>
           )

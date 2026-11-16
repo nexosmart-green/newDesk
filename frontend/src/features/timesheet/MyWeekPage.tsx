@@ -1,13 +1,19 @@
-import { useSearchParams } from 'react-router'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
+import { useSearchParamPatch, useTabParam } from '@/lib/useSearchParamPatch'
+import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { PendingCommentDialog } from '@/features/timer/PendingCommentDialog'
 import type { PendingEntrySummary } from '@/features/timer/pendingEntry'
 import { formatDuration } from '@/lib/duration'
-import { TimesheetDaySection } from './TimesheetDaySection'
+import { TimeHistoryTab } from './TimeHistoryTab'
+import { DayTotal, TimesheetDayEntries } from './TimesheetDayEntries'
 import type { Timesheet, TimesheetEntry } from './types'
 import { useTimesheet } from './useTimesheet'
-import { useWeekParam } from './useWeekParam'
-import { WeekNav } from './WeekNav'
+import { useWeekParam } from '@/lib/useWeekParam'
+import { WeekNav } from '@/components/ui/WeekNav'
+import { DayList } from '@/components/ui/DayList'
+import { todayIn } from '@/lib/timezone'
 
 function toPendingSummary(entry: TimesheetEntry): PendingEntrySummary {
   return {
@@ -24,52 +30,51 @@ function findEntry(timesheet: Timesheet | undefined, id: number): TimesheetEntry
   return timesheet?.days.flatMap((day) => day.entries).find((entry) => entry.id === id)
 }
 
-/** RF-05.12 "Mi semana": personal timesheet Monday–Sunday with daily totals. */
+type WeekView = 'semana' | 'historial'
+
+const views: TabItem<WeekView>[] = [
+  { id: 'semana', label: 'Semana' },
+  { id: 'historial', label: 'Historial' },
+]
+const viewIds = views.map((view) => view.id)
+
+/** RF-05.12 "Mi semana": the Monday–Sunday timesheet, and "Historial" for any range (`?vista=historial`). */
 export function MyWeekPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { selected: view, select: selectView } = useTabParam(viewIds, 'semana', 'vista')
+
+  return (
+    <section className="max-w-4xl space-y-6">
+      <PageHeader title="Mi semana" />
+      <Tabs label="Vistas de horas" tabs={views} selected={view} onSelect={selectView}>
+        {view === 'semana' ? <WeekTimesheet /> : <TimeHistoryTab />}
+      </Tabs>
+    </section>
+  )
+}
+
+function WeekTimesheet() {
+  const [searchParams, updateParams] = useSearchParamPatch()
   const { week, isCurrentWeek, goToWeek } = useWeekParam()
   const timesheet = useTimesheet(week.from, week.to)
   const reviewing = Number(searchParams.get('revisar')) || null
   const reviewEntry = reviewing ? findEntry(timesheet.data, reviewing) : undefined
 
-  function updateParams(changes: Record<string, string | null>) {
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        for (const [key, value] of Object.entries(changes)) {
-          if (value === null) next.delete(key)
-          else next.set(key, value)
-        }
-        return next
-      },
-      { replace: true },
-    )
-  }
-
   return (
-    <section className="max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Mi semana</h1>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
         {timesheet.data && (
-          <p className="text-sm">
-            Total de la semana: <strong className="font-mono">{formatDuration(timesheet.data.total_seconds)}</strong>
+          <p className="text-sm text-muted">
+            Total de la semana <strong className="tabular ml-1 text-base font-semibold text-text">{formatDuration(timesheet.data.total_seconds)}</strong>
           </p>
         )}
       </div>
-      <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
       {!timesheet.data ? (
         <PageState isPending={timesheet.isPending} error={timesheet.error} shape="table" onRetry={() => void timesheet.refetch()} />
       ) : (
-        <div className="space-y-3">
-          {timesheet.data.days.map((day) => (
-            <TimesheetDaySection
-              key={day.date}
-              day={day}
-              timeZone={timesheet.data.timezone}
-              onComplete={(entry) => updateParams({ revisar: String(entry.id) })}
-            />
-          ))}
-        </div>
+        <StaleContent stale={timesheet.isPlaceholderData}>
+          <WeekDays timesheet={timesheet.data} onComplete={(entry) => updateParams({ revisar: String(entry.id) })} />
+        </StaleContent>
       )}
       {reviewEntry?.comment_pending && (
         <PendingCommentDialog
@@ -78,6 +83,25 @@ export function MyWeekPage() {
           onClose={() => updateParams({ revisar: null })}
         />
       )}
-    </section>
+    </div>
+  )
+}
+
+function WeekDays({ timesheet, onComplete }: { timesheet: Timesheet; onComplete: (entry: TimesheetEntry) => void }) {
+  const byDate = new Map(timesheet.days.map((day) => [day.date, day]))
+  const entriesOf = (date: string) => byDate.get(date)?.entries ?? []
+  return (
+    <DayList
+      label="Registros de la semana"
+      dates={timesheet.days.map((day) => day.date)}
+      today={todayIn(timesheet.timezone)}
+      emptyText="sin registros"
+      isEmpty={(date) => entriesOf(date).length === 0}
+      renderTotal={(date) => <DayTotal seconds={byDate.get(date)?.total_seconds ?? 0} />}
+      renderDay={(date) => {
+        const day = byDate.get(date)
+        return day && <TimesheetDayEntries day={day} timeZone={timesheet.timezone} onComplete={onComplete} />
+      }}
+    />
   )
 }

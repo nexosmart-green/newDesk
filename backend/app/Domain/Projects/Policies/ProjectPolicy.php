@@ -24,12 +24,18 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): Response
     {
-        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::ProjectsManage));
+        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::ProjectsManage), 'Solo quien gestiona proyectos puede editar este proyecto.');
     }
 
     public function manageMembers(User $user, Project $project): Response
     {
-        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::MembersManage));
+        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::MembersManage), 'Solo quien gestiona miembros puede sumar o quitar personas del proyecto.');
+    }
+
+    /** RF-05.04: load, extend or correct the bag (`hours.allocate`). Web and MCP alike. */
+    public function allocateHours(User $user, Project $project): Response
+    {
+        return $this->visibleAnd($user, $project, $user->hasPermission(Permission::HoursAllocate), 'Tu rol no tiene permiso para cargar horas.', 'cannot_allocate');
     }
 
     public static function seesAllProjects(User $user): bool
@@ -43,12 +49,12 @@ class ProjectPolicy
             && (self::seesAllProjects($user) || $project->hasMember($user));
     }
 
-    private function visibleAnd(User $user, Project $project, bool $allowed): Response
+    private function visibleAnd(User $user, Project $project, bool $allowed, string $denial, ?string $code = null): Response
     {
         if (! $this->canSee($user, $project)) {
             return Response::denyAsNotFound();
         }
 
-        return $allowed ? Response::allow() : Response::deny();
+        return $allowed ? Response::allow() : Response::deny($denial, $code);
     }
 }

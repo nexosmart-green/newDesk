@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Dialog, DialogFooter } from '@/components/ui/Dialog'
-import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Role } from './types'
 import { useDeleteRole } from './useRoles'
 
@@ -31,22 +30,17 @@ export function DeleteRoleButton({ role, onDeleted }: { role: Role; onDeleted: (
         </p>
       )}
       {confirming && (
-        <Dialog title={`¿Borrar el rol ${role.name}?`} size="sm" onClose={close}>
-          <p className="text-sm text-muted">Esta acción no se puede deshacer.</p>
-          <FieldErrorsAlert error={mutation.error} />
-          <DialogFooter>
-            <Button variant="secondary" onClick={close} data-autofocus>
-              Cancelar
-            </Button>
-            <Button
-              variant="danger"
-              loading={mutation.isPending}
-              onClick={() => mutation.mutate(role.id, { onSuccess: onDeleted })}
-            >
-              Borrar
-            </Button>
-          </DialogFooter>
-        </Dialog>
+        <ConfirmDialog
+          title={`¿Borrar «${role.name}»?`}
+          confirmLabel="Borrar"
+          danger
+          pending={mutation.isPending}
+          error={mutation.error}
+          onConfirm={() => mutation.mutate(role.id, { onSuccess: onDeleted })}
+          onClose={close}
+        >
+          <p>Nadie tiene este rol asignado, así que nadie pierde acceso. Sus permisos se borran con él y no se puede deshacer.</p>
+        </ConfirmDialog>
       )}
     </>
   )

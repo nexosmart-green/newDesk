@@ -1,3 +1,4 @@
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { formatClock } from '@/lib/duration'
 import { CommentDialog } from './CommentDialog'
 import type { TimeEntry } from './types'
@@ -33,7 +34,7 @@ export function StopTimerDialog({ entry, onClose }: StopTimerDialogProps) {
       <div className="flex items-start justify-between gap-4 rounded-xl bg-surface-2 px-4 py-3">
         <div className="min-w-0">
           <p className="font-medium">
-            <span className="mr-2 font-mono text-xs uppercase text-muted">{entry.task.code}</span>
+            <TaskCode code={entry.task.code} className="mr-2" />
             {entry.task.title}
           </p>
           {entry.project.name && <p className="text-muted">{entry.project.name}</p>}

@@ -9,6 +9,8 @@ test('starts the timer from Mis tareas, shows it in the header and stops it with
   await page.getByLabel('Email').fill('colaborador@nexosmart.com')
   await page.getByLabel('Contraseña').fill('password')
   await page.getByRole('button', { name: 'Ingresar' }).click()
+  await expect(page.getByRole('heading', { name: /Hola/ })).toBeVisible()
+  await page.getByRole('navigation').first().getByRole('link', { name: 'Mis tareas' }).click()
 
   await page.getByRole('button', { name: 'Iniciar cronómetro en bhn-1' }).first().click()
   await expect(page.getByRole('timer', { name: 'Tiempo transcurrido' })).toBeVisible()

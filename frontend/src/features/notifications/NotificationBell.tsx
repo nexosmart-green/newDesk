@@ -57,14 +57,15 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((current) => !current)}
-        className={`relative grid size-11 place-items-center rounded-lg transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent ${open ? 'bg-surface-2 text-text' : 'text-muted'}`}
+        className={`relative grid size-9 place-items-center rounded-md coarse:size-11 transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent ${open ? 'bg-surface-2 text-text' : 'text-muted'}`}
       >
         <Bell aria-hidden="true" className="size-5" strokeWidth={1.75} />
         {unread > 0 && (
-          // "Live" pink from desk: something new is waiting.
+          // "Live" pink from desk: something new is waiting. Sits on the button's corner, off the bell itself,
+          // so the bell stays readable (a centered badge hid most of it on the dark header).
           <span
             aria-hidden="true"
-            className="tabular absolute right-1 top-1 min-w-5 rounded-full bg-live px-1 text-center text-[11px] font-bold leading-5 text-on-live ring-2 ring-surface"
+            className="tabular absolute right-0 top-0 h-4 min-w-4 translate-x-1/4 -translate-y-1/4 rounded-full bg-live px-1 text-center text-[10px] font-bold leading-4 text-on-live ring-2 ring-surface coarse:translate-x-0 coarse:translate-y-0"
           >
             {badgeText(unread)}
           </span>
@@ -75,7 +76,7 @@ export function NotificationBell() {
           id={panelId}
           role="region"
           aria-label="Notificaciones"
-          className="absolute inset-x-2 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-xl sm:inset-x-auto sm:right-0 sm:w-96"
+          className="absolute inset-x-2 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-lg sm:inset-x-auto sm:right-0 sm:w-96"
         >
           <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
             <h2 className="text-sm font-semibold">Notificaciones</h2>

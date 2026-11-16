@@ -5,6 +5,8 @@ namespace App\Domain\TimeTracking\Models;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Concerns\BelongsToCompany;
+use App\Domain\TimeTracking\Enums\HourExtensionStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $project_id
  * @property int $requested_by
  * @property string|null $message
- * @property string $status pending|approved|rejected
+ * @property HourExtensionStatus $status
  */
 class HourExtensionRequest extends Model
 {
@@ -23,11 +25,11 @@ class HourExtensionRequest extends Model
 
     protected $guarded = ['id'];
 
-    protected $attributes = ['status' => 'pending'];
+    protected $attributes = ['status' => HourExtensionStatus::Pending->value];
 
     protected function casts(): array
     {
-        return ['resolved_at' => 'datetime'];
+        return ['status' => HourExtensionStatus::class, 'resolved_at' => 'datetime'];
     }
 
     /** @return BelongsTo<Project, $this> */
@@ -44,6 +46,15 @@ class HourExtensionRequest extends Model
 
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return $this->status === HourExtensionStatus::Pending;
+    }
+
+    /**
+     * @param  Builder<HourExtensionRequest>  $query
+     * @return Builder<HourExtensionRequest>
+     */
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('status'), HourExtensionStatus::Pending);
     }
 }

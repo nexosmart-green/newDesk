@@ -26,7 +26,7 @@ it('rejects wrong credentials with a field error', function () {
 
     $this->postJson('/api/v1/auth/login', ['email' => 'ada@example.com', 'password' => 'nope'])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.email.0', 'Credenciales incorrectas.');
+        ->assertJsonPath('errors.email.0', 'El email o la contraseña no coinciden. Revisalos o usá «¿Olvidaste tu contraseña?».');
 });
 
 it('does not let a deactivated user log in (RF-01.10)', function () {

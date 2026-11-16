@@ -20,7 +20,7 @@ describe('GlobalTimer', () => {
     renderAt(<GlobalTimer />)
 
     expect(await screen.findByRole('timer')).toHaveTextContent('01:01:05')
-    expect(screen.getByRole('link', { name: 'bhn-60' })).toHaveAttribute('href', '/tareas/bhn-60')
+    expect(screen.getByRole('link', { name: 'Arreglar el login' })).toHaveAttribute('href', '/tareas/bhn-60')
 
     act(() => vi.advanceTimersByTime(2000))
     expect(screen.getByRole('timer')).toHaveTextContent('01:01:07')

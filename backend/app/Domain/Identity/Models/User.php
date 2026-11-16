@@ -183,6 +183,15 @@ class User extends Authenticatable
     }
 
     /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('status'), UserStatus::Active);
+    }
+
+    /**
      * Evaluated against the CURRENT role on every request (RF-12.03): changing a role
      * changes what the user's web session and MCP tokens can do immediately.
      */
@@ -194,5 +203,11 @@ class User extends Authenticatable
     public function effectiveTimezone(): string
     {
         return $this->timezone ?? $this->company->timezone;
+    }
+
+    /** Today's date (Y-m-d) where the person is: due dates and "overdue" are judged on this day. */
+    public function localDate(): string
+    {
+        return now($this->effectiveTimezone())->toDateString();
     }
 }

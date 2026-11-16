@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
+import { StaleContent } from '@/components/ui/StaleContent'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { useProjectFromOutlet } from '@/features/projects/projectContext'
 import { isClosedStatus } from '@/features/projects/types'
@@ -40,7 +41,7 @@ export function ProjectTasksTab() {
               type="button"
               aria-pressed={view === option.id}
               onClick={() => setView(option.id)}
-              className={`px-3 py-1.5 text-sm ${view === option.id ? 'bg-accent text-white' : 'text-muted hover:text-text'}`}
+              className={`min-h-9 px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent coarse:min-h-11 ${view === option.id ? 'bg-brand-strong text-white' : 'text-muted hover:text-text'}`}
             >
               {option.label}
             </button>
@@ -56,10 +57,14 @@ export function ProjectTasksTab() {
           shape="list"
           onRetry={() => void Promise.all([tasks.refetch(), statuses.refetch()])}
         />
-      ) : view === 'list' ? (
-        <TaskList tasks={tasks.data.data} userId={userId} />
       ) : (
-        <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} userId={userId} />
+        <StaleContent stale={tasks.isPlaceholderData}>
+          {view === 'list' ? (
+            <TaskList tasks={tasks.data.data} userId={userId} />
+          ) : (
+            <TaskBoard tasks={tasks.data.data} statuses={statuses.data} filters={filters} userId={userId} />
+          )}
+        </StaleContent>
       )}
       {tasks.data && tasks.data.meta.total > tasks.data.data.length && (
         <p className="text-xs text-muted">

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { mustSetUpTwoFactor } from '@/features/auth/types'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { DisableTwoFactorForm } from './DisableTwoFactorForm'
@@ -14,8 +15,8 @@ export function SecurityPage() {
   const showSetup = !enabled || setupInProgress
 
   return (
-    <section className="max-w-2xl space-y-4">
-      <h1 className="text-lg font-semibold">Seguridad</h1>
+    <section className="max-w-2xl space-y-6">
+      <PageHeader title="Seguridad" />
       {mustSetUpTwoFactor(user) && (
         <p role="alert" className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
           Tu rol exige verificación en dos pasos. Activala para seguir usando newDesk.

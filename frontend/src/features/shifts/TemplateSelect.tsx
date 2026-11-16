@@ -1,5 +1,5 @@
 import { SelectField } from '@/components/ui/SelectField'
-import { CLEAR_SHIFT, shiftLabel, workModeLabels, type ShiftTemplate } from './types'
+import { CLEAR_SHIFT, templateOptionLabel, type ShiftTemplate } from './types'
 
 interface TemplateSelectProps {
   templates: readonly ShiftTemplate[]
@@ -13,7 +13,7 @@ export function TemplateSelect({ templates, value, onChange }: TemplateSelectPro
     <SelectField label="Turno" value={value} onChange={(event) => onChange(event.target.value)}>
       {templates.map((template) => (
         <option key={template.id} value={String(template.id)}>
-          {shiftLabel(template)} · {workModeLabels[template.mode]}
+          {templateOptionLabel(template)}
         </option>
       ))}
       <option value={CLEAR_SHIFT}>Sin turno (quitar)</option>

@@ -27,7 +27,7 @@ final class StopTimer
         $this->rules->assertValidComment($comment);
 
         return $this->lock->run($user->id, fn () => DB::transaction(function () use ($user, $comment) {
-            $active = TimeEntry::query()->forCompany($user->company_id)->where('user_id', $user->id)->running()->first()
+            $active = TimeEntry::query()->runningFor($user)->first()
                 ?? throw new BusinessRuleViolation('No tenés un cronómetro corriendo.', 'no_active_timer', 404);
 
             $project = Project::query()->forCompany($user->company_id)->lockForUpdate()->findOrFail($active->project_id);
