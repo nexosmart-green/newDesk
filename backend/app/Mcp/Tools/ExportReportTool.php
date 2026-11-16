@@ -26,6 +26,9 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsReadOnly]
 class ExportReportTool extends NewDeskTool
 {
+    /** Enough for "en Excel y en PDF" of a few reports; more is a loop, not a request. */
+    private const FILES_PER_TURN = 4;
+
     public function __construct(
         private readonly AssistantReportData $data,
         private readonly GenerateAssistantReport $generate,
@@ -50,6 +53,9 @@ class ExportReportTool extends NewDeskTool
             'from' => 'nullable|date_format:Y-m-d',
             'to' => 'nullable|date_format:Y-m-d',
         ]);
+        if ($turn->answer()?->files()->count() >= self::FILES_PER_TURN) {
+            throw new BusinessRuleViolation('Ya generé '.self::FILES_PER_TURN.' archivos en esta respuesta: pedí los demás en un mensaje nuevo.', 'assistant_files_per_turn');
+        }
         $kind = ReportKind::from($input['kind']);
         $this->ensureModule($user, $kind->module());
         if ($kind->isHours()) {

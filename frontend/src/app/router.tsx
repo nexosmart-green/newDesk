@@ -100,6 +100,7 @@ export const router = createBrowserRouter([
             path: '/reportes/horas/proyectos/:projectId',
             lazy: async () => ({ Component: (await import('@/features/reports/ProjectHoursReportPage')).ProjectHoursReportPage }),
           },
+          { path: '/asistente', lazy: async () => ({ Component: (await import('@/features/assistant/AssistantPage')).AssistantPage }) },
           {
             path: '/configuracion',
             lazy: async () => ({ Component: (await import('./settingsRoutes')).SettingsLayout }),
@@ -111,6 +112,7 @@ export const router = createBrowserRouter([
               { path: 'catalogos', lazy: async () => ({ Component: (await import('./settingsRoutes')).CatalogsSettings }) },
               { path: 'feriados', lazy: async () => ({ Component: (await import('./settingsRoutes')).HolidaysSettings }) },
               { path: 'tokens-ia', lazy: async () => ({ Component: (await import('./settingsRoutes')).AiTokensSettings }) },
+              { path: 'asistente', lazy: async () => ({ Component: (await import('./settingsRoutes')).AssistantSettings }) },
             ],
           },
         ],

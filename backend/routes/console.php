@@ -15,3 +15,6 @@ Schedule::command('hours:reconcile')->dailyAt('03:15')->onOneServer();
 
 // RF-06.03: recurring shifts stay generated 8 weeks ahead (idempotent).
 Schedule::command('shifts:extend-recurrences')->dailyAt('02:30')->onOneServer();
+
+// RF-13: no answer stays "pensando…", proposals expire, report files and assistant tokens don't outlive their time.
+Schedule::command('assistant:housekeeping')->everyFiveMinutes()->withoutOverlapping(5)->onOneServer();

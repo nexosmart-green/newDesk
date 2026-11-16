@@ -8,10 +8,12 @@ import {
   FolderKanban,
   LayoutDashboard,
   ListTodo,
+  MessagesSquare,
   Settings,
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { ASSISTANT_PERMISSION } from '@/features/assistant/types'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCan, useCanAny } from '@/features/auth/useAuth'
 import { CLIENTS_READ_PERMISSIONS } from '@/features/clients/types'
@@ -48,6 +50,7 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
   const canManageShifts = useCan(SHIFTS_PERMISSION)
   const canSeeReports = useCan(REPORTS_PERMISSION)
   const canSeeSettings = useCanAny(SETTINGS_PERMISSIONS)
+  const canUseAssistant = useCan(ASSISTANT_PERMISSION)
 
   const visible = (items: Array<NavItem | false>) => items.filter((item): item is NavItem => item !== false)
 
@@ -71,6 +74,7 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
           hasPeople && { to: '/personas', label: 'Personas', icon: Users },
           hasCalendar && canManageShifts && { to: '/turnos', label: 'Turnos', icon: CalendarRange },
           hasReports && canSeeReports && { to: '/reportes/horas', label: 'Reportes', icon: BarChart3 },
+          canUseAssistant && { to: '/asistente', label: 'Asistente', icon: MessagesSquare },
         ]),
       },
     ],

@@ -17,6 +17,7 @@ export const settingsTabs: readonly SettingsTab[] = [
   { path: 'catalogos', label: 'Catálogos', permissions: ['users.manage', 'projects.manage'] },
   { path: 'feriados', label: 'Feriados', permissions: ['company.manage'] },
   { path: 'tokens-ia', label: 'Tokens de IA', permissions: ['mcp.manage_tokens'] },
+  { path: 'asistente', label: 'Asistente', permissions: ['company.manage'] },
 ]
 
 export function visibleSettingsTabs(userPermissions: readonly string[]): SettingsTab[] {

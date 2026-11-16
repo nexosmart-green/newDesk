@@ -159,9 +159,19 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 - [x] 4. `AssistantEngine` + `ClaudeCodeEngine` + job + `AskAssistant` + límites (tests con `Process::fake`: argumentos exactos, token por env y nunca en el comando, revocado aunque falle, timeout, JSON inválido, tope y rate limit).
 - [x] 5. API web (conversaciones, mensajes, confirmar/cancelar, descargas) + `export_report` + archivos.
 - [x] 6. Supervisor: programa `assistant` (`queue:work redis --queue=assistant --timeout=200`, 1 proceso) en `SupervisorSync`.
-- [ ] 7. Front: skills de diseño → pantalla, polling, propuestas, descargas, configuración; Vitest (+ `TZ=UTC`), typecheck, lint, build; capturas revisadas; E2E Playwright del flujo con el motor fakeado.
-- [ ] 8. Eval con `claude -p` real: `php artisan assistant:eval` (manual, no CI) con ~15 pedidos reales del dueño contra datos de prueba (lecturas con números esperados, escrituras que deben quedar como propuesta, pedido sin permiso). Ajustar prompt/descripciones hasta que pase.
-- [ ] 9. Review independiente, docs (RF-13, convenciones), commit + push.
+- [x] 7. Front: pantalla `/asistente` + pestaña Configuración → Asistente; capturas claro/oscuro/mobile revisadas. ⏳ Falta: E2E Playwright (ver "Mañana").
+- [x] 8. Eval real: `php artisan assistant:eval admin@nexosmart.com` → 8/8 OK, USD 0,23 estimados (lecturas con números del sistema, 3 escrituras quedaron como propuesta sin tocar datos, Excel adjunto, fuera de tema rechazado). Limpia sus conversaciones.
+- [x] 9. Review independiente hecho y corregido (turno colgado tras timeout, catch Throwable + `failed()` del job + `assistant:housekeeping` cada 5 min, costo de timeouts al tope, nombres `assistant:` reservados, purga de reportes vencidos, descarga exige `assistant.use`, propuestas visibles en respuesta fallida, tope de 4 archivos por turno). Convenciones actualizadas.
+
+**Estado al cortar (2026-11-16, tarde)** — commit de cierre en `dev_green` (NO en `main`).
+- Backend: `php artisan test` 310/310 después de los fixes del review.
+- Front: typecheck y lint limpios, tests del asistente 7/7. La suite completa (local + `TZ=UTC`) y el `npm run build` pasaron
+  ANTES del último ajuste (hook `useSlowAnswer` + test de "tarda más de lo normal"); **re-correrlas mañana** antes de nada.
+- **Mañana:** 1) suite front completa + UTC + build; 2) E2E Playwright del asistente (sin motor real: abrir `/asistente`,
+  sugerencias, propuesta cancelada) — ojo: el 5173 lo ocupa el front de Contador Digital, levantar newDesk en 5174 con
+  `SANCTUM_STATEFUL_DOMAINS` extendido solo por entorno; 3) revisar CI del push; 4) avisar antes de Fase 3/4 (Discord y
+  `feat/monitoreo`); 5) Maxi confirma uso de la suscripción Max.
+- Base de desarrollo restaurada (asistente apagado, Gestor sin `assistant.use`, sin conversaciones de prueba).
 
 **Decisiones de Juani (2026-11-16)**
 1. Autenticación: **suscripción Max de la empresa (200 USD)** → `CLAUDE_CODE_OAUTH_TOKEN` (de `claude setup-token`) en el

@@ -94,6 +94,25 @@ Shared                                   app/Domain/Shared/
   clientes (`#[Name('get_task')]`) es contrato: **no se cambia** al renombrar la clase.
 - `Support/McpLookup` resuelve códigos/prefijos/personas/ítems de checklist **y autoriza `view`**;
   `Support/McpPresenter` arma las formas compactas para el modelo (sin tarifas ni datos personales de otros).
+- **Lectura o escritura, sin término medio** (lo verifica `McpToolContractTest`): las de lectura llevan `#[IsReadOnly]`;
+  las que cambian datos extienden **`NewDeskWriteTool`** e implementan `prepare()`: valida, resuelve, autoriza y describe
+  el cambio **sin escribir** y devuelve un `PreparedWrite` (resumen + closure que llama a la Action). Así el mismo
+  código sirve para ejecutar ya (MCP personal) o para dejar una **propuesta** (asistente, RF-13.02) que al confirmar se
+  vuelve a preparar con el rol de ese momento. Reglas que la acción rechazaría igual (proyecto interno, pedido ya
+  resuelto) se chequean también en `prepare()` con el **mismo guard** de `Support/`, para no proponer algo que va a fallar.
+- Los argumentos llegan normalizados como un formulario web (trim, `''` → `null`) y las reglas de validación se comparten
+  con el FormRequest (`ClientRules`, `ProjectRules`), nunca copiadas.
+
+### Asistente (`app/Domain/Assistant`, RF-13)
+
+- Motor detrás de `Contracts/AssistantEngine` → `app/Infrastructure/ClaudeCode/ClaudeCodeEngine` (`claude -p` aislado: solo
+  el MCP de newDesk, sin herramientas propias ni settings de la máquina, pregunta por stdin, token por entorno). Los tests
+  usan un motor fake o `Process::fake()`: **nunca** llaman a `claude`. `php artisan assistant:eval <email>` corre turnos
+  reales a propósito (manual, no CI).
+- Un turno = token Sanctum efímero del que pregunta (abilities `mcp` + `assistant`), siempre revocado al terminar;
+  `AuthorizeMcpToken` lo reconoce y activa `AssistantTurn` (scoped, se limpia en cada request).
+- Ejecutar una propuesta confirmada pasa por `Contracts/ProposalExecutor` → `Mcp/Support/McpProposalExecutor`: el
+  dominio no conoce las tools.
 
 ### Esqueleto de un módulo nuevo
 

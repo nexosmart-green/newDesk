@@ -25,6 +25,8 @@ final class ClaudeCodeEngine implements AssistantEngine
 {
     private const TOKEN_ENV = 'NEWDESK_TOKEN';
 
+    private const UNAVAILABLE = 'No pude responder: el asistente no está disponible en este momento. Avisale a un administrador.';
+
     public function __construct(private readonly Config $config) {}
 
     public function answer(AssistantQuestion $question): AssistantAnswer
@@ -38,18 +40,20 @@ final class ClaudeCodeEngine implements AssistantEngine
                 ->input($question->text)
                 ->run($this->command($question, $workdir.DIRECTORY_SEPARATOR.'mcp.json'));
         } catch (ProcessTimedOutException) {
-            throw new AssistantEngineFailed('Tardé demasiado en responder. Probá con un pedido más concreto.');
+            // It may have spent up to its budget before being cut: count it all, so the monthly cap can't be dodged.
+            throw new AssistantEngineFailed('Tardé demasiado en responder. Probá con un pedido más concreto.', $question->budgetUsd);
         }
 
+        // Before any work (no JSON, or an error that cost nothing) a missing `--resume` session is the usual cause.
         $output = json_decode($result->output(), true);
         if (! is_array($output) || ! isset($output['type'])) {
-            throw new AssistantEngineFailed('No pude responder: el asistente no está disponible en este momento. Avisale a un administrador.');
+            throw new AssistantEngineFailed(self::UNAVAILABLE, mayRetryFresh: $question->sessionId !== null);
         }
 
         $cost = (float) ($output['total_cost_usd'] ?? 0);
         $sessionId = $output['session_id'] ?? null;
         if (($output['is_error'] ?? false) || ($output['subtype'] ?? '') !== 'success' || ! is_string($output['result'] ?? null)) {
-            throw new AssistantEngineFailed($this->failureMessage($output), $cost, $sessionId);
+            throw new AssistantEngineFailed($this->failureMessage($output), $cost, $sessionId, $question->sessionId !== null && $cost === 0.0);
         }
 
         return new AssistantAnswer(trim($output['result']), $sessionId, $cost, (int) ($output['duration_ms'] ?? 0));
@@ -95,7 +99,7 @@ final class ClaudeCodeEngine implements AssistantEngine
         return match ($output['subtype'] ?? null) {
             'error_max_budget_usd' => 'El pedido superó el gasto permitido por consulta. Probá con algo más acotado.',
             'error_max_turns' => 'El pedido necesitó demasiados pasos. Probá dividirlo en partes.',
-            default => 'No pude responder: el asistente no está disponible en este momento. Avisale a un administrador.',
+            default => self::UNAVAILABLE,
         };
     }
 }

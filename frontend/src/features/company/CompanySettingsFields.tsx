@@ -9,7 +9,8 @@ interface CompanySettingsFieldsProps {
   disabled: boolean
 }
 
-type ScalarSetting = Exclude<keyof CompanySettings, 'hour_alert_thresholds'>
+/** The assistant's settings have their own tab (Configuración → Asistente). */
+type ScalarSetting = 'manual_entry_days_back' | 'forgotten_timer_max_hours' | 'forgotten_timer_after_shift_hours'
 
 const scalarFields: { key: ScalarSetting; label: string; hint: string; min: number; max: number }[] = [
   {

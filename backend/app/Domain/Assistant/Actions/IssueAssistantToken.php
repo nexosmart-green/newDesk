@@ -8,7 +8,7 @@ use App\Domain\Identity\Models\User;
 
 /**
  * The ephemeral token of one assistant turn: the asker's own Sanctum token (so the MCP applies their role),
- * tied to that answer, valid for minutes and revoked when the turn ends (RevokeAssistantToken).
+ * tied to that answer, valid for minutes and revoked when the turn ends (AbandonAssistantTurn::revokeToken).
  */
 final class IssueAssistantToken
 {

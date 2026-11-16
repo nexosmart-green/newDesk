@@ -12,9 +12,16 @@ class IssueMcpTokenRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:60'],
+            // `assistant:` names the assistant's ephemeral tokens, which the token lists leave out.
+            'name' => ['required', 'string', 'max:60', 'not_regex:/^\s*assistant:/i'],
             'expires_in_days' => ['nullable', 'integer', Rule::in(IssueMcpToken::EXPIRY_OPTIONS)],
         ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return ['name.not_regex' => 'Ese nombre está reservado para el asistente. Elegí otro.'];
     }
 
     public function tokenName(): string

@@ -15,7 +15,7 @@ return [
         'binary' => env('ASSISTANT_CLAUDE_BINARY', 'claude'),
         // The MCP the turn talks to: this same app, reached locally.
         'mcp_url' => env('ASSISTANT_MCP_URL', rtrim((string) env('APP_URL', 'http://localhost:8000'), '/').'/mcp'),
-        'timeout_seconds' => (int) env('ASSISTANT_TIMEOUT_SECONDS', 180),
+        'timeout_seconds' => (int) env('ASSISTANT_TIMEOUT_SECONDS', 120),
         'workdir' => env('ASSISTANT_WORKDIR', storage_path('app/assistant/workdir')),
         'turns_per_hour' => (int) env('ASSISTANT_TURNS_PER_HOUR', 20),
     ],

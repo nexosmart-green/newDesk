@@ -1,4 +1,5 @@
 import { CompanyTokensTab } from '@/features/aiConnections/CompanyTokensTab'
+import { AssistantSettingsTab } from '@/features/assistant/AssistantSettingsTab'
 import { HolidaysTab } from '@/features/calendar/HolidaysTab'
 import { CatalogsTab } from '@/features/catalogs/CatalogsTab'
 import { CompanyTab } from '@/features/company/CompanyTab'
@@ -46,6 +47,14 @@ export function HolidaysSettings() {
   return (
     <SettingsTabGuard path="feriados">
       <HolidaysTab />
+    </SettingsTabGuard>
+  )
+}
+
+export function AssistantSettings() {
+  return (
+    <SettingsTabGuard path="asistente">
+      <AssistantSettingsTab />
     </SettingsTabGuard>
   )
 }

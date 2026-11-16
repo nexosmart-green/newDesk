@@ -11,18 +11,20 @@ use App\Domain\Assistant\Support\AssistantEngineFailed;
 use App\Domain\Assistant\Support\AssistantLimits;
 use App\Domain\Assistant\Support\AssistantQuestion;
 use App\Domain\Assistant\Support\AssistantSystemPrompt;
+use Throwable;
 
 /**
  * Runs one turn (from the `assistant` queue): the engine answers through the MCP with the asker's ephemeral
  * token, which is ALWAYS revoked when the turn ends. Saves the answer, its cost and the Claude Code session
- * (`--resume` for the next turn of the conversation). A failure leaves the answer `failed` with a human message.
+ * (`--resume` for the next turn of the conversation). Whatever goes wrong, the answer ends `failed` with a
+ * message for the person: a turn never stays "pensando…" (AbandonAssistantTurn covers a killed worker).
  */
 final class AnswerAssistantMessage
 {
     public function __construct(
         private readonly AssistantEngine $engine,
         private readonly IssueAssistantToken $issueToken,
-        private readonly RevokeAssistantToken $revokeToken,
+        private readonly AbandonAssistantTurn $abandon,
         private readonly AssistantSystemPrompt $systemPrompt,
         private readonly AssistantLimits $limits,
     ) {}
@@ -58,20 +60,22 @@ final class AnswerAssistantMessage
                 'claude_session_id' => $reply->sessionId ?? $conversation->claude_session_id,
                 'last_message_at' => now(),
             ])->save();
+            ($this->abandon)->revokeToken($answer);
         } catch (AssistantEngineFailed $e) {
-            $answer->forceFill(['status' => MessageStatus::Failed, 'error' => $e->getMessage(), 'cost_usd' => $e->costUsd])->save();
-        } finally {
-            ($this->revokeToken)($answer);
+            ($this->abandon)($answer, $e->getMessage(), $e->costUsd);
+        } catch (Throwable $e) {
+            report($e);
+            ($this->abandon)($answer, AbandonAssistantTurn::UNEXPECTED);
         }
     }
 
-    /** A session that no longer exists on this machine (new server, cleaned disk) must not block the conversation. */
+    /** A session this machine no longer has (new server, cleaned disk) must not block the conversation. */
     private function ask(AssistantQuestion $question): AssistantAnswer
     {
         try {
             return $this->engine->answer($question);
         } catch (AssistantEngineFailed $e) {
-            if ($question->sessionId === null || $e->costUsd > 0) {
+            if (! $e->mayRetryFresh) {
                 throw $e;
             }
 

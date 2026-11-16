@@ -25,7 +25,11 @@ class AssistantController extends Controller
 {
     public function conversations(Request $request, MyAssistantConversations $conversations): AnonymousResourceCollection
     {
-        return AssistantConversationResource::collection($conversations($request->user()));
+        $user = $request->user();
+
+        // The screen says up front when the Admin has the assistant turned off (RF-13.10).
+        return AssistantConversationResource::collection($conversations($user))
+            ->additional(['meta' => ['enabled' => (bool) $user->company->setting('assistant_enabled')]]);
     }
 
     public function messages(AssistantConversation $conversation, ConversationMessages $messages): AnonymousResourceCollection

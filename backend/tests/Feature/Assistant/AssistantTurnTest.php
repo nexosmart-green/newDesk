@@ -61,7 +61,7 @@ it('starts a fresh session when the stored one no longer exists on this machine'
     fakeAssistant(function (AssistantQuestion $question) use (&$calls) {
         $calls++;
         if ($question->sessionId !== null) {
-            throw new AssistantEngineFailed('No pude responder.');
+            throw new AssistantEngineFailed('No pude responder.', mayRetryFresh: true);
         }
 
         return new AssistantAnswer('de nuevo', 'session-2', 0.01, 10);
@@ -156,4 +156,11 @@ it('shows the month usage and the models to whoever configures the company, and 
     $this->actingAs($admin)->putJson('/api/v1/company', [...$company, 'settings' => ['assistant_model' => 'claude-sonnet-5-5', 'assistant_monthly_budget_usd' => 50]])
         ->assertOk()->assertJsonPath('data.settings.assistant_model', 'claude-sonnet-5-5');
     $this->actingAs($admin)->putJson('/api/v1/company', [...$company, 'settings' => ['assistant_model' => 'gpt-9']])->assertUnprocessable();
+});
+
+it('tells the screen whether the assistant is turned on', function () {
+    $admin = adminUser();
+    $this->actingAs($admin)->getJson('/api/v1/assistant/conversations')->assertOk()->assertJsonPath('meta.enabled', false)->assertJsonPath('meta.total', 0);
+    enableAssistant($admin);
+    $this->actingAs($admin)->getJson('/api/v1/assistant/conversations')->assertJsonPath('meta.enabled', true);
 });
