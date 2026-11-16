@@ -16,7 +16,8 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 - **Quién:** permiso nuevo `assistant.use`. Por defecto **solo el rol Admin** lo tiene (configurable por rol en Configuración → Roles).
 - **Un solo núcleo, varios canales:** el asistente vive en el backend (dominio `Assistant`); la web y Discord son canales. Slack/WhatsApp se suman después sin reescribir.
 - **Herramientas = las del MCP** (misma definición, mismas acciones) + las de gestión que faltan (RF-13.07). Una sola fuente de verdad.
-- **Modelo:** Claude Opus 5.5 vía API (SDK oficial de PHP, tool runner). Configurable (`ASSISTANT_MODEL`); Sonnet 5.5 si se prioriza costo.
+- **Motor: Claude Code en modo no interactivo (`claude -p`)**, lanzado por el backend desde una cola. No se usa la API de Anthropic ni un SDK. `claude -p` se conecta **solo** al MCP de newDesk (RF-12) con un **token efímero del usuario que pregunta**, así los permisos son los suyos y las herramientas son las mismas del MCP. Modelo configurable (`ASSISTANT_MODEL`, flag `--model`).
+- **Escrituras siempre con humano:** con el token del asistente, las tools que cambian datos no ejecutan: crean una **propuesta** que la persona confirma o cancela (web o botón de Discord); recién ahí corre la acción de dominio.
 - **Reportes programados sin IA para los números:** el scheduler arma los datos con las queries existentes; la IA solo redacta el **resumen en texto**.
 
 ## Requerimientos
