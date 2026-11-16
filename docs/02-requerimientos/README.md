@@ -23,6 +23,7 @@
 | RF-10 Reportes | `RF-10-reportes.md` | R2 |
 | RF-11 Configuración de empresa | `RF-11-configuracion-empresa.md` | R1 |
 | RF-12 Servidor MCP (Claude Code) | `RF-12-mcp-claude-code.md` | R1 |
+| RF-13 Asistente de IA (web + Discord) | `RF-13-asistente-ia.md` | R1.5 |
 | RNF | `RNF-no-funcionales.md` | Transversal |
 
 ## Matriz de permisos (base)
