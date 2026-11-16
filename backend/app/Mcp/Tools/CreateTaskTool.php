@@ -12,17 +12,17 @@ use App\Domain\TimeTracking\Actions\CreateAndStartTask;
 use App\Domain\TimeTracking\Support\TimeTrackingLimits;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('create_task')]
 #[Description('Crea una tarea en un proyecto donde soy miembro. Con start_timer=true la asigna a mí y arranca mi cronómetro ("Crear e iniciar"); si ya tengo uno corriendo hay que mandar previous_comment (qué hice, mínimo 10 caracteres).')]
-class CreateTaskTool extends NewDeskTool
+class CreateTaskTool extends NewDeskWriteTool
 {
     protected function module(): ?Permission
     {
@@ -35,7 +35,7 @@ class CreateTaskTool extends NewDeskTool
         private readonly CreateAndStartTask $createAndStart,
     ) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate([
             'project' => 'required|string',
@@ -54,20 +54,25 @@ class CreateTaskTool extends NewDeskTool
 
         $data = array_filter(['title' => $input['title'], 'description' => $input['description'] ?? null, 'due_on' => $input['due_on'] ?? null, 'priority' => $input['priority'] ?? null]);
         $assignees = $this->lookup->userIds($user, $input['assignees'] ?? []);
-
-        if (! ($input['start_timer'] ?? false)) {
-            $task = ($this->createTask)($user, $project, $data, $assignees);
-
-            return $this->json(['created' => McpPresenter::task($task, $user)]);
+        $startTimer = (bool) ($input['start_timer'] ?? false);
+        if ($startTimer) {
+            $this->ensureModule($user, Permission::ModuleTime); // the web's "Crear e iniciar" lives under module:time
         }
+        $summary = "Crear la tarea «{$input['title']}» en {$project->code_prefix}".($startTimer ? ' e iniciar mi cronómetro' : '');
 
-        $result = ($this->createAndStart)($user, $project, $data, $assignees, $input['previous_comment'] ?? null);
+        return PreparedWrite::of($summary, function () use ($user, $project, $data, $assignees, $startTimer, $input) {
+            if (! $startTimer) {
+                return $this->json(['created' => McpPresenter::task(($this->createTask)($user, $project, $data, $assignees), $user)]);
+            }
 
-        return $this->json([
-            'created' => McpPresenter::task($result['task'], $user),
-            'timer' => $result['entry'] ? McpPresenter::entry($result['entry']) : null,
-            'timer_not_started_because' => $result['timer_error']?->getMessage(),
-        ]);
+            $result = ($this->createAndStart)($user, $project, $data, $assignees, $input['previous_comment'] ?? null);
+
+            return $this->json([
+                'created' => McpPresenter::task($result['task'], $user),
+                'timer' => $result['entry'] ? McpPresenter::entry($result['entry']) : null,
+                'timer_not_started_because' => $result['timer_error']?->getMessage(),
+            ]);
+        });
     }
 
     public function schema(JsonSchema $schema): array

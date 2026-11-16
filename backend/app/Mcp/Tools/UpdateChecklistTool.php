@@ -9,16 +9,16 @@ use App\Domain\Tasks\Actions\UpdateChecklistItem;
 use App\Domain\Tasks\Models\TaskChecklistItem;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('update_checklist')]
 #[Description('Subtareas (checklist) de una tarea: "add" agrega una al final; "check" / "uncheck" la marcan como hecha o pendiente, indicándola por número (como la muestra get_task) o por su texto.')]
-class UpdateChecklistTool extends NewDeskTool
+class UpdateChecklistTool extends NewDeskWriteTool
 {
     protected function module(): ?Permission
     {
@@ -31,7 +31,7 @@ class UpdateChecklistTool extends NewDeskTool
         private readonly UpdateChecklistItem $updateItem,
     ) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate([
             'code' => 'required|string',
@@ -40,15 +40,25 @@ class UpdateChecklistTool extends NewDeskTool
         ]);
         $task = $this->lookup->task($user, $input['code']);
         Gate::forUser($user)->authorize('update', $task);
-        $item = trim($input['item']);
+        $text = trim($input['item']);
+        $respond = fn () => $this->json(['task' => $task->code, 'checklist' => McpPresenter::checklist($task)]);
 
         if ($input['action'] === 'add') {
-            ($this->addItem)($user, $task, $item);
-        } else {
-            ($this->updateItem)($user, $this->lookup->checklistItem($task, $item), done: $input['action'] === 'check');
+            return PreparedWrite::of("Agregar la subtarea «{$text}» a {$task->code}", function () use ($user, $task, $text, $respond) {
+                ($this->addItem)($user, $task, $text);
+
+                return $respond();
+            });
         }
 
-        return $this->json(['task' => $task->code, 'checklist' => McpPresenter::checklist($task)]);
+        $item = $this->lookup->checklistItem($task, $text);
+        $done = $input['action'] === 'check';
+
+        return PreparedWrite::of(($done ? 'Tildar' : 'Destildar')." la subtarea «{$item->text}» de {$task->code}", function () use ($user, $item, $done, $respond) {
+            ($this->updateItem)($user, $item, done: $done);
+
+            return $respond();
+        });
     }
 
     public function schema(JsonSchema $schema): array

@@ -4,20 +4,22 @@ namespace App\Mcp\Tools;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
+use App\Domain\Shared\Support\Duration;
 use App\Domain\TimeTracking\Actions\AllocateHours;
+use App\Domain\TimeTracking\Support\EnsureProjectHasBag;
 use App\Domain\TimeTracking\Support\TimeTrackingLimits;
 use App\Mcp\Support\McpLookup;
 use App\Mcp\Support\McpPresenter;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('allocate_hours')]
 #[Description('Carga o amplía horas de la bolsa de un proyecto (minutos; negativos corrigen). Motivo obligatorio. Requiere permiso hours.allocate.')]
-class AllocateHoursTool extends NewDeskTool
+class AllocateHoursTool extends NewDeskWriteTool
 {
     /** Same ceiling as the web (seconds), in the minutes this tool takes. */
     private const MAX_MINUTES = TimeTrackingLimits::ALLOCATION_SECONDS_MAX / 60;
@@ -27,9 +29,13 @@ class AllocateHoursTool extends NewDeskTool
         return Permission::ModuleTime;
     }
 
-    public function __construct(private readonly McpLookup $lookup, private readonly AllocateHours $allocateHours) {}
+    public function __construct(
+        private readonly McpLookup $lookup,
+        private readonly EnsureProjectHasBag $ensureBag,
+        private readonly AllocateHours $allocateHours,
+    ) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate([
             'project' => 'required|string',
@@ -39,10 +45,19 @@ class AllocateHoursTool extends NewDeskTool
         ]);
         $project = $this->lookup->project($user, $input['project']);
         Gate::forUser($user)->authorize('allocateHours', $project);
+        ($this->ensureBag)($project);
 
-        ($this->allocateHours)($user, $project, $input['minutes'] * 60, $input['reason'], $input['reference'] ?? null);
+        $seconds = $input['minutes'] * 60;
+        $verb = $seconds > 0 ? 'Cargar' : 'Quitar';
 
-        return $this->json(['project' => McpPresenter::project($project->fresh())]);
+        return PreparedWrite::of(
+            "{$verb} ".Duration::humanize(abs($seconds))." a {$project->code_prefix} «{$project->name}» — motivo: {$input['reason']}",
+            function () use ($user, $project, $seconds, $input) {
+                ($this->allocateHours)($user, $project, $seconds, $input['reason'], $input['reference'] ?? null);
+
+                return $this->json(['project' => McpPresenter::project($project->fresh())]);
+            },
+        );
     }
 
     public function schema(JsonSchema $schema): array

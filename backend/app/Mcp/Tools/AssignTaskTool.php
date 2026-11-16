@@ -7,17 +7,18 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\AssignTask;
 use App\Domain\Tasks\Support\TaskLimits;
 use App\Mcp\Support\McpLookup;
+use App\Mcp\Support\McpManagementPresenter;
 use App\Mcp\Support\McpPresenter;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('assign_task')]
 #[Description('Define la lista completa de asignados de una tarea (emails o ids de miembros del proyecto). Requiere permiso tasks.assign.')]
-class AssignTaskTool extends NewDeskTool
+class AssignTaskTool extends NewDeskWriteTool
 {
     protected function module(): ?Permission
     {
@@ -26,15 +27,18 @@ class AssignTaskTool extends NewDeskTool
 
     public function __construct(private readonly McpLookup $lookup, private readonly AssignTask $assignTask) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate(['code' => 'required|string', 'assignees' => 'present|array|max:'.TaskLimits::ASSIGNEES_MAX, 'assignees.*' => 'string']);
         $task = $this->lookup->task($user, $input['code']);
         Gate::forUser($user)->authorize('assign', $task);
+        $userIds = $this->lookup->userIds($user, $input['assignees']);
+        $names = McpManagementPresenter::names($user->company_id, $userIds);
 
-        $task = ($this->assignTask)($user, $task, $this->lookup->userIds($user, $input['assignees']));
-
-        return $this->json(['updated' => McpPresenter::task($task, $user)]);
+        return PreparedWrite::of(
+            "Dejar {$task->code} asignada a: ".($names === '' ? 'nadie' : $names),
+            fn () => $this->json(['updated' => McpPresenter::task(($this->assignTask)($user, $task, $userIds), $user)]),
+        );
     }
 
     public function schema(JsonSchema $schema): array

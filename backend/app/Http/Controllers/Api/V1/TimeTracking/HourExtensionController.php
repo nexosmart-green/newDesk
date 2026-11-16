@@ -7,6 +7,7 @@ use App\Domain\TimeTracking\Actions\ApproveHourExtension;
 use App\Domain\TimeTracking\Actions\RejectHourExtension;
 use App\Domain\TimeTracking\Actions\RequestHourExtension;
 use App\Domain\TimeTracking\Models\HourExtensionRequest;
+use App\Domain\TimeTracking\Queries\PendingExtensionRequests;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TimeTracking\ApproveHourExtensionRequest;
 use App\Http\Requests\TimeTracking\RequestHourExtensionRequest;
@@ -24,11 +25,11 @@ class HourExtensionController extends Controller
 {
     private const RELATIONS = ['project', 'requester'];
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request, PendingExtensionRequests $pendingRequests): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', HourExtensionRequest::class);
 
-        return HourExtensionRequestResource::collection(HourExtensionRequest::query()->pending()->with(self::RELATIONS)->oldest()->get());
+        return HourExtensionRequestResource::collection($pendingRequests($request->user()->company_id));
     }
 
     public function store(RequestHourExtensionRequest $request, Project $project, RequestHourExtension $requestExtension): JsonResponse

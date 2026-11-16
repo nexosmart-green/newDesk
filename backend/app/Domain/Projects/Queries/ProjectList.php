@@ -16,7 +16,7 @@ final class ProjectList
      * @param  array{client_id?: int|null, status?: string|null, search?: string|null, running_out?: bool}  $filters
      * @return LengthAwarePaginator<int, Project>
      */
-    public function __invoke(User $viewer, array $filters, int $perPage = 25): LengthAwarePaginator
+    public function __invoke(User $viewer, array $filters, int $perPage = 25, ?int $page = null): LengthAwarePaginator
     {
         return Project::query()
             ->visibleTo($viewer)
@@ -31,6 +31,6 @@ final class ProjectList
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('code_prefix', 'like', "{$search}%")))
             ->orderBy('name')
-            ->paginate($perPage);
+            ->paginate($perPage, page: $page);
     }
 }

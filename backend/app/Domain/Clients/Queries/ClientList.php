@@ -15,7 +15,7 @@ final class ClientList
      * @param  array{status?: string|null, search?: string|null}  $filters
      * @return LengthAwarePaginator<int, Client>
      */
-    public function __invoke(array $filters, int $perPage = 50): LengthAwarePaginator
+    public function __invoke(array $filters, int $perPage = 50, ?int $page = null): LengthAwarePaginator
     {
         return Client::query()
             ->withCount('projects')
@@ -25,6 +25,6 @@ final class ClientList
                 ->orWhere('trade_name', 'like', "%{$search}%")
                 ->orWhere('tax_id', 'like', "%{$search}%")))
             ->orderBy('legal_name')
-            ->paginate($perPage);
+            ->paginate($perPage, page: $page);
     }
 }

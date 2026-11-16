@@ -15,10 +15,16 @@ final class PendingExtensionLock
     public function acquire(HourExtensionRequest $request): HourExtensionRequest
     {
         $locked = HourExtensionRequest::query()->forCompany($request->company_id)->lockForUpdate()->findOrFail($request->id);
-        if (! $locked->isPending()) {
-            throw new BusinessRuleViolation('Ese pedido ya fue resuelto.', 'extension_already_resolved');
-        }
+        self::ensurePending($locked);
 
         return $locked;
+    }
+
+    /** Without a lock: to describe a resolution before it runs (MCP). The lock above re-checks it when it runs. */
+    public static function ensurePending(HourExtensionRequest $request): void
+    {
+        if (! $request->isPending()) {
+            throw new BusinessRuleViolation('Ese pedido ya fue resuelto.', 'extension_already_resolved');
+        }
     }
 }

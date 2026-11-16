@@ -22,14 +22,16 @@ it('issues an nd_ token shown once, stored hashed, with the ready-to-copy comman
     $this->actingAs($dev)->getJson('/api/v1/me/ai-tokens')->assertJsonMissing(['plain_text_token' => $plain])->assertJsonPath('data.tokens.0.name', 'Notebook');
 });
 
-it('answers 401 without a token and lists every R1 tool in one page', function () {
+it('answers 401 without a token and lists every tool (R1 + RF-13.07 management) in one page', function () {
     $this->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'])->assertUnauthorized();
 
     $tools = test()->withHeaders(['Authorization' => 'Bearer '.mcpToken(userWithRole(adminUser()))])
         ->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => (object) []])
         ->json('result.tools.*.name');
 
-    expect($tools)->toContain('whoami', 'start_timer', 'stop_timer', 'allocate_hours', 'project_hours_report', 'update_checklist')->toHaveCount(20);
+    expect($tools)->toContain('whoami', 'start_timer', 'stop_timer', 'allocate_hours', 'project_hours_report', 'update_checklist')
+        ->toContain('hours_report', 'search_projects', 'list_tasks', 'list_clients', 'create_project', 'approve_extension_request', 'team_shifts')
+        ->toHaveCount(37);
 });
 
 it('answers whoami with role, permissions and timer; revoked token → 401 (CA-12.02)', function () {

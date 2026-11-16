@@ -44,6 +44,25 @@ Todas validan con las mismas policies que la API web. Las de escritura usan los 
 | `allocate_hours` | Cargar/ampliar horas de un proyecto (motivo obligatorio) | `hours.allocate` |
 | `project_hours_report` | Horas por persona/tarea de un proyecto | `projects.manage` |
 
+## Tools de gestión (RF-13.07)
+
+Mismas reglas: el módulo del rol, la misma policy/Gate y la misma acción de dominio que la web. Las de escritura
+extienden `NewDeskWriteTool` (se preparan —validan, resuelven, autorizan y se describen— antes de ejecutarse; base de
+las confirmaciones del asistente, RF-13.02). Listados con `limit` (máx. 50) / `page` y `total` / `has_more`.
+
+| Tool | Qué hace | Permiso |
+|---|---|---|
+| `hours_report` | Horas de toda la empresa en un período por proyecto, cliente o persona (`group_by`) | `projects.manage` (módulo reportes) |
+| `search_projects` | Todos los proyectos visibles; `running_out` = bolsas por agotarse | módulo proyectos |
+| `list_tasks` | Tareas abiertas del equipo; filtros proyecto, asignado, vencidas, estado, texto | módulo proyectos |
+| `list_clients` | Clientes con id, CUIT, contacto y estado | `clients.manage` o `projects.manage` |
+| `create_client` / `update_client` / `change_client_status` | Alta, edición parcial, activar/inactivar | `clients.manage` |
+| `create_project` / `update_project` / `change_project_status` | Alta, edición parcial, estado (reabrir: `projects.reopen`) | `projects.manage` |
+| `add_project_member` / `remove_project_member` | Sumar/quitar miembros por email | `members.manage` |
+| `list_extension_requests` / `approve_extension_request` / `reject_extension_request` | Pedidos de ampliación pendientes y su resolución | `hours.allocate` |
+| `list_people` | Directorio activo (nombre, email, puesto, área); filtros texto, área, habilidad | — |
+| `team_shifts` | Turnos del equipo por día (máx. 31 días) | `shifts.manage` o gente a cargo |
+
 ## Criterios de aceptación
 
 - **CA-12.03** Un Colaborador con token llama `allocate_hours` → error de permiso; el mismo usuario promovido a Gestor, **sin regenerar el token**, puede.

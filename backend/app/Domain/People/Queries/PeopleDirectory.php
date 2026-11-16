@@ -16,7 +16,7 @@ final class PeopleDirectory
      * @param  array{search?: string|null, area_id?: int|null, skill_id?: int|null, min_level?: int|null, include_inactive?: bool}  $filters
      * @return LengthAwarePaginator<int, User>
      */
-    public function __invoke(int $companyId, array $filters, int $perPage = 50): LengthAwarePaginator
+    public function __invoke(int $companyId, array $filters, int $perPage = 50, ?int $page = null): LengthAwarePaginator
     {
         $skillId = $filters['skill_id'] ?? null;
 
@@ -36,6 +36,6 @@ final class PeopleDirectory
                     ->where('user_skills.level', '>=', $filters['min_level'] ?? 0))
                 ->with(['skills' => fn ($skills) => $skills->where('skills.id', $skillId)]))
             ->orderBy('first_name')->orderBy('last_name')
-            ->paginate($perPage);
+            ->paginate($perPage, page: $page);
     }
 }

@@ -2,12 +2,14 @@
 
 namespace App\Mcp\Support;
 
+use App\Domain\Clients\Models\Client;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\Tasks\Models\TaskChecklistItem;
 use App\Domain\Tasks\Models\TaskStatus;
+use App\Domain\TimeTracking\Models\HourExtensionRequest;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -35,6 +37,28 @@ final class McpLookup
         Gate::forUser($user)->authorize('view', $project);
 
         return $project;
+    }
+
+    public function client(User $user, int $id): Client
+    {
+        $client = Client::query()->forCompany($user->company_id)->find($id)
+            ?? throw new BusinessRuleViolation("No existe el cliente {$id} o no tenés acceso. Usá list_clients para obtener ids válidos.", 'not_found', 404);
+        Gate::forUser($user)->authorize('view', $client);
+
+        return $client;
+    }
+
+    /** Visibility of extension requests is `hours.allocate` (the same as approving them): checked by the tool's policy call. */
+    public function extensionRequest(User $user, int $id): HourExtensionRequest
+    {
+        return HourExtensionRequest::query()->forCompany($user->company_id)->with(['project', 'requester'])->find($id)
+            ?? throw new BusinessRuleViolation("No existe el pedido de ampliación #{$id}. Usá list_extension_requests para ver los pendientes.", 'not_found', 404);
+    }
+
+    /** One person of the company by e-mail or id (see userIds). */
+    public function person(User $user, string|int $person): User
+    {
+        return User::query()->findOrFail($this->userIds($user, [$person])[0]);
     }
 
     /** A subtask of an already authorized task, by number as get_task shows it (1 = first) or by text: exact first, then a single partial match. */

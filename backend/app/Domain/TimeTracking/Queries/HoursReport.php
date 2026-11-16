@@ -2,6 +2,7 @@
 
 namespace App\Domain\TimeTracking\Queries;
 
+use App\Domain\Clients\Models\Client;
 use App\Domain\Projects\Enums\ProjectStatus;
 use App\Domain\Projects\Models\Project;
 use Illuminate\Database\Query\Builder;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * RF-10.01 (R1): hours per project and period — sold / consumed / % / per person — plus per task for the
- * project detail. Closed entries only (a running timer is not "consumed in the period" until it stops).
+ * project detail, and the period's hours per client and per person (RF-13.07). Closed entries only (a running timer is not "consumed in the period" until it stops).
  * Dates are local to the company; filtering is by range on started_at (index-friendly).
  */
 final class HoursReport
@@ -66,6 +67,53 @@ final class HoursReport
             'by_person' => $byPerson,
             'by_task' => $byTask,
         ];
+    }
+
+    /**
+     * Hours of the period per client (projects without a client are grouped under client null), most hours first.
+     *
+     * @return list<array{client: array{id: int, name: string}|null, seconds: int, projects: int}>
+     */
+    public function byClient(int $companyId, Carbon $from, Carbon $to): array
+    {
+        $rows = $this->entries($companyId, $from, $to)
+            ->join('projects', 'projects.id', '=', 'time_entries.project_id')
+            ->whereNull('projects.deleted_at') // same projects as overview(), which goes through the model
+            ->groupBy('projects.client_id')
+            ->orderByRaw('SUM(time_entries.seconds) DESC')
+            ->get(['projects.client_id', DB::raw('SUM(time_entries.seconds) as seconds'), DB::raw('COUNT(DISTINCT projects.id) as projects')]);
+        $clients = Client::query()->forCompany($companyId)->whereKey($rows->pluck('client_id')->filter())->get()->keyBy('id');
+
+        return $rows->map(fn ($row) => [
+            'client' => $row->client_id === null ? null : ['id' => (int) $row->client_id, 'name' => $clients[$row->client_id]->displayName()],
+            'seconds' => (int) $row->seconds,
+            'projects' => (int) $row->projects,
+        ])->values()->all();
+    }
+
+    /**
+     * Hours of the period per person across every project, with their split by project; most hours first.
+     *
+     * @return list<array{user_id: int, name: string, seconds: int, by_project: list<array{prefix: string, name: string, seconds: int}>}>
+     */
+    public function byPerson(int $companyId, Carbon $from, Carbon $to): array
+    {
+        $rows = $this->entries($companyId, $from, $to)
+            ->join('users', 'users.id', '=', 'time_entries.user_id')
+            ->join('projects', 'projects.id', '=', 'time_entries.project_id')
+            ->whereNull('projects.deleted_at')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'projects.id', 'projects.code_prefix', 'projects.name')
+            ->orderByRaw('SUM(time_entries.seconds) DESC')
+            ->get(['users.id', 'users.first_name', 'users.last_name', 'projects.code_prefix', 'projects.name', DB::raw('SUM(time_entries.seconds) as seconds')]);
+
+        return $rows->groupBy('id')
+            ->map(fn ($projects) => [
+                'user_id' => (int) $projects->first()->id,
+                'name' => trim("{$projects->first()->first_name} {$projects->first()->last_name}"),
+                'seconds' => (int) $projects->sum('seconds'),
+                'by_project' => $projects->map(fn ($row) => ['prefix' => $row->code_prefix, 'name' => $row->name, 'seconds' => (int) $row->seconds])->values()->all(),
+            ])
+            ->sortByDesc('seconds')->values()->all();
     }
 
     private function entries(int $companyId, Carbon $from, Carbon $to): Builder

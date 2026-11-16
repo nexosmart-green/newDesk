@@ -7,6 +7,7 @@ use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\RecordActivity;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\TimeTracking\Models\HourAllocation;
+use App\Domain\TimeTracking\Support\EnsureProjectHasBag;
 use App\Domain\TimeTracking\Support\HourBag;
 use Illuminate\Support\Facades\DB;
 
@@ -20,13 +21,12 @@ final class AllocateHours
     public function __construct(
         private readonly EvaluateHourAlerts $evaluateAlerts,
         private readonly RecordActivity $recordActivity,
+        private readonly EnsureProjectHasBag $ensureBag,
     ) {}
 
     public function __invoke(User $actor, Project $project, int $seconds, string $reason, ?string $reference = null): HourAllocation
     {
-        if (! $project->type->hasHourCap()) {
-            throw new BusinessRuleViolation("{$project->name} es interno: no tiene bolsa de horas.", 'project_without_bag');
-        }
+        ($this->ensureBag)($project);
         if ($seconds === 0 || trim($reason) === '') {
             throw new BusinessRuleViolation('Indicá las horas (distintas de cero) y el motivo.', 'allocation_invalid');
         }

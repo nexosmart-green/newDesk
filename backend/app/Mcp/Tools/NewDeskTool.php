@@ -33,13 +33,13 @@ abstract class NewDeskTool extends Tool
     {
         /** @var User $user */
         $user = $request->user();
-
-        $module = $this->module();
-        if ($module !== null && ! $user->hasPermission($module)) {
-            return Response::error("Tu rol no tiene acceso a: {$module->label()}. Pedile a un administrador que habilite el módulo para tu rol; no reintentes.");
-        }
+        $request->setArguments(self::normalized($request->all()));
 
         try {
+            if ($this->module() !== null) {
+                $this->ensureModule($user, $this->module());
+            }
+
             return $this->run($request, $user);
         } catch (BusinessRuleViolation $e) {
             return Response::error($e->getMessage());
@@ -50,6 +50,30 @@ abstract class NewDeskTool extends Tool
         } catch (ModelNotFoundException) {
             return Response::error(self::NOT_FOUND);
         }
+    }
+
+    /** The same switch as the web's `module:` middleware; also for a second module a single call may need. */
+    protected function ensureModule(User $user, Permission $module): void
+    {
+        if (! $user->hasPermission($module)) {
+            throw new BusinessRuleViolation("Tu rol no tiene acceso a: {$module->label()}. Pedile a un administrador que habilite el módulo para tu rol; no reintentes.", 'module_disabled', 403);
+        }
+    }
+
+    /**
+     * Arguments as the web receives a form after TrimStrings + ConvertEmptyStringsToNull, so the same input
+     * is stored the same way through both channels.
+     *
+     * @param  array<array-key, mixed>  $arguments
+     * @return array<array-key, mixed>
+     */
+    private static function normalized(array $arguments): array
+    {
+        return array_map(fn (mixed $value) => match (true) {
+            is_array($value) => self::normalized($value),
+            is_string($value) => trim($value) === '' ? null : trim($value),
+            default => $value,
+        }, $arguments);
     }
 
     /** @param  array<string, mixed>|list<mixed>  $data */

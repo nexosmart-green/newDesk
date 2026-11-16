@@ -20,7 +20,7 @@ final class TaskList
      * @param  array{status_ids?: list<int>, include_closed?: bool, assignee_id?: int|null, overdue?: bool, search?: string|null, project_id?: int|null, category_id?: int|null, label_id?: int|null, mine?: bool}  $filters
      * @return LengthAwarePaginator<int, Task>
      */
-    public function __invoke(User $viewer, ?Project $project, array $filters, int $perPage = 50): LengthAwarePaginator
+    public function __invoke(User $viewer, ?Project $project, array $filters, int $perPage = 50, ?int $page = null): LengthAwarePaginator
     {
         $query = Task::query()
             ->withLoggedSeconds()
@@ -46,6 +46,6 @@ final class TaskList
             ->orderByRaw('due_on IS NULL')
             ->orderBy('due_on')
             ->orderByDesc('tasks.id')
-            ->paginate($perPage);
+            ->paginate($perPage, page: $page);
     }
 }

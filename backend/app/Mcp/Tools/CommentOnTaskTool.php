@@ -7,16 +7,16 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Tasks\Actions\CommentOnTask;
 use App\Domain\Tasks\Support\TaskLimits;
 use App\Mcp\Support\McpLookup;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('comment_task')]
 #[Description('Comenta una tarea. Para @mencionar (y notificar) pasá los emails de miembros del proyecto en "mentions".')]
-class CommentOnTaskTool extends NewDeskTool
+class CommentOnTaskTool extends NewDeskWriteTool
 {
     protected function module(): ?Permission
     {
@@ -25,7 +25,7 @@ class CommentOnTaskTool extends NewDeskTool
 
     public function __construct(private readonly McpLookup $lookup, private readonly CommentOnTask $commentOnTask) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate([
             'code' => 'required|string',
@@ -36,12 +36,17 @@ class CommentOnTaskTool extends NewDeskTool
         $task = $this->lookup->task($user, $input['code']);
         Gate::forUser($user)->authorize('comment', $task);
 
-        $comment = ($this->commentOnTask)($user, $task, trim($input['body']), $this->lookup->userIds($user, $input['mentions'] ?? []));
+        $body = trim($input['body']);
+        $mentionIds = $this->lookup->userIds($user, $input['mentions'] ?? []);
 
-        return $this->json([
-            'commented_on' => $task->code,
-            'mentioned' => $comment->mentions->map(fn (User $person) => $person->fullName())->all(),
-        ]);
+        return PreparedWrite::of("Comentar en {$task->code}: «{$body}»", function () use ($user, $task, $body, $mentionIds) {
+            $comment = ($this->commentOnTask)($user, $task, $body, $mentionIds);
+
+            return $this->json([
+                'commented_on' => $task->code,
+                'mentioned' => $comment->mentions->map(fn (User $person) => $person->fullName())->all(),
+            ]);
+        });
     }
 
     public function schema(JsonSchema $schema): array

@@ -8,16 +8,16 @@ use App\Domain\TimeTracking\Actions\CompletePendingComment;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Domain\TimeTracking\Support\TimeTrackingLimits;
 use App\Mcp\Support\McpPresenter;
+use App\Mcp\Support\PreparedWrite;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
-use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 
 #[Name('complete_pending_comment')]
 #[Description('Completa el comentario de un registro que el sistema cortó automáticamente (sin horas, olvidado, tarea cerrada…). Mientras haya alguno pendiente no se puede iniciar otro cronómetro. Los ids salen de whoami.')]
-class CompletePendingCommentTool extends NewDeskTool
+class CompletePendingCommentTool extends NewDeskWriteTool
 {
     protected function module(): ?Permission
     {
@@ -26,13 +26,17 @@ class CompletePendingCommentTool extends NewDeskTool
 
     public function __construct(private readonly CompletePendingComment $complete) {}
 
-    protected function run(Request $request, User $user): Response
+    public function prepare(Request $request, User $user): PreparedWrite
     {
         $input = $request->validate(['time_entry_id' => ['required', 'integer'], 'comment' => ['nullable', 'string', 'max:'.TimeTrackingLimits::ENTRY_COMMENT_MAX]]);
         $entry = TimeEntry::query()->forCompany($user->company_id)->findOrFail($input['time_entry_id']);
         Gate::forUser($user)->authorize('completeComment', $entry);
+        $comment = $input['comment'] ?? null;
 
-        return $this->json(['completed' => McpPresenter::entry(($this->complete)($user, $entry, $input['comment'] ?? null))]);
+        return PreparedWrite::of(
+            "Completar el comentario del registro #{$entry->id}: «{$comment}»",
+            fn () => $this->json(['completed' => McpPresenter::entry(($this->complete)($user, $entry, $comment))]),
+        );
     }
 
     public function schema(JsonSchema $schema): array
