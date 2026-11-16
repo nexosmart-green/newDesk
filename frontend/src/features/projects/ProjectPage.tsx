@@ -1,4 +1,5 @@
 import { Link, Outlet, useParams } from 'react-router'
+import { BackLink } from '@/components/ui/BackLink'
 import { PageState } from '@/components/ui/PageState'
 import { TabNav } from '@/components/ui/TabNav'
 import { ApiError } from '@/lib/api'
@@ -14,7 +15,7 @@ export function ProjectPage() {
   if (project.error instanceof ApiError && project.error.status === 404) {
     return (
       <section className="space-y-2">
-        <h1 className="text-lg font-semibold">Proyecto no encontrado</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">Proyecto no encontrado</h1>
         <p className="text-sm text-muted">No existe o no sos miembro de este proyecto.</p>
         <Link to="/proyectos" className="text-sm text-accent">
           Volver a Proyectos
@@ -35,12 +36,10 @@ export function ProjectPage() {
 
   return (
     <section className="max-w-5xl space-y-4">
-      <Link to="/proyectos" className="text-sm text-accent">
-        ← Proyectos
-      </Link>
+      <BackLink to="/proyectos">Proyectos</BackLink>
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-mono text-sm uppercase text-muted">{project.data.code_prefix}</span>
-        <h1 className="text-lg font-semibold">{project.data.name}</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">{project.data.name}</h1>
         <ProjectStatusBadge status={project.data.status} />
         {project.data.client && (
           <span className="w-full text-sm text-muted sm:w-auto">{project.data.client.name}</span>

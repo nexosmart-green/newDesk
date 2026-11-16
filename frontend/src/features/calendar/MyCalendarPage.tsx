@@ -55,7 +55,7 @@ export function MyCalendarPage() {
   return (
     <section className={`${isTeam ? 'max-w-6xl' : 'max-w-5xl'} space-y-4`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">{isTeam ? 'Calendario de equipo' : 'Mi calendario'}</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">{isTeam ? 'Calendario de equipo' : 'Mi calendario'}</h1>
         <div role="group" aria-label="Vista" className="flex gap-1">
           {views.map((option) => (
             <Button key={option} variant={view === option ? 'primary' : 'secondary'} aria-pressed={view === option} onClick={() => setView(option)}>

@@ -58,21 +58,21 @@ Tokens:
 - Densidad: controles 36px en desktop, 44px con `pointer:coarse`; filas 44; padding de página 24; ancho hasta max-w-7xl.
 
 Cambios (orden de impacto):
-- [ ] Tokens en `index.css` (+ variante `coarse`), Button/TextField/SelectField con los nuevos radios/alturas/`bg-field`, variante `icon`.
-- [ ] Un solo título: sacar el del Header (queda el h1 de la página); header mobile: menú · timer · campana · avatar.
-- [ ] Cronómetro rosa: pill `bg-live` con título de tarea; fila de la tarea corriendo con regla rosa y tiempo en vez de ▶; stop nunca `danger`.
-- [ ] Inicio: banda "Ahora" (tarea corriendo con tiempo grande y Detener, o "Seguí con…" e Iniciar); contadores como frase con links; barra de hoy en rosa.
-- [ ] Filtros en una fila: búsqueda con ícono sin label visible, selects cuyo valor nombra la dimensión, "Más filtros (n)"; mobile: búsqueda + "Filtros".
+- [x] Tokens en `index.css` (+ variante `coarse`), Button/TextField/SelectField con los nuevos radios/alturas/`bg-field`, variante `icon`.
+- [x] Un solo título: sacar el del Header (queda el h1 de la página); header mobile: menú · timer · campana · avatar.
+- [x] Cronómetro rosa: pill `bg-live` con título de tarea; fila de la tarea corriendo con regla rosa y tiempo en vez de ▶; stop nunca `danger`.
+- [x] Inicio: banda "Ahora" (tarea corriendo con tiempo grande y Detener, o "Seguí con…" e Iniciar); contadores como frase con links; barra de hoy en rosa.
+- [x] Filtros en una fila: búsqueda con ícono sin label visible, selects cuyo valor nombra la dimensión, "Más filtros (n)"; mobile: búsqueda + "Filtros".
 - [ ] Detalle de tarea: columna principal una superficie (secciones por título y espacio, no tarjetas); lateral como lista de propiedades; "Mover a otro proyecto" a un menú "⋯".
 - [ ] Semana / calendario: un contenedor, una fila por día, días vacíos agrupados ("Mié 11 a vie 13: sin registros").
-- [ ] PeriodNav con chevrons + "Hoy", sin "←/→" en texto.
+- [x] PeriodNav con chevrons + "Hoy", sin "←/→" en texto.
 - [ ] Sin `font-mono` (salvo código real: tokens, 2FA, snippets) ni `uppercase`; códigos de tarea como se guardan, 500, muted.
 - [ ] Reescribir los 24 "A · B · C" como estructura (avatar, línea muted, ícono); plural "1 miembro".
 - [ ] Proyectos: prefijo después del nombre, badge solo si no está Activo, barra de horas sin "consumido" por fila.
 - [ ] Turnos/equipo: celdas vacías en blanco (+ al hover para quien gestiona), finde/feriado con fondo, chips sin truncar, zona horaria solo si difiere ("Hora de Buenos Aires"), sin animate-ping.
 - [ ] iCal como botón secundario en el encabezado; estado de proyecto como badge editable con menú.
-- [ ] Login con marca (newDesk sobre el color del sidebar); notificaciones sin "Sin mensaje.", no leídas con punto rosa.
-- [ ] `EmptyState` único (ícono, una frase, una acción, sin borde punteado).
+- [x] Login con marca (newDesk sobre el color del sidebar); notificaciones sin "Sin mensaje.", no leídas con punto rosa.
+- [x] `EmptyState` único (ícono, una frase, una acción, sin borde punteado).
 - [ ] Posible bug: en bb1-1 el select de Estado sale vacío (¿el estado actual no está entre las opciones?).
 
 ## Cierre

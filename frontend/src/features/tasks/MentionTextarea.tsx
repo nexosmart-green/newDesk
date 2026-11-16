@@ -87,7 +87,7 @@ export function MentionTextarea({ id, value, members, onChange, onMention, texta
         role="listbox"
         aria-label="Mencionar a"
         hidden={!open}
-        className="absolute inset-x-2 top-full z-20 mt-1 max-w-xs rounded-lg border border-border bg-surface p-1 shadow-lg"
+        className="absolute inset-x-2 top-full z-20 mt-1 max-w-xs rounded-xl border border-border bg-raised p-1 shadow-lg"
       >
         {suggestions.map((member, index) => (
           <li
@@ -99,7 +99,7 @@ export function MentionTextarea({ id, value, members, onChange, onMention, texta
               event.preventDefault()
               pick(member)
             }}
-            className={`cursor-pointer rounded-md px-2 py-1.5 text-sm ${index === activeIndex ? 'bg-brand-strong text-white' : 'hover:bg-surface-2'}`}
+            className={`cursor-pointer rounded-md px-2 py-1.5 text-sm ${index === activeIndex ? 'bg-brand-strong text-white' : 'hover:bg-text/5'}`}
           >
             {member.full_name}
           </li>

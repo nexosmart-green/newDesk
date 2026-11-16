@@ -2,7 +2,9 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { currentUserKey } from '@/lib/queryKeys'
 import { ApiError } from '@/lib/api'
-import { buildTask } from '@/test/fixtures'
+import * as timerApi from '@/features/timer/timerApi'
+import * as historyApi from '@/features/timesheet/historyApi'
+import { buildTask, buildTimeEntry, buildTimerState } from '@/test/fixtures'
 import { buildUser, createTestQueryClient, renderAt } from '@/test/renderWithProviders'
 import * as dashboardApi from './dashboardApi'
 import { DashboardPage } from './DashboardPage'
@@ -31,6 +33,8 @@ function buildDashboard(overrides: Partial<Dashboard> = {}): Dashboard {
   }
 }
 
+const emptyHistory = { data: [], meta: { current_page: 1, last_page: 1, per_page: 50, total: 0, total_seconds: 0 } }
+
 function renderPanel() {
   const client = createTestQueryClient()
   client.setQueryData(currentUserKey, buildUser())
@@ -41,6 +45,8 @@ describe('DashboardPage', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-11-10T15:00:00Z'))
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
+    vi.spyOn(historyApi, 'fetchMyTimeEntries').mockResolvedValue(emptyHistory)
   })
   afterEach(() => vi.useRealTimers())
 
@@ -49,9 +55,10 @@ describe('DashboardPage', () => {
     renderPanel()
 
     const counters = await screen.findByRole('navigation', { name: 'Resumen de tareas' })
-    expect(within(counters).getByRole('link', { name: /38\s*Vencidas/ })).toHaveAttribute('href', '/mis-tareas?vencidas=1')
-    expect(within(counters).getByRole('link', { name: /54\s*Pendientes/ })).toHaveAttribute('href', '/mis-tareas')
-    expect(within(counters).getByRole('link', { name: /19\s*Proyectos activos/ })).toHaveAttribute('href', '/proyectos')
+    expect(counters).toHaveTextContent('Tenés 54 tareas pendientes, 38 vencidas y 2 que vencen hoy. Hay 19 proyectos activos.')
+    expect(within(counters).getByRole('link', { name: '38 vencidas' })).toHaveAttribute('href', '/mis-tareas?vencidas=1')
+    expect(within(counters).getByRole('link', { name: '54 tareas pendientes' })).toHaveAttribute('href', '/mis-tareas')
+    expect(within(counters).getByRole('link', { name: '19 proyectos activos' })).toHaveAttribute('href', '/proyectos')
 
     const week = screen.getByRole('region', { name: 'Mi semana' })
     expect(within(week).getByText('9h 30m')).toBeInTheDocument()
@@ -82,6 +89,62 @@ describe('DashboardPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Reintentar' }))
 
     expect(await screen.findByRole('navigation', { name: 'Resumen de tareas' })).toBeInTheDocument()
+  })
+
+  it('words the counters as a sentence: one pending, none overdue, nothing due today', async () => {
+    vi.spyOn(dashboardApi, 'fetchDashboard').mockResolvedValue(
+      buildDashboard({ tasks: { open: 1, overdue: 0, due_today: 0, due_soon: [] }, projects: null }),
+    )
+    renderPanel()
+
+    expect(await screen.findByRole('navigation', { name: 'Resumen de tareas' })).toHaveTextContent('Tenés 1 tarea pendiente y ninguna vencida.')
+    expect(within(screen.getByRole('region', { name: 'Próximas a vencer' })).getByText('No tenés tareas abiertas con vencimiento.')).toBeInTheDocument()
+  })
+
+  it('"Ahora": the running timer, big, with Detener on pink', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState({ active: buildTimeEntry({ elapsed_seconds: 125 }) }))
+    vi.spyOn(dashboardApi, 'fetchDashboard').mockResolvedValue(buildDashboard())
+    renderPanel()
+
+    const now = await screen.findByRole('region', { name: 'Ahora' })
+    expect(within(now).getByRole('timer')).toHaveTextContent('00:02:05')
+    expect(within(now).getByRole('link', { name: 'Arreglar el login' })).toHaveAttribute('href', '/tareas/bhn-60')
+    expect(within(now).getByRole('button', { name: 'Detener' })).toHaveClass('bg-live')
+  })
+
+  it('"Ahora" without a timer: pick up the last task worked on with "Seguir"', async () => {
+    vi.spyOn(historyApi, 'fetchMyTimeEntries').mockResolvedValue({
+      ...emptyHistory,
+      data: [
+        {
+          id: 5,
+          user: { id: 1, full_name: 'Ana García' },
+          task: { code: 'bhn-12', title: 'Maquetar home' },
+          project: { id: 9, name: 'Bahía Web' },
+          started_at: '2026-11-09T12:00:00Z',
+          ended_at: '2026-11-09T13:00:00Z',
+          seconds: 3600,
+          is_running: false,
+          comment: 'Header listo',
+          comment_pending: false,
+          source: 'timer',
+        },
+      ],
+    })
+    vi.spyOn(dashboardApi, 'fetchDashboard').mockResolvedValue(buildDashboard())
+    renderPanel()
+
+    const now = await screen.findByRole('region', { name: 'Ahora' })
+    expect(await within(now).findByText(/Lo último que trabajaste fue/)).toHaveTextContent('Lo último que trabajaste fue Maquetar home, de Bahía Web.')
+    expect(within(now).getByRole('button', { name: 'Iniciar cronómetro en bhn-12' })).toHaveTextContent('Seguir')
+  })
+
+  it('"Ahora" with nothing worked on lately: a quiet nudge to pick a task', async () => {
+    vi.spyOn(dashboardApi, 'fetchDashboard').mockResolvedValue(buildDashboard())
+    renderPanel()
+
+    const now = await screen.findByRole('region', { name: 'Ahora' })
+    expect(await within(now).findByRole('link', { name: 'Mis tareas' })).toHaveAttribute('href', '/mis-tareas')
   })
 
   it('words deadlines relative to today', () => {

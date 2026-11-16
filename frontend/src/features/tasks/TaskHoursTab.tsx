@@ -2,6 +2,7 @@ import { Clock } from 'lucide-react'
 import { useState } from 'react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
@@ -40,13 +41,11 @@ export function TaskHoursTab({ task, canLog }: TaskHoursTabProps) {
       {!entries.data ? (
         <PageState isPending={entries.isPending} error={entries.error} shape="list" onRetry={() => void entries.refetch()} />
       ) : entries.data.data.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
-          <Clock aria-hidden="true" className="size-6 text-muted" />
-          <p className="font-medium">Todavía no hay horas en esta tarea</p>
-          <p className="max-w-sm text-sm text-muted">
-            {canLog ? 'Arrancá el cronómetro con ▶ o cargalas a mano arriba.' : 'Cuando alguien registre tiempo, aparece acá.'}
-          </p>
-        </div>
+        <EmptyState icon={Clock}>
+          {canLog
+            ? 'Todavía no hay horas en esta tarea: iniciá el cronómetro o cargalas a mano arriba.'
+            : 'Todavía no hay horas en esta tarea: cuando alguien registre tiempo, aparece acá.'}
+        </EmptyState>
       ) : (
         <>
           <p className="text-sm">

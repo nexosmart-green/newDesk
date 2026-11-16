@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { useCan } from '@/features/auth/useAuth'
 import { RecurringShiftsPanel } from './RecurringShiftsPanel'
@@ -22,8 +23,8 @@ export function ShiftsPage() {
   if (!canManage) return <p className="text-muted">No tenés acceso a los turnos del equipo.</p>
 
   return (
-    <section className="mx-auto max-w-6xl space-y-4">
-      <h1 className="text-lg font-semibold">Turnos</h1>
+    <section className="max-w-6xl space-y-4">
+      <PageHeader title="Turnos" />
       <Tabs label="Secciones de turnos" tabs={tabs} selected={tab} onSelect={setTab}>
         {tab === 'grilla' && <ShiftWeekBoard />}
         {tab === 'fijos' && <RecurringShiftsPanel onGoToTemplates={() => setTab('plantillas')} />}

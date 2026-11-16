@@ -157,7 +157,7 @@ describe('RecurringShiftsPanel (RF-06.03)', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Reintentar' }))
 
-    expect(await screen.findByText('Todavía no hay turnos fijos')).toBeInTheDocument()
+    expect(await screen.findByText(/Todavía no hay turnos fijos/)).toBeInTheDocument()
     expect(fetchRecurrences).toHaveBeenCalledTimes(2)
   })
 })

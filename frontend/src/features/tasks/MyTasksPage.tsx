@@ -21,7 +21,7 @@ export function MyTasksPage() {
   return (
     <section className="max-w-4xl space-y-4">
       <header className="space-y-0.5">
-        <h1 className="text-lg font-semibold">Mis tareas</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">Mis tareas</h1>
         <p className="text-sm text-muted">Las tareas que tenés asignadas, de todos tus proyectos.</p>
       </header>
       <TaskFiltersBar filters={filters} statuses={statuses.data ?? []} onChange={change} />

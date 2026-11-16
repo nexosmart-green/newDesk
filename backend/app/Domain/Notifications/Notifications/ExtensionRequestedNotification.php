@@ -27,7 +27,8 @@ final class ExtensionRequestedNotification extends AppNotification
 
     protected function body(User $notifiable): string
     {
-        return $this->message ? "«{$this->message}»" : 'Sin mensaje.';
+        // Without a message there is nothing to add to the title (an empty body is left out, not filled in).
+        return $this->message ? "«{$this->message}»" : '';
     }
 
     protected function path(): string

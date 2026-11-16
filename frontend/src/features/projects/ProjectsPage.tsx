@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { FolderSearch } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
@@ -27,17 +30,14 @@ export function ProjectsPage() {
 
   return (
     <section className="max-w-5xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Proyectos</h1>
-        {canCreate && <Button onClick={() => setCreating(true)}>Nuevo proyecto</Button>}
-      </div>
+      <PageHeader title="Proyectos" actions={canCreate && <Button onClick={() => setCreating(true)}>Nuevo proyecto</Button>} />
       <ProjectsFilters filters={filters} onChange={change} />
       {!projects.data ? (
         <PageState isPending={projects.isPending} error={projects.error} shape="list" onRetry={() => void projects.refetch()} />
       ) : (
         <StaleContent stale={projects.isPlaceholderData} className="space-y-4">
           {projects.data.data.length === 0 ? (
-            <p className="text-sm text-muted">No hay proyectos que coincidan con la búsqueda.</p>
+            <EmptyState icon={FolderSearch}>No hay proyectos que coincidan con la búsqueda.</EmptyState>
           ) : (
             <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Proyectos">
               {projects.data.data.map((project) => (

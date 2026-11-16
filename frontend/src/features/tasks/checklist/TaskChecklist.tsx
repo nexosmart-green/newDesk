@@ -1,5 +1,6 @@
 import { ListChecks } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Panel } from '../TaskPanel'
 import type { ChecklistItem, Task } from '../types'
@@ -44,10 +45,9 @@ export function TaskChecklist({ task }: { task: Task }) {
   return (
     <Panel title="Subtareas" action={items.length > 0 ? <ChecklistProgress progress={progressOf(items)} /> : undefined}>
       {items.length === 0 ? (
-        <div className="flex items-start gap-3 rounded-lg border border-dashed border-border p-3">
-          <ListChecks aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
-          <p className="text-sm text-muted">Dividí la tarea en pasos y tildalos a medida que avanzan. Escribí el primero acá abajo.</p>
-        </div>
+        <EmptyState icon={ListChecks} bare>
+          Dividí la tarea en pasos y tildalos a medida que avanzan. Escribí el primero acá abajo.
+        </EmptyState>
       ) : (
         <ul aria-label="Subtareas" className="-mx-1.5 space-y-0.5">
           {items.map((item, index) => (

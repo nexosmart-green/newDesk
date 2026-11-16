@@ -130,7 +130,7 @@ describe('TaskPage tabs', () => {
     vi.spyOn(tasksApi, 'fetchTaskTimeEntries').mockResolvedValue({ ...page([]), meta: { ...page([]).meta, total_seconds: 0 } })
     renderTask(detailed, '/tareas/bhn-60?tab=horas')
 
-    expect(await screen.findByText('Todavía no hay horas en esta tarea')).toBeInTheDocument()
+    expect(await screen.findByText(/Todavía no hay horas en esta tarea/)).toBeInTheDocument()
   })
 
   it('reads the history as sentences with each changed field', async () => {

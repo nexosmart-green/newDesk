@@ -30,8 +30,8 @@ const widths: Record<DialogSize, string> = {
 
 /** Big forms take the whole phone screen; short prompts stay a bottom sheet. */
 const phoneShape: Record<DialogSize, string> = {
-  sm: 'max-h-[92dvh] rounded-t-2xl',
-  md: 'max-h-[92dvh] rounded-t-2xl',
+  sm: 'max-h-[92dvh] rounded-t-xl',
+  md: 'max-h-[92dvh] rounded-t-xl',
   lg: 'h-dvh',
   xl: 'h-dvh',
 }
@@ -64,7 +64,7 @@ export function Dialog({ title, description, size = 'md', dirty = false, onClose
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           tabIndex={-1}
-          className={`flex w-full flex-col overflow-hidden border border-border bg-surface shadow-2xl outline-none motion-safe:animate-[dialog-in_180ms_cubic-bezier(0.2,0.8,0.2,1)] sm:h-auto sm:max-h-[min(88dvh,56rem)] sm:rounded-2xl ${phoneShape[size]} ${widths[size]}`}
+          className={`flex w-full flex-col overflow-hidden border border-border bg-surface shadow-2xl outline-none motion-safe:animate-[dialog-in_180ms_cubic-bezier(0.2,0.8,0.2,1)] sm:h-auto sm:max-h-[min(88dvh,56rem)] sm:rounded-xl ${phoneShape[size]} ${widths[size]}`}
         >
           <div className="flex items-start gap-3 border-b border-border px-5 py-3 sm:px-6">
             <div className="min-w-0 flex-1 py-1.5">
@@ -82,7 +82,7 @@ export function Dialog({ title, description, size = 'md', dirty = false, onClose
               onClick={dismiss}
               aria-label="Cerrar"
               data-focus-guard
-              className="-mr-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
+              className="-mr-1.5 grid size-9 shrink-0 cursor-pointer place-items-center rounded-md coarse:size-11 text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
             >
               <X aria-hidden="true" className="size-5" />
             </button>

@@ -33,7 +33,7 @@ export function ToastItem({ toast }: { toast: Toast }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
       data-variant={toast.variant}
-      className={`pointer-events-auto flex items-start gap-3 rounded-xl border border-border bg-surface py-3 pl-4 pr-1 text-sm shadow-xl ring-1 [--toast-from:-12px] motion-safe:animate-[toast-in_200ms_cubic-bezier(0.2,0.8,0.2,1)] sm:[--toast-from:12px] ${look.ring}`}
+      className={`pointer-events-auto flex items-start gap-3 rounded-xl border border-border bg-surface py-3 pl-4 pr-1 text-sm shadow-lg ring-1 [--toast-from:-12px] motion-safe:animate-[toast-in_200ms_cubic-bezier(0.2,0.8,0.2,1)] sm:[--toast-from:12px] ${look.ring}`}
     >
       <Icon aria-hidden="true" className={`mt-0.5 size-5 shrink-0 ${look.iconClass}`} strokeWidth={2} />
       <div className="min-w-0 flex-1 py-0.5">
@@ -45,7 +45,7 @@ export function ToastItem({ toast }: { toast: Toast }) {
         type="button"
         onClick={() => toasts.dismiss(toast.id)}
         aria-label="Cerrar aviso"
-        className="-my-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
+        className="-my-1 grid size-9 shrink-0 cursor-pointer place-items-center rounded-md coarse:size-11 text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent"
       >
         <X aria-hidden="true" className="size-4" />
       </button>

@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { UserSearch } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
@@ -21,14 +24,14 @@ export function PeopleDirectoryPage() {
 
   return (
     <section className="max-w-5xl space-y-4">
-      <h1 className="text-lg font-semibold">Personas</h1>
+      <PageHeader title="Personas" />
       <PeopleFilters filters={filters} canSeeInactive={canManageUsers} onChange={handleChange} />
       {!people.data ? (
         <PageState isPending={people.isPending} error={people.error} shape="cards" onRetry={() => void people.refetch()} />
       ) : (
         <StaleContent stale={people.isPlaceholderData} className="space-y-4">
           {people.data.data.length === 0 ? (
-            <p className="text-sm text-muted">No hay personas que coincidan con la búsqueda.</p>
+            <EmptyState icon={UserSearch}>No hay personas que coincidan con la búsqueda.</EmptyState>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Personas">
               {people.data.data.map((person) => (

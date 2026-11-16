@@ -1,12 +1,16 @@
 import { useState } from 'react'
+import { Building2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
-import { SelectField } from '@/components/ui/SelectField'
-import { TextField } from '@/components/ui/TextField'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { FilterBar } from '@/components/ui/filters/FilterBar'
+import { FilterSelect } from '@/components/ui/filters/FilterSelect'
+import { SearchInput } from '@/components/ui/filters/SearchInput'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { useCan, useCanAny } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { ClientFormDialog } from './ClientFormDialog'
@@ -14,6 +18,7 @@ import { clientStatusLabels, CLIENTS_READ_PERMISSIONS, type ClientFilters, type 
 import { useClients } from './useClients'
 
 const statuses = Object.keys(clientStatusLabels) as ClientStatus[]
+const statusOptions = [{ value: '', label: 'Todos' }, ...statuses.map((status) => ({ value: status, label: clientStatusLabels[status] }))]
 
 export function ClientsPage() {
   const canRead = useCanAny(CLIENTS_READ_PERMISSIONS)
@@ -30,37 +35,24 @@ export function ClientsPage() {
 
   return (
     <section className="max-w-5xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Clientes</h1>
-        {canManage && <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
-        <TextField
-          label="Buscar"
-          type="search"
-          placeholder="Razón social, nombre o CUIT"
-          value={filters.search}
-          onChange={(event) => change({ search: event.target.value })}
-        />
-        <SelectField
+      <PageHeader title="Clientes" actions={canManage && <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>} />
+      <FilterBar
+        active={filters.status !== 'active' ? 1 : 0}
+        search={<SearchInput label="Buscar clientes por razón social, nombre o CUIT" placeholder="Razón social, nombre o CUIT" value={filters.search} onChange={(search) => change({ search })} />}
+      >
+        <FilterSelect
           label="Estado"
           value={filters.status}
-          onChange={(event) => change({ status: statuses.find((status) => status === event.target.value) ?? '' })}
-        >
-          <option value="">Todos</option>
-          {statuses.map((status) => (
-            <option key={status} value={status}>
-              {clientStatusLabels[status]}
-            </option>
-          ))}
-        </SelectField>
-      </div>
+          options={statusOptions}
+          onChange={(value) => change({ status: statuses.find((status) => status === value) ?? '' })}
+        />
+      </FilterBar>
       {!clients.data ? (
         <PageState isPending={clients.isPending} error={clients.error} onRetry={() => void clients.refetch()} />
       ) : (
         <StaleContent stale={clients.isPlaceholderData} className="space-y-4">
           {clients.data.data.length === 0 ? (
-            <p className="text-sm text-muted">No hay clientes que coincidan con la búsqueda.</p>
+            <EmptyState icon={Building2}>No hay clientes que coincidan con la búsqueda.</EmptyState>
           ) : (
             <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Clientes">
               {clients.data.data.map((client) => (

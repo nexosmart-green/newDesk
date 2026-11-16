@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
@@ -35,17 +36,17 @@ export function AllTasksPage() {
 
   return (
     <section className="max-w-5xl space-y-4">
-      <header className="flex flex-wrap items-end justify-between gap-2">
-        <div className="space-y-0.5">
-          <h1 className="text-lg font-semibold">Tareas</h1>
-          <p className="text-sm text-muted">Todas las tareas de los proyectos que podés ver.</p>
-        </div>
-        {tasks.data && (
-          <p className="text-sm text-muted" aria-live="polite">
-            {tasks.data.meta.total === 1 ? '1 tarea' : `${tasks.data.meta.total} tareas`}
-          </p>
-        )}
-      </header>
+      <PageHeader
+        title="Tareas"
+        description="Todas las tareas de los proyectos que podés ver."
+        actions={
+          tasks.data && (
+            <p className="tabular text-sm text-muted" aria-live="polite">
+              {tasks.data.meta.total === 1 ? '1 tarea' : `${tasks.data.meta.total} tareas`}
+            </p>
+          )
+        }
+      />
       <TaskFiltersBar
         filters={filters}
         statuses={statuses.data ?? []}

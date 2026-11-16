@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { BackLink } from '@/components/ui/BackLink'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
@@ -55,10 +57,8 @@ export function ProjectHoursReportPage() {
 
   return (
     <section className="max-w-4xl space-y-4">
-      <Link to={`/reportes/horas${search ? `?${search}` : ''}`} className="text-sm text-accent hover:underline">
-        ← Todos los proyectos
-      </Link>
-      <h1 className="text-lg font-semibold">{report.data ? `Horas de ${report.data.project.name}` : 'Horas del proyecto'}</h1>
+      <BackLink to={`/reportes/horas${search ? `?${search}` : ''}`}>Todos los proyectos</BackLink>
+      <PageHeader title={report.data ? `Horas de ${report.data.project.name}` : 'Horas del proyecto'} />
       <ReportPeriodPicker applied={report.data?.period} />
       {!report.data ? (
         <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />

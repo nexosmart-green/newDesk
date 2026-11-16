@@ -1,5 +1,7 @@
-import { SelectField } from '@/components/ui/SelectField'
-import { TextField } from '@/components/ui/TextField'
+import { FilterBar } from '@/components/ui/filters/FilterBar'
+import { FilterCheck } from '@/components/ui/filters/FilterCheck'
+import { FilterSelect } from '@/components/ui/filters/FilterSelect'
+import { SearchInput } from '@/components/ui/filters/SearchInput'
 import { useCanAny } from '@/features/auth/useAuth'
 import { CLIENTS_READ_PERMISSIONS } from '@/features/clients/types'
 import { useClients } from '@/features/clients/useClients'
@@ -10,56 +12,34 @@ interface ProjectsFiltersProps {
   onChange: (changes: Partial<ProjectFilters>) => void
 }
 
+const statusOptions = [{ value: '', label: 'Todos' }, ...projectStatuses.map((status) => ({ value: status, label: projectStatusLabels[status] }))]
+
 /** RF-03.07 filters. The client filter needs reading clients, so collaborators don't get it. */
 export function ProjectsFilters({ filters, onChange }: ProjectsFiltersProps) {
   const canReadClients = useCanAny(CLIENTS_READ_PERMISSIONS)
   const clients = useClients({ status: '', search: '', page: 1 }, canReadClients)
+  const active = [filters.client_id !== null, filters.status !== '', filters.running_out].filter(Boolean).length
 
   return (
-    <div className="space-y-2">
-      <div className={`grid gap-3 ${canReadClients ? 'sm:grid-cols-[1fr_12rem_12rem]' : 'sm:grid-cols-[1fr_12rem]'}`}>
-      <TextField
-        label="Buscar"
-        type="search"
-        placeholder="Nombre o prefijo"
-        value={filters.search}
-        onChange={(event) => onChange({ search: event.target.value })}
-      />
-      {canReadClients && (
-        <SelectField
-          label="Cliente"
-          value={filters.client_id ?? ''}
-          onChange={(event) => onChange({ client_id: event.target.value ? Number(event.target.value) : null })}
-        >
-          <option value="">Todos</option>
-          {clients.data?.data.map((client) => (
-            <option key={client.id} value={client.id}>
-              {client.display_name}
-            </option>
-          ))}
-        </SelectField>
-      )}
-      <SelectField
+    <FilterBar
+      active={active}
+      search={<SearchInput label="Buscar proyectos por nombre o prefijo" placeholder="Nombre o prefijo" value={filters.search} onChange={(search) => onChange({ search })} />}
+    >
+      <FilterSelect
         label="Estado"
         value={filters.status}
-        onChange={(event) => onChange({ status: isProjectStatus(event.target.value) ? event.target.value : '' })}
-      >
-        <option value="">Todos</option>
-        {projectStatuses.map((status) => (
-          <option key={status} value={status}>
-            {projectStatusLabels[status]}
-          </option>
-        ))}
-      </SelectField>
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={filters.running_out}
-          onChange={(event) => onChange({ running_out: event.target.checked })}
+        options={statusOptions}
+        onChange={(value) => onChange({ status: isProjectStatus(value) ? value : '' })}
+      />
+      {canReadClients && (
+        <FilterSelect
+          label="Cliente"
+          value={String(filters.client_id ?? '')}
+          options={[{ value: '', label: 'Todos' }, ...(clients.data?.data ?? []).map((client) => ({ value: String(client.id), label: client.display_name }))]}
+          onChange={(value) => onChange({ client_id: value ? Number(value) : null })}
         />
-        Con horas por agotarse
-      </label>
-    </div>
+      )}
+      <FilterCheck label="Con horas por agotarse" checked={filters.running_out} onChange={(running_out) => onChange({ running_out })} />
+    </FilterBar>
   )
 }

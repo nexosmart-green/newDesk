@@ -57,7 +57,7 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((current) => !current)}
-        className={`relative grid size-11 place-items-center rounded-lg transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent ${open ? 'bg-surface-2 text-text' : 'text-muted'}`}
+        className={`relative grid size-9 place-items-center rounded-md coarse:size-11 transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent ${open ? 'bg-surface-2 text-text' : 'text-muted'}`}
       >
         <Bell aria-hidden="true" className="size-5" strokeWidth={1.75} />
         {unread > 0 && (
@@ -75,7 +75,7 @@ export function NotificationBell() {
           id={panelId}
           role="region"
           aria-label="Notificaciones"
-          className="absolute inset-x-2 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-xl sm:inset-x-auto sm:right-0 sm:w-96"
+          className="absolute inset-x-2 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-lg sm:inset-x-auto sm:right-0 sm:w-96"
         >
           <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
             <h2 className="text-sm font-semibold">Notificaciones</h2>

@@ -1,42 +1,33 @@
-import { useQuery } from '@tanstack/react-query'
 import { Play, Square } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
-import { MODULES, useHasModule } from '@/features/auth/modules'
 import { ApiError } from '@/lib/api'
 import { errorTextOf } from '@/lib/errorText'
-import { timerKey } from '@/lib/queryKeys'
+import { formatClock } from '@/lib/duration'
 import { CommentDialog } from './CommentDialog'
 import { PendingCommentDialog } from './PendingCommentDialog'
 import { toPendingSummary } from './pendingEntry'
 import { RequestExtensionButton } from './RequestExtensionButton'
 import { StopTimerDialog } from './StopTimerDialog'
-import { fetchTimer } from './timerApi'
-import { isProvisional } from './timerOptimistic'
 import { TimerBlockedNotice } from './TimerBlockedNotice'
-import { timerRule, type TimerState } from './types'
+import { timerRule } from './types'
+import { useRunningElapsedSeconds, useRunningTimer } from './useRunningTimer'
 import { useStartTimer, useTimerState } from './useTimer'
 
 interface StartTimerButtonProps {
   task: { code: string; title: string; project?: { id: number; name?: string; hours_exhausted: boolean } }
   /** Compact icon-only rendering for cards and rows. */
   compact?: boolean
+  /** The start verb when it isn't a plain "Iniciar" (e.g. "Seguir" on the last task worked on). */
+  startLabel?: string
 }
 
 const sameCode = (left: string, right: string) => left.toLowerCase() === right.toLowerCase()
 
-/** Only what ▶/■ needs: the poll every 30 s changes the elapsed time, which must not re-render every row. */
-const runningOf = ({ active }: TimerState) =>
-  active ? { id: active.id, code: active.task.code, provisional: isProvisional(active) } : null
-
-/**
- * Reads the timer the header polls (no poll of its own: one per row would multiply the requests), through
- * `select`: structural sharing keeps the result identical between polls, so the row doesn't re-render.
- */
-function useRunningTimer() {
-  const enabled = useHasModule(MODULES.time)
-  return useQuery({ enabled, queryKey: timerKey, queryFn: fetchTimer, select: runningOf }).data ?? null
+/** The ticking time, only inside the one running row (the other rows never re-render with it). */
+function RunningElapsed() {
+  return <span className="tabular font-semibold">{formatClock(useRunningElapsedSeconds() ?? 0)}</span>
 }
 
 /** The full entry (with its ticking time) only while the stop dialog is open. */
@@ -67,7 +58,7 @@ const asksForComment = (error: ApiError) =>
  * there first (RF-05.16); a block (no hours, closed task…) explains why and how to get out (RF-05.05/08).
  * A project already out of hours says so before the click, with the extension request at hand.
  */
-export function StartTimerButton({ task, compact = false }: StartTimerButtonProps) {
+export function StartTimerButton({ task, compact = false, startLabel = 'Iniciar' }: StartTimerButtonProps) {
   const active = useRunningTimer()
   const start = useStartTimer()
   const noHoursId = useId()
@@ -106,9 +97,9 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   if (!runningHere && task.project?.hours_exhausted) {
     return (
       <div className="flex flex-wrap items-start justify-end gap-2">
-        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'min-w-11 px-0' : undefined}>
+        <Button variant="secondary" aria-label={label} aria-describedby={noHoursId} disabled className={compact ? 'min-w-9 px-0 coarse:min-w-11' : undefined}>
           <Play aria-hidden="true" className="size-4 fill-current" />
-          {!compact && <span>Iniciar</span>}
+          {!compact && <span>{startLabel}</span>}
         </Button>
         <p id={noHoursId} className="self-center text-xs text-danger">
           Sin horas disponibles — pedir ampliación
@@ -121,17 +112,18 @@ export function StartTimerButton({ task, compact = false }: StartTimerButtonProp
   return (
     <>
       <Button
-        variant={runningHere ? 'danger' : 'secondary'}
+        // Running here: the time on desk's pink, never danger (stopping ends work, it doesn't destroy it).
+        variant={runningHere ? 'live' : 'secondary'}
         aria-label={label}
         title={label}
         loading={start.isPending}
         // A just-started (optimistic) entry can't be stopped until the server confirms it.
         disabled={runningHere && active.provisional}
         onClick={handleClick}
-        className={compact ? 'min-w-11 px-0' : undefined}
+        className={compact && !runningHere ? 'min-w-9 px-0 coarse:min-w-11' : undefined}
       >
-        {runningHere ? <Square aria-hidden="true" className="size-3.5 fill-current" /> : <Play aria-hidden="true" className="size-4 fill-current" />}
-        {!compact && <span>{runningHere ? 'Detener' : 'Iniciar'}</span>}
+        {runningHere ? <Square aria-hidden="true" className="size-3 fill-current" /> : <Play aria-hidden="true" className="size-4 fill-current" />}
+        {runningHere ? <RunningElapsed /> : !compact && <span>{startLabel}</span>}
       </Button>
       {askingPrevious && (
         <CommentDialog

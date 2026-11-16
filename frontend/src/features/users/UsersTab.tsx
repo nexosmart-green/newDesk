@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { UserSearch } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { toast } from '@/components/ui/toast/toastStore'
 import { useRoles } from '@/features/roles/useRoles'
@@ -28,7 +30,7 @@ export function UsersTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
         <UsersFilters
           search={search}
           status={status}
@@ -50,7 +52,7 @@ export function UsersTab() {
       ) : (
         <StaleContent stale={users.isPlaceholderData} className="space-y-4">
           {users.data.data.length === 0 ? (
-            <p className="text-sm text-muted">No hay usuarios que coincidan con la búsqueda.</p>
+            <EmptyState icon={UserSearch}>No hay usuarios que coincidan con la búsqueda.</EmptyState>
           ) : (
             <table className="w-full text-left">
               <thead className="text-xs text-muted">

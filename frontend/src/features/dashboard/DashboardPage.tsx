@@ -1,9 +1,12 @@
 import { QuickLinks } from '@/components/layout/QuickLinks'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCurrentUser, useProfileTimeZone } from '@/features/auth/useAuth'
 import { BagsRunningOut } from './BagsRunningOut'
 import { DueSoonList } from './DueSoonList'
+import { NowBand } from './NowBand'
 import { TaskCounters } from './TaskCounters'
 import { useDashboard } from './useDashboard'
 import { WeekHours } from './WeekHours'
@@ -12,19 +15,24 @@ function longToday(timeZone: string): string {
   return new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', timeZone })
 }
 
-/** `/` "Panel": what's pending, how the week goes and which bags need a word with the client. Blocks the role can't see are absent. */
+/**
+ * `/` Inicio, read top to bottom like a work log: what runs now, what is pending (one sentence), how the
+ * week goes, what is due, which bags need a word with the client. Blocks the role can't see are absent.
+ */
 export function DashboardPage() {
   const { data: user } = useCurrentUser()
   const timeZone = useProfileTimeZone()
   const dashboard = useDashboard()
+  const hasTime = useHasModule(MODULES.time)
   const data = dashboard.data
 
   return (
     <section className="max-w-6xl space-y-5">
-      <header className="space-y-0.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Hola, {user?.first_name}</h1>
-        <p className="text-sm text-muted first-letter:uppercase">{longToday(timeZone)}</p>
-      </header>
+      <PageHeader
+        title={`Hola, ${user?.first_name ?? ''}`}
+        description={<span className="inline-block first-letter:uppercase">{longToday(timeZone)}</span>}
+      />
+      {hasTime && <NowBand />}
       {!data ? (
         <PageState isPending={dashboard.isPending} error={dashboard.error} skeleton={<DashboardSkeleton />} onRetry={() => void dashboard.refetch()} />
       ) : !data.tasks && !data.projects && !data.week && !data.bags_running_out ? (
@@ -52,10 +60,10 @@ function DashboardSkeleton() {
   return (
     <div role="status" aria-live="polite" className="space-y-4">
       <span className="sr-only">Cargando el panel…</span>
-      <Skeleton className="h-20 w-full rounded-xl" />
+      <Skeleton className="h-6 w-2/3 max-w-xl" />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-56 rounded-lg" />
+        <Skeleton className="h-56 rounded-lg" />
       </div>
     </div>
   )

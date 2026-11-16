@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { MODULES, useHasModule } from '@/features/auth/modules'
 import { PendingCommentsBanner } from '@/features/timer/PendingCommentsBanner'
@@ -21,6 +21,12 @@ export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => readStoredJson(COLLAPSED_KEY) === true)
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  const section = sectionTitle(pathname, groups, footer)
+
+  // The page's h1 is the only visible title; the browser tab names the section too (WCAG 2.4.2).
+  useEffect(() => {
+    document.title = section === 'newDesk' ? 'newDesk' : `${section} | newDesk`
+  }, [section])
 
   function toggleCollapsed() {
     setCollapsed((current) => {
@@ -41,7 +47,6 @@ export function AppLayout() {
       <MobileDrawer open={drawerOpen} onClose={closeDrawer} groups={groups} footer={footer} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
-          title={sectionTitle(pathname, groups, footer)}
           theme={theme}
           onToggleTheme={toggleTheme}
           showTimer={hasTime}

@@ -1,5 +1,6 @@
-import { Pencil } from 'lucide-react'
+import { FileText, Pencil } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Button } from '@/components/ui/Button'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { MarkdownView } from '@/components/ui/Markdown'
@@ -43,12 +44,17 @@ export function TaskDetailTab({ task }: { task: Task }) {
             {task.description?.trim() ? (
               <MarkdownView source={task.description} />
             ) : (
-              <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border p-4">
-                <p className="text-sm text-muted">Sin descripción. Contá qué hay que hacer, con capturas si hace falta.</p>
-                <Button variant="secondary" onClick={() => setEditing(true)}>
-                  Agregar descripción
-                </Button>
-              </div>
+              <EmptyState
+                icon={FileText}
+                bare
+                action={
+                  <Button variant="secondary" onClick={() => setEditing(true)}>
+                    Agregar descripción
+                  </Button>
+                }
+              >
+                Sin descripción. Contá qué hay que hacer, con capturas si hace falta.
+              </EmptyState>
             )}
           </Panel>
         )}

@@ -82,7 +82,7 @@ describe('MyWeekPage', () => {
     const fetch = renderWeek()
     await screen.findByText('3h 30m')
 
-    await userEvent.click(screen.getByRole('button', { name: '← Semana anterior' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Semana anterior' }))
 
     await vi.waitFor(() => expect(fetch).toHaveBeenCalledWith('2026-10-26', '2026-11-01'))
   })

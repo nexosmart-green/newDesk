@@ -39,7 +39,7 @@ export function TaskPage() {
   if (task.error instanceof ApiError && task.error.status === 404) {
     return (
       <section className="space-y-2">
-        <h1 className="text-lg font-semibold">Tarea no encontrada</h1>
+        <h1 className="text-xl font-semibold leading-tight tracking-tight">Tarea no encontrada</h1>
         <p className="text-sm text-muted">No existe o no sos miembro del proyecto.</p>
         <Link to="/mis-tareas" className="text-sm text-accent">
           Volver a Mis tareas

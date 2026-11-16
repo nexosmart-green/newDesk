@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
 import { useSearchParamPatch, useTabParam } from '@/lib/useSearchParamPatch'
@@ -41,7 +42,7 @@ export function MyWeekPage() {
 
   return (
     <section className="max-w-4xl space-y-4">
-      <h1 className="text-lg font-semibold">Mi semana</h1>
+      <PageHeader title="Mi semana" />
       <Tabs label="Vistas de horas" tabs={views} selected={view} onSelect={selectView}>
         {view === 'semana' ? <WeekTimesheet /> : <TimeHistoryTab />}
       </Tabs>

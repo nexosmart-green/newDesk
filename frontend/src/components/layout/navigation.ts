@@ -78,7 +78,7 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
   }
 }
 
-/** Title for the header: the nav entry that owns the current path (longest prefix wins). */
+/** The browser tab's title: the nav entry that owns the current path (longest prefix wins). */
 export function sectionTitle(pathname: string, groups: NavGroup[], footer: NavItem[]): string {
   // `/tareas` lists them all; `/tareas/:code` is one task.
   if (pathname.startsWith('/tareas/')) return 'Tarea'

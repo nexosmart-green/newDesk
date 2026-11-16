@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
@@ -77,10 +78,8 @@ export function TimeHistoryTab() {
       {!ready ? null : !history.data ? (
         <PageState isPending={history.isPending} error={history.error} shape="table" onRetry={() => void history.refetch()} />
       ) : history.data.data.length === 0 ? (
-        <StaleContent stale={history.isPlaceholderData} className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
-          <SearchX aria-hidden="true" className="size-6 text-muted" />
-          <p className="font-medium">No hay horas en ese rango</p>
-          <p className="max-w-sm text-sm text-muted">Probá con un rango más amplio o sacá el proyecto o la búsqueda.</p>
+        <StaleContent stale={history.isPlaceholderData}>
+          <EmptyState icon={SearchX}>No hay horas en ese rango. Probá con uno más amplio o sacá el proyecto o la búsqueda.</EmptyState>
         </StaleContent>
       ) : (
         <StaleContent stale={history.isPlaceholderData} className="space-y-4">

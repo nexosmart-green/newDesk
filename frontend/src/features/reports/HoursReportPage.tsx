@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
@@ -35,13 +36,15 @@ export function HoursReportPage() {
   if (!canSee) return <p className="text-muted">No tenés acceso a los reportes.</p>
 
   return (
-    <section className="mx-auto max-w-6xl space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-lg font-semibold">Reporte de horas</h1>
-        <Button variant="secondary" disabled={!report.data} onClick={() => report.data && exportCsv(report.data)}>
-          Exportar CSV
-        </Button>
-      </div>
+    <section className="max-w-6xl space-y-4">
+      <PageHeader
+        title="Reporte de horas"
+        actions={
+          <Button variant="secondary" disabled={!report.data} onClick={() => report.data && exportCsv(report.data)}>
+            Exportar CSV
+          </Button>
+        }
+      />
       <ReportPeriodPicker applied={report.data?.period} />
       {!report.data ? (
         <PageState isPending={report.isPending} error={report.error} shape="table" onRetry={() => void report.refetch()} />

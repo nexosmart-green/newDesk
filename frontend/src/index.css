@@ -2,6 +2,8 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Touch screens: controls grow from 36px to 44px (RNF-13 touch targets). */
+@custom-variant coarse (@media (pointer: coarse));
 
 /*
  * Design tokens — palette taken from desk.nexosmart.es (the Worksuite NexoSmart uses today):
@@ -15,6 +17,12 @@
   --color-surface: #232b36;
   --color-surface-2: #2b3441;
   --color-border: #364151;
+  /* Quiet separators (rows, sections) and the inputs' own surface. */
+  --color-line: #2f3946;
+  --color-field: #1b222c;
+  --color-field-border: #3a4656;
+  /* Only what floats: popovers and dialogs. */
+  --color-raised: #2b3441;
   --color-text: #f3f5f7;
   --color-muted: #99a5b5;
   /* Teal readable as text/icon on dark surfaces (6.4:1 on bg). */
@@ -40,6 +48,11 @@
   --color-surface: #ffffff;
   --color-surface-2: #f3f6f9;
   --color-border: #d3dbe3;
+  --color-line: #d3dbe3;
+  /* White with a visible edge: grey-filled inputs read as disabled. */
+  --color-field: #ffffff;
+  --color-field-border: #c3ced9;
+  --color-raised: #ffffff;
   --color-text: #28313c;
   --color-muted: #56626f;
   --color-accent: #1f7071;
@@ -59,6 +72,10 @@
   --color-surface: var(--color-surface);
   --color-surface-2: var(--color-surface-2);
   --color-border: var(--color-border);
+  --color-line: var(--color-line);
+  --color-field: var(--color-field);
+  --color-field-border: var(--color-field-border);
+  --color-raised: var(--color-raised);
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-accent: var(--color-accent);
@@ -73,6 +90,12 @@
   --color-sidebar-text: var(--color-sidebar-text);
   --color-sidebar-muted: var(--color-sidebar-muted);
   --color-sidebar-hover: var(--color-sidebar-hover);
+  /* Radius by role: 4 chips/checks/bars · 6 inputs/buttons · 10 containers · 14 dialogs/popovers. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 0.875rem;
 }
 
 html {

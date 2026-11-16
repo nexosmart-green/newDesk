@@ -1,5 +1,6 @@
-import { CalendarPlus } from 'lucide-react'
+import { CalendarOff, CalendarPlus } from 'lucide-react'
 import { Link } from 'react-router'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
@@ -44,18 +45,22 @@ export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCale
         ) : (
           <StaleContent stale={weekCalendar.isPlaceholderData} className="space-y-3">
             {nobodyWorks && (
-              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-4 py-3 text-sm">
-                <span className="min-w-0 flex-1 text-muted">Nadie del equipo tiene turnos esta semana.</span>
-                {canManage && (
-                  <Link
-                    to="/turnos"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand-strong px-4 py-2 text-white hover:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    <CalendarPlus aria-hidden="true" className="size-4" />
-                    Armar turnos
-                  </Link>
-                )}
-              </div>
+              <EmptyState
+                icon={CalendarOff}
+                action={
+                  canManage && (
+                    <Link
+                      to="/turnos"
+                      className="inline-flex min-h-9 items-center gap-2 rounded-md bg-brand-strong px-3.5 text-sm font-medium text-white hover:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent coarse:min-h-11"
+                    >
+                      <CalendarPlus aria-hidden="true" className="size-4" />
+                      Armar turnos
+                    </Link>
+                  )
+                }
+              >
+                Nadie del equipo tiene turnos esta semana.
+              </EmptyState>
             )}
             <TeamWeekGrid calendar={weekCalendar.data} today={todayIn(weekCalendar.data.timezone)} />
             <p className="text-xs text-muted">Horarios en {weekCalendar.data.timezone}. Las licencias se suman cuando esté el módulo.</p>

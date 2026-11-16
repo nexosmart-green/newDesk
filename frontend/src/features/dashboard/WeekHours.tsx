@@ -20,30 +20,30 @@ function shortHours(seconds: number): string {
   return hours === 0 ? `${minutes}m` : minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
 }
 
-/** Mi semana in one look: a bar per day against an 8 h line, today marked. Lunes a domingo, mis horas. */
+/** Mi semana in one look: a bar per day against an 8 h line, today in pink ("now"). Lunes a domingo, mis horas. */
 export function WeekHours({ week }: { week: DashboardWeek }) {
   const today = todayIn(useProfileTimeZone())
   const scale = Math.max(WORKDAY_SECONDS, ...week.days.map((day) => day.seconds))
   const workdayAt = (WORKDAY_SECONDS / scale) * 100
 
   return (
-    <section aria-labelledby="week-hours-title" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
+    <section aria-labelledby="week-hours-title" className="rounded-lg border border-line bg-surface p-4 sm:p-5">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h2 id="week-hours-title" className="font-semibold">
+          <h2 id="week-hours-title" className="text-base font-semibold">
             Mi semana
           </h2>
-          <p className="text-xs text-muted">
+          <p className="text-[13px] text-muted">
             {formatDate(week.from)} al {formatDate(week.to)}
           </p>
         </div>
-        <p className="tabular text-2xl font-semibold tracking-tight">
+        <p className="tabular text-[28px] font-semibold leading-none tracking-tight">
           {formatDuration(week.total_seconds)}
           <span className="sr-only"> registradas en la semana</span>
         </p>
       </header>
 
-      <div className="relative mt-5 h-40" aria-hidden="true">
+      <div className="relative mt-4 h-24" aria-hidden="true">
         <div className="absolute inset-x-0 border-t border-dashed border-muted/40" style={{ bottom: `${workdayAt}%` }}>
           <span className="absolute -top-2.5 right-0 bg-surface pl-1 text-[0.6875rem] text-muted">8 h</span>
         </div>
@@ -54,7 +54,7 @@ export function WeekHours({ week }: { week: DashboardWeek }) {
             return (
               <div key={day.date} className="flex h-full flex-col justify-end">
                 <div
-                  className={`w-full rounded-t-md transition-[height] duration-300 ${isToday ? 'bg-brand' : 'bg-brand/35'}`}
+                  className={`w-full rounded-t-sm transition-[height] duration-300 ${isToday ? 'bg-live' : 'bg-brand/45'}`}
                   style={{ height: `${height}%` }}
                 />
               </div>
@@ -67,7 +67,7 @@ export function WeekHours({ week }: { week: DashboardWeek }) {
           const isToday = day.date === today
           return (
             <li key={day.date} aria-current={isToday ? 'date' : undefined} className="min-w-0">
-              <span className={`block text-xs capitalize ${isToday ? 'font-semibold text-accent' : 'text-muted'}`}>
+              <span className={`block text-xs capitalize ${isToday ? 'font-semibold text-text' : 'text-muted'}`}>
                 {weekdayOf(day.date)}
                 <span className="sr-only"> {formatDate(day.date)}{isToday ? ' (hoy)' : ''}:</span>
               </span>

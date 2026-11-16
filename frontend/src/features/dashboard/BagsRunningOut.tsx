@@ -20,9 +20,9 @@ function bagOf(bag: BagRunningOut): HourBag {
 /** Active hour bags at 80 % or more (who sells or manages hours sees it): time to talk to the client. */
 export function BagsRunningOut({ bags }: { bags: BagRunningOut[] }) {
   return (
-    <section aria-labelledby="bags-title" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
+    <section aria-labelledby="bags-title" className="rounded-lg border border-line bg-surface p-4 sm:p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="bags-title" className="font-semibold">
+        <h2 id="bags-title" className="text-base font-semibold">
           Bolsas por agotarse
         </h2>
         <Link to="/proyectos" className="text-sm text-accent hover:underline">

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
+import { BackLink } from '@/components/ui/BackLink'
 import { Badge } from '@/components/ui/Badge'
 import { PageState } from '@/components/ui/PageState'
 import { useCan, useCanAny } from '@/features/auth/useAuth'
@@ -27,20 +28,18 @@ export function ClientPage() {
 
   if (!canRead) return <p className="text-muted">No tenés acceso a los clientes.</p>
   if (client.error instanceof ApiError && client.error.status === 404) {
-    return <h1 className="text-lg font-semibold">Cliente no encontrado</h1>
+    return <h1 className="text-xl font-semibold leading-tight tracking-tight">Cliente no encontrado</h1>
   }
   if (!client.data) return <PageState isPending={client.isPending} error={client.error} shape="detail" onRetry={() => void client.refetch()} />
   const data = client.data
 
   return (
     <section className="max-w-4xl space-y-6">
-      <Link to="/clientes" className="text-sm text-accent">
-        ← Clientes
-      </Link>
+      <BackLink to="/clientes">Clientes</BackLink>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg font-semibold">{data.display_name}</h1>
+            <h1 className="text-xl font-semibold leading-tight tracking-tight">{data.display_name}</h1>
             <Badge tone={data.status === 'active' ? 'success' : 'neutral'}>
               {data.status === 'active' ? 'Activo' : 'Inactivo'}
             </Badge>

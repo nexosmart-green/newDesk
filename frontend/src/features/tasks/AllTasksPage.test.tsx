@@ -79,7 +79,7 @@ describe('AllTasksPage', () => {
 
     await userEvent.click(screen.getByLabelText('Solo vencidas'))
 
-    expect(await screen.findByText('Ninguna tarea coincide con los filtros')).toBeInTheDocument()
+    expect(await screen.findByText('Ninguna tarea coincide con los filtros.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
     expect(screen.getByLabelText('Solo vencidas')).not.toBeChecked()
   })

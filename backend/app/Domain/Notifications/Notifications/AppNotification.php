@@ -54,7 +54,7 @@ abstract class AppNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject($this->title($notifiable))
             ->greeting("Hola {$notifiable->first_name}")
-            ->line($this->body($notifiable))
+            ->lineIf($this->body($notifiable) !== '', $this->body($notifiable))
             ->action('Abrir en newDesk', rtrim((string) config('newdesk.frontend_url'), '/').$this->path());
     }
 

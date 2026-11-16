@@ -1,4 +1,5 @@
 import { MessageSquare } from 'lucide-react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkdownView } from '@/components/ui/Markdown'
 import { PageState } from '@/components/ui/PageState'
 import { formatDateTime } from '@/lib/dates'
@@ -41,10 +42,9 @@ export function TaskComments({ code, projectId }: TaskCommentsProps) {
       {!comments.data ? (
         <PageState isPending={comments.isPending} error={comments.error} shape="list" onRetry={() => void comments.refetch()} />
       ) : comments.data.data.length === 0 ? (
-        <div className="flex items-start gap-3 rounded-lg border border-dashed border-border p-3">
-          <MessageSquare aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
-          <p className="text-sm text-muted">Todavía no hay comentarios. Escribí el primero abajo; con @ avisás a alguien del proyecto.</p>
-        </div>
+        <EmptyState icon={MessageSquare} bare>
+          Todavía no hay comentarios. Escribí el primero abajo; con @ avisás a alguien del proyecto.
+        </EmptyState>
       ) : (
         <ul className="space-y-3" aria-label="Comentarios de la tarea">
           {comments.data.data.map((comment) => (

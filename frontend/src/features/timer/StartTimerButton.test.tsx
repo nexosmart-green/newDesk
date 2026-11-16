@@ -133,4 +133,21 @@ describe('StartTimerButton', () => {
 
     expect(stop).toHaveBeenCalledWith('Arreglé el login')
   })
+
+  it('on the running task shows the elapsed time on pink, never as a danger button', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState({ active: buildTimeEntry({ elapsed_seconds: 3725 }) }))
+    renderButton()
+
+    const button = await screen.findByRole('button', { name: 'Detener cronómetro de bhn-60' })
+    await vi.waitFor(() => expect(button).toHaveTextContent('01:02:05'))
+    expect(button).toHaveClass('bg-live')
+    expect(button.className).not.toMatch(/danger/)
+  })
+
+  it('takes another start verb when asked ("Seguir")', async () => {
+    vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
+    renderAt(<StartTimerButton task={task} startLabel="Seguir" />)
+
+    expect(await screen.findByRole('button', { name: 'Iniciar cronómetro en bhn-60' })).toHaveTextContent('Seguir')
+  })
 })

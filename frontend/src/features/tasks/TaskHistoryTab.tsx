@@ -1,5 +1,6 @@
-import { History } from 'lucide-react'
+import { ArrowRight, History } from 'lucide-react'
 import { useState } from 'react'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { Pagination } from '@/components/ui/Pagination'
 import { activitySourceLabel } from '@/features/projects/activityMessages'
@@ -17,11 +18,7 @@ export function TaskHistoryTab({ code }: { code: string }) {
   }
   if (activity.data.data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border px-6 py-10 text-center">
-        <History aria-hidden="true" className="size-6 text-muted" />
-        <p className="font-medium">Sin cambios registrados</p>
-        <p className="max-w-sm text-sm text-muted">Acá aparece cada edición, cambio de estado, asignación o movimiento de la tarea.</p>
-      </div>
+      <EmptyState icon={History}>Todavía no hay cambios: acá va a aparecer cada edición, cambio de estado, asignación o movimiento.</EmptyState>
     )
   }
 
@@ -42,7 +39,8 @@ export function TaskHistoryTab({ code }: { code: string }) {
                       <dt className="text-muted">{change.label}:</dt>
                       <dd>
                         <span className="text-muted line-through decoration-muted/60">{change.before}</span>
-                        <span aria-label="pasó a"> → </span>
+                        <ArrowRight aria-hidden="true" className="mx-1 inline size-3 align-[-1px] text-muted" />
+                        <span className="sr-only">pasó a </span>
                         <span className="font-medium">{change.after}</span>
                       </dd>
                     </div>

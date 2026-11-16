@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
+import { SearchX } from 'lucide-react'
 import { Link } from 'react-router'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
+import { useRunningTimer } from '@/features/timer/useRunningTimer'
 import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours, TaskStatusLabel } from './TaskBits'
 import { isAssignedTo, type Task } from './types'
 
@@ -16,14 +19,16 @@ interface TaskListProps {
 
 /** RF-04.04 "Lista": one row per task, stacked as a card on mobile. */
 export function TaskList({ tasks, userId, showProject = false, empty }: TaskListProps) {
-  if (tasks.length === 0) return empty ?? <p className="text-sm text-muted">No hay tareas que coincidan con los filtros.</p>
+  const runningCode = useRunningTimer()?.code.toLowerCase()
+  if (tasks.length === 0) return empty ?? <EmptyState icon={SearchX}>No hay tareas que coincidan con los filtros.</EmptyState>
 
   return (
     <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Tareas">
       {tasks.map((task) => (
         <li
           key={task.id}
-          className={`flex items-start gap-3 p-3 ${task.is_overdue ? overdueRowClassName : ''}`}
+          // The task being timed right now: a pink rule (desk's "running now"), above the overdue mark.
+          className={`flex items-start gap-3 p-3 ${task.code.toLowerCase() === runningCode ? 'shadow-[inset_3px_0_0_var(--color-live)]' : task.is_overdue ? overdueRowClassName : ''}`}
           aria-label={task.is_overdue ? `${task.code} (vencida)` : undefined}
         >
           <div className="min-w-0 flex-1 space-y-1.5">

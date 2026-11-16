@@ -1,8 +1,9 @@
 import { CalendarSync, Plus } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { weekOf } from '@/lib/week'
@@ -134,12 +135,12 @@ export function RecurringShiftsPanel({ onGoToTemplates }: RecurringShiftsPanelPr
           onRetry={() => void Promise.all([recurrences.refetch(), templates.refetch()])}
         />
       ) : templates.data.length === 0 ? (
-        <EmptyState title="Primero necesitás una plantilla" text="El turno fijo repite una plantilla (ej.: “Completo 09:00–18:00”).">
-          <Button onClick={onGoToTemplates}>Crear plantilla</Button>
+        <EmptyState icon={CalendarSync} action={<Button onClick={onGoToTemplates}>Crear plantilla</Button>}>
+          Primero necesitás una plantilla: el turno fijo la repite (por ejemplo, Completo de 09:00 a 18:00).
         </EmptyState>
       ) : recurrences.data.length === 0 ? (
-        <EmptyState title="Todavía no hay turnos fijos" text="Ej.: lunes a viernes, Completo, desde el 01/12. Los días se generan solos.">
-          {newButton}
+        <EmptyState icon={CalendarSync} action={newButton}>
+          Todavía no hay turnos fijos. Por ejemplo, lunes a viernes Completo desde el 01/12: los días se generan solos.
         </EmptyState>
       ) : (
         <ul className="space-y-3" aria-label="Turnos fijos por persona">
@@ -180,19 +181,6 @@ export function RecurringShiftsPanel({ onGoToTemplates }: RecurringShiftsPanelPr
           <p className="text-muted">Los días hasta hoy quedan cargados como turnos comunes, y los cargados a mano no se tocan.</p>
         </ConfirmDialog>
       )}
-    </div>
-  )
-}
-
-function EmptyState({ title, text, children }: { title: string; text: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-surface px-6 py-10 text-center">
-      <span className="grid size-12 place-items-center rounded-full bg-brand/15 text-brand-strong">
-        <CalendarSync aria-hidden="true" className="size-5" />
-      </span>
-      <p className="font-semibold">{title}</p>
-      <p className="max-w-sm text-sm text-muted">{text}</p>
-      {children}
     </div>
   )
 }

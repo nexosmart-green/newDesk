@@ -35,7 +35,7 @@ export function ProfilePage() {
       <header className="flex flex-wrap items-center gap-4">
         <AvatarUpload profile={person} />
         <div>
-          <h1 className="text-lg font-semibold">{person.full_name}</h1>
+          <h1 className="text-xl font-semibold leading-tight tracking-tight">{person.full_name}</h1>
           <p className="text-sm text-muted">
             {[person.job_title?.name, person.area?.name].filter(Boolean).join(' · ') || person.email}
           </p>
