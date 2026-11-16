@@ -67,10 +67,10 @@ export function ClientPage() {
           <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
             {data.projects?.map((project) => (
               <li key={project.id}>
-                <Link to={`/proyectos/${project.id}`} className="flex flex-wrap items-center gap-3 p-3 hover:bg-bg">
-                  <span className="font-mono text-xs uppercase text-muted">{project.code_prefix}</span>
-                  <span className="flex-1 font-medium">{project.name}</span>
-                  <ProjectStatusBadge status={project.status} />
+                <Link to={`/proyectos/${project.id}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 px-4 py-3 hover:bg-surface-2/60">
+                  <span className="font-medium">{project.name}</span>
+                  <span className="flex-1 text-[13px] text-muted">{project.code_prefix}</span>
+                  {project.status !== 'active' && <ProjectStatusBadge status={project.status} />}
                 </Link>
               </li>
             ))}

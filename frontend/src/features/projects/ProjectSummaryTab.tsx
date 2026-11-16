@@ -5,7 +5,6 @@ import { HoursBar } from '@/features/hours/HoursBar'
 import { formatDate } from '@/lib/dates'
 import { EditProjectDialog } from './EditProjectDialog'
 import { useProjectFromOutlet } from './projectContext'
-import { ProjectStatusControl } from './ProjectStatusControl'
 import { projectTypeLabels } from './types'
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -39,7 +38,7 @@ export function ProjectSummaryTab() {
         <Field label="Inicio">{project.starts_on && formatDate(project.starts_on)}</Field>
         <Field label="Fin estimado">{project.ends_on && formatDate(project.ends_on)}</Field>
         <Field label="Prefijo">
-          <span className="font-mono uppercase">{project.code_prefix}</span>
+          {project.code_prefix}
         </Field>
         <div className="sm:col-span-2 lg:col-span-3">
           <Field label="Descripción">
@@ -48,12 +47,9 @@ export function ProjectSummaryTab() {
         </div>
       </dl>
       {project.can.update && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <ProjectStatusControl project={project} />
-          <Button variant="secondary" onClick={() => setEditing(true)}>
-            Editar proyecto
-          </Button>
-        </div>
+        <Button variant="secondary" onClick={() => setEditing(true)}>
+          Editar proyecto
+        </Button>
       )}
       {editing && <EditProjectDialog project={project} onClose={() => setEditing(false)} />}
     </div>

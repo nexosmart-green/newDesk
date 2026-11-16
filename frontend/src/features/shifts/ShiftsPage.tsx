@@ -23,7 +23,7 @@ export function ShiftsPage() {
   if (!canManage) return <p className="text-muted">No tenés acceso a los turnos del equipo.</p>
 
   return (
-    <section className="max-w-6xl space-y-4">
+    <section className="max-w-6xl space-y-6">
       <PageHeader title="Turnos" />
       <Tabs label="Secciones de turnos" tabs={tabs} selected={tab} onSelect={setTab}>
         {tab === 'grilla' && <ShiftWeekBoard />}

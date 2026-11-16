@@ -61,7 +61,8 @@ function Running({ entry, receivedAt }: { entry: TimeEntry; receivedAt: number }
 function Idle() {
   const today = todayIn(useProfileTimeZone())
   const history = useTimeHistory({ from: daysBefore(today, LOOKBACK_DAYS), to: today, project_id: null, search: '', user_id: null }, 1, true)
-  if (!history.data) return null
+  // Same height as the band it becomes: the page below must not jump when the history arrives.
+  if (!history.data) return <div aria-hidden="true" className="min-h-[4.5rem]" />
   const last = history.data.data[0]
 
   if (!last) {

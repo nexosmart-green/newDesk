@@ -61,3 +61,15 @@ export function datesBetween(from: string, to: string): string[] {
   for (const day = parseLocalDate(from); day <= end; day.setDate(day.getDate() + 1)) dates.push(toLocalDateString(day))
   return dates
 }
+
+/** "Mié 11": the short form for day rows (weekday without the abbreviation dot, capitalized). */
+export function shortDayLabel(value: string): string {
+  const date = parseLocalDate(value)
+  const weekday = date.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '')
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${date.getDate()}`
+}
+
+export function isWeekend(value: string): boolean {
+  const weekday = parseLocalDate(value).getDay()
+  return weekday === 0 || weekday === 6
+}

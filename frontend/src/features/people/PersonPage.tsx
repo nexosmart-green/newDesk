@@ -38,7 +38,7 @@ export function PersonPage() {
   const currentTab = canViewRates ? tab : 'perfil'
 
   return (
-    <section className="max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-6">
       <BackLink to="/personas">Personas</BackLink>
       <PersonHeader person={person.data} canManage={canManage} />
       <Tabs label="Secciones de la persona" tabs={tabs} selected={currentTab} onSelect={setTab}>

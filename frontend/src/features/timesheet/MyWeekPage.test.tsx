@@ -75,7 +75,11 @@ describe('MyWeekPage', () => {
     const tuesday = screen.getByRole('region', { name: /martes 3\/11/i })
     expect(within(tuesday).getByLabelText('Total del día 1h 00m')).toBeInTheDocument()
     expect(within(tuesday).getByText('Comentario pendiente')).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: /miércoles 4\/11/i })).getByText('Sin registros')).toBeInTheDocument()
+    // Empty days collapse into one muted row; today is never merged away; the weekend is its own run.
+    expect(screen.queryByRole('region', { name: /miércoles 4\/11/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Mié 4 a jue 5: sin registros')).toBeInTheDocument()
+    expect(screen.getByText('Vie 6 (hoy): sin registros')).toHaveAttribute('aria-current', 'date')
+    expect(screen.getByText('Sáb 7 a dom 8: sin registros')).toBeInTheDocument()
   })
 
   it('moves to the previous week', async () => {

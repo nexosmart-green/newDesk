@@ -8,6 +8,7 @@ import { WeekNav } from '@/components/ui/WeekNav'
 import { datesBetween, weekLabel } from '@/lib/week'
 import { AssignCellsDialog } from './AssignCellsDialog'
 import { BulkAssignDialog } from './BulkAssignDialog'
+import { CompanyTimeNote } from './CompanyTimeNote'
 import { cellKey, type Cell } from './selection'
 import { ShiftGridTable } from './ShiftGridTable'
 import { daysLabel, useAssignShifts, useCopyPreviousWeek, useSetShiftCells, useShiftGrid, useShiftTemplates } from './useShifts'
@@ -73,7 +74,7 @@ export function ShiftWeekBoard() {
         </div>
       </div>
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded border border-accent/40 bg-accent/10 px-3 py-2 text-sm" role="region" aria-label="Selección">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm" role="region" aria-label="Selección">
           <span>{daysLabel(selected.size)} seleccionados</span>
           <Button onClick={() => setDialog('cells')} disabled={!templates.data}>
             Asignar turno
@@ -89,7 +90,10 @@ export function ShiftWeekBoard() {
         <p className="text-sm text-muted">No hay personas activas.</p>
       ) : (
         <StaleContent stale={grid.isPlaceholderData} className="space-y-3">
-          <p className="text-xs text-muted">Tocá uno o varios días para asignarles un turno. Horarios de {grid.data.timezone}.</p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <p className="text-xs text-muted">Tocá uno o varios días para asignarles un turno.</p>
+            <CompanyTimeNote timeZone={grid.data.timezone} />
+          </div>
           <ShiftGridTable grid={grid.data} dates={dates} selected={new Set(selected.keys())} onToggle={toggle} />
         </StaleContent>
       )}

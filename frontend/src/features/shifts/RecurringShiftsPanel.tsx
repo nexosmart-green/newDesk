@@ -12,7 +12,8 @@ import { browserTimeZone, todayIn } from '@/lib/timezone'
 import { EndRecurrenceDialog } from './EndRecurrenceDialog'
 import { RecurrenceFormDialog } from './RecurrenceFormDialog'
 import type { ShiftRecurrence } from './recurrenceTypes'
-import { workModeLabels } from './types'
+import { WorkModeIcon } from '@/features/calendar/WorkModeIcon'
+import { timeRange } from './shiftTime'
 import { useDeleteShiftRecurrence, useShiftRecurrences } from './useRecurrences'
 import { useShiftGrid, useShiftTemplates } from './useShifts'
 import { WeekdayChips } from './Weekdays'
@@ -48,9 +49,8 @@ function RecurrenceRow({ recurrence, today, onEnd, onDelete }: RecurrenceRowProp
           {template ? (
             <>
               <span className="font-medium">{template.name}</span>
-              <span className="tabular text-muted">
-                {template.starts_at}–{template.ends_at}, {workModeLabels[template.mode]}
-              </span>
+              <span className="tabular text-muted">{timeRange(template.starts_at, template.ends_at)}</span>
+              <WorkModeIcon mode={template.mode} withLabel />
             </>
           ) : (
             <Badge tone="warning">Plantilla eliminada: ya no genera días</Badge>
@@ -145,7 +145,7 @@ export function RecurringShiftsPanel({ onGoToTemplates }: RecurringShiftsPanelPr
       ) : (
         <ul className="space-y-3" aria-label="Turnos fijos por persona">
           {groupByPerson(recurrences.data).map(([userId, group]) => (
-            <li key={userId} className="rounded-xl border border-border bg-surface px-4 py-1">
+            <li key={userId} className="rounded-lg border border-line bg-surface px-4 py-1">
               <h3 className="pt-3 text-sm font-semibold">{group.name}</h3>
               <ul className="divide-y divide-border">
                 {group.rules.map((recurrence) => (

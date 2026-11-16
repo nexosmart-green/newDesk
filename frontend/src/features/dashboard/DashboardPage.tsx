@@ -27,7 +27,7 @@ export function DashboardPage() {
   const data = dashboard.data
 
   return (
-    <section className="max-w-6xl space-y-5">
+    <section className="max-w-6xl space-y-6">
       <PageHeader
         title={`Hola, ${user?.first_name ?? ''}`}
         description={<span className="inline-block first-letter:uppercase">{longToday(timeZone)}</span>}

@@ -61,10 +61,11 @@ export function NotificationBell() {
       >
         <Bell aria-hidden="true" className="size-5" strokeWidth={1.75} />
         {unread > 0 && (
-          // "Live" pink from desk: something new is waiting.
+          // "Live" pink from desk: something new is waiting. Sits on the button's corner, off the bell itself,
+          // so the bell stays readable (a centered badge hid most of it on the dark header).
           <span
             aria-hidden="true"
-            className="tabular absolute right-1 top-1 min-w-5 rounded-full bg-live px-1 text-center text-[11px] font-bold leading-5 text-on-live ring-2 ring-surface"
+            className="tabular absolute right-0 top-0 h-4 min-w-4 translate-x-1/4 -translate-y-1/4 rounded-full bg-live px-1 text-center text-[10px] font-bold leading-4 text-on-live ring-2 ring-surface coarse:translate-x-0 coarse:translate-y-0"
           >
             {badgeText(unread)}
           </span>

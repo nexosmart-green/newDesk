@@ -1,5 +1,6 @@
+import type { BadgeTone } from '@/components/ui/badgeStyles'
 import type { HourBag } from '@/features/hours/types'
-import type { PersonSummary } from '@/features/people/types'
+import type { AvatarUrls, PersonSummary } from '@/features/people/types'
 
 export type ProjectStatus = 'active' | 'paused' | 'finished' | 'cancelled'
 
@@ -20,6 +21,13 @@ export const projectStatusVerbs: Record<ProjectStatus, { action: string; done: s
 
 export const projectStatuses = Object.keys(projectStatusLabels) as ProjectStatus[]
 
+export const projectStatusTones: Record<ProjectStatus, BadgeTone> = {
+  active: 'success',
+  paused: 'warning',
+  finished: 'accent',
+  cancelled: 'neutral',
+}
+
 /** RF-03.08: closed projects accept no new tasks nor timers. */
 export function isClosedStatus(status: ProjectStatus): boolean {
   return status === 'finished' || status === 'cancelled'
@@ -37,6 +45,13 @@ export const projectTypeLabels: Record<ProjectType, string> = {
   internal: 'Interno',
 }
 
+/** Who someone is at a glance: name and face (initials when there's no photo). */
+export interface PersonFace {
+  id: number
+  full_name: string
+  avatar?: AvatarUrls | null
+}
+
 export interface ProjectSummary {
   id: number
   name: string
@@ -45,8 +60,10 @@ export interface ProjectSummary {
   status: ProjectStatus
   status_label: string
   client?: { id: number; name: string } | null
-  leader?: { id: number; full_name: string } | null
+  leader?: PersonFace | null
   members_count?: number
+  /** Lists only: the first few members, for the row's faces (`members_count` is the total). */
+  member_faces?: PersonFace[]
   /** RF-03.05/07: the bag, always computed by the server. */
   hours: HourBag
   starts_on: string | null

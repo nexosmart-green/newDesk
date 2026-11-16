@@ -41,7 +41,7 @@ export function ProjectTasksTab() {
               type="button"
               aria-pressed={view === option.id}
               onClick={() => setView(option.id)}
-              className={`px-3 py-1.5 text-sm ${view === option.id ? 'bg-accent text-white' : 'text-muted hover:text-text'}`}
+              className={`min-h-9 px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent coarse:min-h-11 ${view === option.id ? 'bg-brand-strong text-white' : 'text-muted hover:text-text'}`}
             >
               {option.label}
             </button>

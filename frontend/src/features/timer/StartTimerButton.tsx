@@ -2,6 +2,7 @@ import { Play, Square } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogFooter } from '@/components/ui/Dialog'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { ApiError } from '@/lib/api'
 import { errorTextOf } from '@/lib/errorText'
 import { formatClock } from '@/lib/duration'
@@ -136,8 +137,8 @@ export function StartTimerButton({ task, compact = false, startLabel = 'Iniciar'
         >
           <p>
             Tenés el cronómetro corriendo en{' '}
-            {active ? <span className="font-mono uppercase">{active.code}</span> : 'otra tarea'}. Contá qué
-            hiciste ahí para detenerlo y arrancar <span className="font-mono uppercase">{task.code}</span>.
+            {active ? <TaskCode code={active.code} /> : 'otra tarea'}. Contá qué
+            hiciste ahí para detenerlo y arrancar <TaskCode code={task.code} />.
           </p>
         </CommentDialog>
       )}

@@ -20,9 +20,16 @@ test('the gestor adds and ticks a subtask, then attaches and removes a file', as
   await input.press('Enter')
   const checkbox = page.getByRole('list', { name: 'Subtareas' }).getByRole('checkbox', { name: subtask })
   await expect(checkbox).toBeVisible()
-  await checkbox.check()
+  // click + expect, not check(): the optimistic tick lands a microtask after the click and check() reads it synchronously.
+  await checkbox.click()
+  await expect(checkbox).toBeChecked()
   await page.reload()
   await expect(page.getByRole('list', { name: 'Subtareas' }).getByRole('checkbox', { name: subtask })).toBeChecked()
+
+  // Leave the shared dev data as it was: each run would otherwise add one more subtask.
+  await page.getByRole('button', { name: `Borrar «${subtask}»` }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Borrar' }).click()
+  await expect(page.getByRole('list', { name: 'Subtareas' }).getByRole('checkbox', { name: subtask })).toHaveCount(0)
 
   await page.getByRole('tab', { name: /Archivos/ }).click()
   await page.locator('input[type=file]').setInputFiles({ name: fileName, mimeType: 'text/plain', buffer: Buffer.from('hola desde e2e') })

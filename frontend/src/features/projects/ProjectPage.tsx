@@ -3,7 +3,7 @@ import { BackLink } from '@/components/ui/BackLink'
 import { PageState } from '@/components/ui/PageState'
 import { TabNav } from '@/components/ui/TabNav'
 import { ApiError } from '@/lib/api'
-import { ProjectStatusBadge } from './ProjectStatusBadge'
+import { ProjectStatusControl } from './ProjectStatusControl'
 import { useProject } from './useProjects'
 
 /** RF-03.04: Resumen · Tareas · Horas · Miembros · Actividad, each tab a route. */
@@ -35,16 +35,18 @@ export function ProjectPage() {
   ]
 
   return (
-    <section className="max-w-5xl space-y-4">
-      <BackLink to="/proyectos">Proyectos</BackLink>
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-mono text-sm uppercase text-muted">{project.data.code_prefix}</span>
-        <h1 className="text-xl font-semibold leading-tight tracking-tight">{project.data.name}</h1>
-        <ProjectStatusBadge status={project.data.status} />
-        {project.data.client && (
-          <span className="w-full text-sm text-muted sm:w-auto">{project.data.client.name}</span>
-        )}
-      </header>
+    <section className="max-w-5xl space-y-6">
+      <div className="space-y-2">
+        <BackLink to="/proyectos">Proyectos</BackLink>
+        <header className="space-y-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-xl font-semibold leading-tight tracking-tight">{project.data.name}</h1>
+            <span className="text-sm text-muted">{project.data.code_prefix}</span>
+            <ProjectStatusControl project={project.data} />
+          </div>
+          {project.data.client && <p className="text-sm text-muted">{project.data.client.name}</p>}
+        </header>
+      </div>
       <TabNav label="Secciones del proyecto" tabs={tabs} />
       <Outlet context={project.data} />
     </section>

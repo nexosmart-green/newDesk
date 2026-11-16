@@ -11,7 +11,8 @@ import { ReportPeriodPicker } from './ReportPeriodPicker'
 import { bagOf, REPORTS_PERMISSION, type HoursReport } from './types'
 import { useHoursReport, useReportPeriod } from './useReports'
 
-const cellClass = 'px-3 py-2'
+const cellClass = 'px-4 py-2.5'
+const hoursCellClass = `${cellClass} tabular text-right`
 
 function exportCsv(report: HoursReport) {
   const hours = (seconds: number | null) => (seconds === null ? '' : formatDuration(seconds))
@@ -36,7 +37,7 @@ export function HoursReportPage() {
   if (!canSee) return <p className="text-muted">No tenés acceso a los reportes.</p>
 
   return (
-    <section className="max-w-6xl space-y-4">
+    <section className="max-w-6xl space-y-6">
       <PageHeader
         title="Reporte de horas"
         actions={
@@ -53,34 +54,34 @@ export function HoursReportPage() {
           <p className="text-sm text-muted">No hay proyectos activos ni horas en el período.</p>
         </StaleContent>
       ) : (
-        <StaleContent stale={report.isPlaceholderData} className="overflow-x-auto rounded-lg border border-border bg-surface">
-          <table className="w-full min-w-[48rem] text-sm">
+        <StaleContent stale={report.isPlaceholderData} className="overflow-x-auto rounded-lg border border-line bg-surface">
+          <table className="w-full min-w-[40rem] text-sm">
             <caption className="sr-only">Horas por proyecto</caption>
-            <thead className="border-b border-border text-left text-muted">
+            <thead className="border-b border-line text-left text-[13px] text-muted">
               <tr>
                 <th scope="col" className={cellClass}>Proyecto</th>
-                <th scope="col" className={cellClass}>Cliente</th>
-                <th scope="col" className={`${cellClass} text-right`}>Vendidas</th>
-                <th scope="col" className={`${cellClass} text-right`}>Consumidas</th>
-                <th scope="col" className={`${cellClass} text-right`}>En el período</th>
-                <th scope="col" className={cellClass}>%</th>
+                <th scope="col" className={`${cellClass} text-right font-normal`}>Vendidas</th>
+                <th scope="col" className={`${cellClass} text-right font-normal`}>Consumidas</th>
+                <th scope="col" className={`${cellClass} text-right font-normal`}>En el período</th>
+                <th scope="col" className={`${cellClass} font-normal`}>% consumido</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-line">
               {report.data.projects.map((row) => (
                 <tr key={row.project.id}>
-                  <th scope="row" className={`${cellClass} text-left font-medium`}>
-                    <Link to={`/reportes/horas/proyectos/${row.project.id}${search ? `?${search}` : ''}`} className="text-accent hover:underline">
-                      {row.project.name}
-                    </Link>
+                  <th scope="row" className={`${cellClass} text-left font-normal`}>
+                    <span className="flex items-baseline gap-2">
+                      <Link to={`/reportes/horas/proyectos/${row.project.id}${search ? `?${search}` : ''}`} className="font-medium text-accent hover:underline">
+                        {row.project.name}
+                      </Link>
+                      <span className="text-[13px] text-muted">{row.project.prefix}</span>
+                    </span>
+                    {row.client && <span className="block text-[13px] text-muted">{row.client}</span>}
                   </th>
-                  <td className={cellClass}>{row.client ?? '—'}</td>
-                  <td className={`${cellClass} text-right font-mono`}>{row.allocated_seconds === null ? 'Sin tope' : formatDuration(row.allocated_seconds)}</td>
-                  <td className={`${cellClass} text-right font-mono`}>{formatDuration(row.consumed_total_seconds)}</td>
-                  <td className={`${cellClass} text-right font-mono`}>{formatDuration(row.consumed_in_period_seconds)}</td>
-                  <td className={cellClass}>
-                    <HoursBar bag={bagOf(row)} compact />
-                  </td>
+                  <td className={hoursCellClass}>{row.allocated_seconds === null ? <span className="text-muted">Sin tope</span> : formatDuration(row.allocated_seconds)}</td>
+                  <td className={hoursCellClass}>{formatDuration(row.consumed_total_seconds)}</td>
+                  <td className={hoursCellClass}>{formatDuration(row.consumed_in_period_seconds)}</td>
+                  <td className={cellClass}>{row.allocated_seconds !== null && <HoursBar bag={bagOf(row)} compact />}</td>
                 </tr>
               ))}
             </tbody>

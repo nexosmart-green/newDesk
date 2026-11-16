@@ -1,11 +1,17 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
-/** A titled block of the task page (Descripción, Subtareas, Estado…), with an optional header action. */
+/**
+ * A titled part of the task's main column (Descripción, Subtareas…). The column is one surface: parts are
+ * told apart by their heading and the space between them, not by boxes of their own.
+ */
 export function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+  const headingId = useId()
   return (
-    <section className="space-y-3 rounded-lg border border-border bg-surface p-4">
+    <section aria-labelledby={headingId} className="space-y-3">
       <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
-        <h2 className="font-semibold">{title}</h2>
+        <h2 id={headingId} className="text-base font-semibold">
+          {title}
+        </h2>
         {action}
       </div>
       {children}

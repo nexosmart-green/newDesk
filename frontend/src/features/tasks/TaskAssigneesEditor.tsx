@@ -10,7 +10,7 @@ import { useUpdateTaskAssignees } from './useTasks'
  * Reassigning needs `tasks.assign` (the caller only renders this as a hint; the backend decides). The options
  * are the project's members; until they arrive, the current assignees are shown as text.
  */
-export function TaskAssigneesEditor({ task }: { task: Task }) {
+export function TaskAssigneesEditor({ task, onDone }: { task: Task; onDone: () => void }) {
   const members = useProjectMembers(task.project?.id)
   const update = useUpdateTaskAssignees(task.code)
   const [selected, setSelected] = useState(() => (task.assignees ?? []).map((assignee) => assignee.id))
@@ -22,6 +22,7 @@ export function TaskAssigneesEditor({ task }: { task: Task }) {
   return (
     <div className="space-y-2">
       <AssigneeCheckboxes
+        hideLegend
         members={members.data}
         selected={selected}
         onChange={(ids) => {
@@ -30,9 +31,14 @@ export function TaskAssigneesEditor({ task }: { task: Task }) {
         }}
       />
       <FieldErrorsAlert error={update.error} />
-      <Button variant="secondary" loading={update.isPending} onClick={() => update.mutate(selected)}>
-        Guardar asignados
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button loading={update.isPending} onClick={() => update.mutate(selected, { onSuccess: onDone })}>
+          Guardar asignados
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancelar
+        </Button>
+      </div>
     </div>
   )
 }

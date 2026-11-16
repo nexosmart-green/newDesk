@@ -18,7 +18,7 @@ export function SettingsPage() {
   }
 
   return (
-    <section className="max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-6">
       <PageHeader title="Configuración" />
       <TabNav label="Secciones de configuración" tabs={tabs} />
       <Outlet />

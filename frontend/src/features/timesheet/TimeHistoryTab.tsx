@@ -9,6 +9,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan, useProfileTimeZone } from '@/features/auth/useAuth'
 import { formatEntryRange } from '@/features/hours/entryTimes'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { useProjects } from '@/features/projects/useProjects'
 import { entrySourceLabels } from '@/features/timer/types'
 import { fieldErrorOf } from '@/lib/api'
@@ -101,12 +102,12 @@ function HistoryRow({ entry, timeZone, showPerson }: { entry: HistoryEntry; time
       <span className="tabular text-sm text-muted">{formatEntryRange(entry.started_at, entry.ended_at, timeZone)}</span>
       <div className="min-w-0 space-y-1 text-sm">
         <p>
-          <Link to={`/tareas/${entry.task.code}`} className="mr-1.5 font-mono uppercase text-accent hover:underline">
-            {entry.task.code}
+          <TaskCode code={entry.task.code} className="mr-1.5" />
+          <Link to={`/tareas/${entry.task.code}`} className="hover:text-accent hover:underline">
+            {entry.task.title}
           </Link>
-          {entry.task.title}
         </p>
-        <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
           <span>{entry.project.name}</span>
           {showPerson && <span>{entry.user.full_name}</span>}
           <Badge>{entrySourceLabels[entry.source]}</Badge>

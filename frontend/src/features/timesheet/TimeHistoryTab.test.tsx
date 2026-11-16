@@ -51,7 +51,7 @@ describe('Mi semana → Historial', () => {
     expect(fetch).toHaveBeenCalledWith({ from: '2026-11-01', to: '2026-11-10', project_id: null, search: '', user_id: null }, 1)
     const list = screen.getByRole('list', { name: 'Registros de horas' })
     expect(within(list).getByText('Corregí la validación')).toBeInTheDocument()
-    expect(within(list).getByRole('link', { name: 'bhn-60' })).toHaveAttribute('href', '/tareas/bhn-60')
+    expect(within(list).getByRole('link', { name: 'Arreglar el login' })).toHaveAttribute('href', '/tareas/bhn-60')
     expect(screen.queryByLabelText('Persona')).not.toBeInTheDocument()
   })
 

@@ -1,6 +1,8 @@
-import { ArrowLeft, Clock } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ArrowRightLeft, Clock, Ellipsis } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
+import { BackLink } from '@/components/ui/BackLink'
+import { Menu } from '@/components/ui/Menu'
 import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { MODULES, useHasModule } from '@/features/auth/modules'
@@ -13,6 +15,8 @@ import { formatDuration } from '@/lib/duration'
 import { useTabParam } from '@/lib/useSearchParamPatch'
 import { TaskAttachmentsTab } from './attachments/TaskAttachmentsTab'
 import { TaskDue, TaskStatusLabel } from './TaskBits'
+import { MoveTaskDialog } from './MoveTaskDialog'
+import { TaskCode } from './TaskCode'
 import { TaskComments } from './TaskComments'
 import { TaskDetailTab } from './TaskDetailTab'
 import { TaskHistoryTab } from './TaskHistoryTab'
@@ -55,6 +59,7 @@ function TaskView({ task }: { task: Task }) {
   const userId = useCurrentUser().data?.id
   const hasTime = useHasModule(MODULES.time)
   const mine = isAssignedTo(task, userId)
+  const [moving, setMoving] = useState(false)
   const tabs = (hasTime ? allTabs : allTabs.filter((tab) => tab.id !== 'horas')).map((tab) =>
     tab.id === 'archivos' ? { ...tab, count: task.attachments_count } : tab,
   )
@@ -64,14 +69,25 @@ function TaskView({ task }: { task: Task }) {
   )
 
   return (
-    <section className="max-w-6xl space-y-5">
-      {task.project && (
-        <Link to={`/proyectos/${task.project.id}/tareas`} className="inline-flex items-center gap-1 text-sm text-accent hover:underline">
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {task.project.name}
-        </Link>
-      )}
-      <TaskHeader task={task} showLogged={hasTime} timer={mine ? <StartTimerButton task={task} /> : null} />
+    <section className="max-w-6xl space-y-6">
+      <div className="space-y-2">
+        {task.project && <BackLink to={`/proyectos/${task.project.id}/tareas`}>{task.project.name}</BackLink>}
+        <TaskHeader
+          task={task}
+          showLogged={hasTime}
+          actions={
+            <>
+              {mine && <StartTimerButton task={task} />}
+              <Menu
+                label="Más acciones"
+                trigger={<Ellipsis aria-hidden="true" className="size-5" />}
+                triggerClassName="grid size-9 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-text coarse:size-11"
+                items={[{ label: 'Mover a otro proyecto', icon: ArrowRightLeft, onSelect: () => setMoving(true) }]}
+              />
+            </>
+          }
+        />
+      </div>
       <Tabs label="Secciones de la tarea" tabs={tabs} selected={selected} onSelect={select}>
         {selected === 'detalle' && <TaskDetailTab task={task} />}
         {selected === 'comentarios' && <TaskComments code={task.code} projectId={task.project?.id} />}
@@ -79,22 +95,31 @@ function TaskView({ task }: { task: Task }) {
         {selected === 'horas' && <TaskHoursTab task={task} canLog={mine} />}
         {selected === 'historial' && <TaskHistoryTab code={task.code} />}
       </Tabs>
+      {moving && <MoveTaskDialog task={task} onClose={() => setMoving(false)} />}
     </section>
   )
 }
 
-function TaskHeader({ task, showLogged, timer }: { task: Task; showLogged: boolean; timer: ReactNode }) {
+function TaskHeader({ task, showLogged, actions }: { task: Task; showLogged: boolean; actions: ReactNode }) {
   const timeZone = useProfileTimeZone()
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
       <div className="min-w-0 flex-1 space-y-2">
-        <p className="font-mono text-sm uppercase text-muted">{task.code}</p>
-        <h1 className="text-xl font-semibold leading-snug tracking-tight text-balance">{task.title}</h1>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <h1 className="text-xl font-semibold leading-snug tracking-tight text-balance">
+          <TaskCode code={task.code} className="mr-2 align-[0.1em]" />
+          {task.title}
+        </h1>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           <TaskStatusLabel status={task.status} />
           <TaskDue task={task} />
           <CategoryTag category={task.category} />
           <LabelChips labels={task.labels} />
+          {showLogged && task.logged_seconds !== undefined && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted">
+              <Clock aria-hidden="true" className="size-3.5" strokeWidth={1.75} />
+              <span className="tabular font-medium text-text">{formatDuration(task.logged_seconds)}</span> registradas
+            </span>
+          )}
         </div>
         {task.created_at && (
           <p className="text-xs text-muted">
@@ -103,16 +128,7 @@ function TaskHeader({ task, showLogged, timer }: { task: Task; showLogged: boole
           </p>
         )}
       </div>
-      <div className="flex items-center gap-3">
-        {showLogged && task.logged_seconds !== undefined && (
-          <p className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
-            <Clock aria-hidden="true" className="size-4 text-accent" />
-            <span className="sr-only">Horas registradas:</span>
-            <span className="tabular text-sm font-semibold">{formatDuration(task.logged_seconds)}</span>
-          </p>
-        )}
-        {timer}
-      </div>
+      <div className="flex shrink-0 items-center gap-2">{actions}</div>
     </header>
   )
 }

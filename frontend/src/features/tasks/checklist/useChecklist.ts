@@ -27,9 +27,13 @@ function useChecklistCache(code: string) {
       return { ...task, checklist: items, checklist_progress: progressOf(items) }
     })
 
-  /** Snapshot for rollback, with in-flight refetches cancelled so they can't overwrite the optimistic state. */
-  async function snapshot() {
-    await queryClient.cancelQueries({ queryKey: key, exact: true })
+  /**
+   * Snapshot for rollback. An in-flight refetch of the task is cancelled without reverting (so it can't
+   * overwrite the optimistic state) and without awaiting it: awaiting left the box unticked until the
+   * network answered, which reads as "the click didn't work".
+   */
+  function snapshot() {
+    void queryClient.cancelQueries({ queryKey: key, exact: true }, { revert: false })
     return read()
   }
 
@@ -58,8 +62,8 @@ export function useToggleChecklistItem(code: string) {
     mutationKey: cache.mutationKey,
     meta: { silentError: true },
     mutationFn: ({ id, done }: { id: number; done: boolean }) => updateChecklistItem(id, { done }),
-    onMutate: async ({ id, done }) => {
-      await cache.snapshot()
+    onMutate: ({ id, done }) => {
+      cache.snapshot()
       cache.write((items) => items.map((item) => (item.id === id ? { ...item, done } : item)))
     },
     // Undo only this box: restoring a whole snapshot would also revert other toggles still in flight.
@@ -111,8 +115,8 @@ export function useReorderChecklist(code: string) {
     mutationKey: cache.mutationKey,
     meta: { silentError: true },
     mutationFn: (ids: number[]) => reorderChecklist(code, ids),
-    onMutate: async (ids) => {
-      const previous = await cache.snapshot()
+    onMutate: (ids) => {
+      const previous = cache.snapshot()
       const byId = new Map(previous.map((item) => [item.id, item]))
       cache.write(() => ids.flatMap((id) => byId.get(id) ?? []))
       return previous

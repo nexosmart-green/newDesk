@@ -50,7 +50,16 @@ describe('HoursBar', () => {
     render(<HoursBar bag={buildHourBag({ has_cap: false, allocated_seconds: null, available_seconds: null, percent_consumed: null, consumed_seconds: 5400 })} />)
 
     expect(screen.queryByRole('meter')).not.toBeInTheDocument()
-    expect(screen.getByText('Interno: sin tope · Consumidas 1h 30m')).toBeInTheDocument()
+    expect(screen.getByText('Sin tope (interno)')).toBeInTheDocument()
+    expect(screen.getByText('1h 30m')).toBeInTheDocument()
+  })
+
+  it('in a row shows the number and the bar, without repeating "consumido"', () => {
+    render(<HoursBar bag={buildHourBag({ percent_consumed: 62 })} compact />)
+
+    expect(screen.getByText('62%')).toBeInTheDocument()
+    expect(screen.getByRole('meter', { name: 'Horas consumidas' })).toHaveAttribute('aria-valuetext', '62% consumido')
+    expect(screen.queryByText(/consumido/)).not.toBeInTheDocument()
   })
 })
 

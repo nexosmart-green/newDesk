@@ -10,6 +10,7 @@ import { timerRule } from '@/features/timer/types'
 import { ApiError } from '@/lib/api'
 import { hasChanges } from '@/lib/formState'
 import { AssigneeCheckboxes } from './AssigneeCheckboxes'
+import { TaskCode } from './TaskCode'
 import { emptyTaskForm, toSaveTaskInput, type TaskFormValues } from './taskForm'
 import { TaskFormFields } from './TaskFormFields'
 import type { CreateAndStartResult, SaveTaskInput } from './types'
@@ -73,7 +74,7 @@ export function CreateTaskDialog({ projectId, members, onClose }: CreateTaskDial
     return (
       <Dialog title="Tarea creada" size="sm" onClose={onClose}>
         <p className="text-sm">
-          Tarea <span className="font-mono uppercase">{task.code}</span> creada, pero el cronómetro no arrancó.
+          Tarea <TaskCode code={task.code} /> creada, pero el cronómetro no arrancó.
         </p>
         <TimerBlockedNotice code={timerError.code} message={timerError.message} projectId={projectId} />
         <DialogFooter>

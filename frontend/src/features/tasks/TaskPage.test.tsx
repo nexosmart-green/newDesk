@@ -23,6 +23,12 @@ function renderTask(path = '/tareas/bhn-60') {
   renderRoutes([{ path: '/tareas/:code', element: <TaskPage /> }], path)
 }
 
+async function openMoveDialog() {
+  await userEvent.click(await screen.findByRole('button', { name: 'Más acciones' }))
+  await userEvent.click(screen.getByRole('menuitem', { name: 'Mover a otro proyecto' }))
+  await screen.findByRole('dialog', { name: 'Mover a otro proyecto' })
+}
+
 describe('TaskPage', () => {
   it('posts a comment with the @mentioned people (RF-04.06)', async () => {
     vi.spyOn(tasksApi, 'fetchTask').mockResolvedValue(buildTask({ description: null }))
@@ -77,6 +83,25 @@ describe('TaskPage', () => {
     await vi.waitFor(() => expect(update).toHaveBeenCalledWith('bhn-60', 2))
   })
 
+  it('shows the current status in the select while the company statuses are still loading', async () => {
+    vi.spyOn(tasksApi, 'fetchTask').mockResolvedValue(buildTask())
+    renderTask()
+    vi.spyOn(tasksApi, 'fetchTaskStatuses').mockReturnValue(new Promise(() => {}))
+
+    const select = await screen.findByLabelText('Estado de bhn-60')
+    expect(select).toHaveDisplayValue('Pendiente')
+    expect(select).toBeDisabled()
+  })
+
+  it('keeps the current status selected when it is not among the cached statuses', async () => {
+    vi.spyOn(tasksApi, 'fetchTask').mockResolvedValue(buildTask({ status: { id: 99, name: 'En QA', color: '#888888', kind: 'open' } }))
+    renderTask()
+
+    const select = await screen.findByLabelText('Estado de bhn-60')
+    await screen.findByRole('option', { name: 'En curso' })
+    expect(select).toHaveDisplayValue('En QA')
+  })
+
   it('moves the task to another project and opens it under its new code (RF-04.12)', async () => {
     vi.spyOn(tasksApi, 'fetchTask')
       .mockResolvedValueOnce(buildTask())
@@ -91,12 +116,13 @@ describe('TaskPage', () => {
     })
     renderTask()
 
-    const select = await screen.findByLabelText('Proyecto destino')
+    await openMoveDialog()
+    const select = screen.getByLabelText('Proyecto destino')
     await screen.findByRole('option', { name: /Otro Cliente/ })
     expect(screen.queryByRole('option', { name: /Bahía Web/ })).not.toBeInTheDocument()
     await userEvent.selectOptions(select, '12')
+    expect(screen.getByText(/bhn-60 pasa a Otro Cliente con un código nuevo/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Mover tarea' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Mover' }))
 
     expect(move).toHaveBeenCalledWith('bhn-60', 12)
     expect(await screen.findByText(/Ahora es otr-3. El código bhn-60 sigue funcionando. Se quitaron de la tarea: Juan Pérez./)).toBeInTheDocument()
@@ -108,10 +134,10 @@ describe('TaskPage', () => {
     vi.spyOn(tasksApi, 'moveTask').mockRejectedValue(new ApiError(403, 'Esta tarea ya tiene horas registradas: moverla cambia qué cliente las paga.'))
     renderTask()
 
+    await openMoveDialog()
     await screen.findByRole('option', { name: /Otro Cliente/ })
     await userEvent.selectOptions(screen.getByLabelText('Proyecto destino'), '12')
     await userEvent.click(screen.getByRole('button', { name: 'Mover tarea' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Mover' }))
 
     expect(await screen.findByText(/cambia qué cliente las paga/)).toBeInTheDocument()
   })

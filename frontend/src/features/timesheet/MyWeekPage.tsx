@@ -7,11 +7,13 @@ import { PendingCommentDialog } from '@/features/timer/PendingCommentDialog'
 import type { PendingEntrySummary } from '@/features/timer/pendingEntry'
 import { formatDuration } from '@/lib/duration'
 import { TimeHistoryTab } from './TimeHistoryTab'
-import { TimesheetDaySection } from './TimesheetDaySection'
+import { DayTotal, TimesheetDayEntries } from './TimesheetDayEntries'
 import type { Timesheet, TimesheetEntry } from './types'
 import { useTimesheet } from './useTimesheet'
 import { useWeekParam } from '@/lib/useWeekParam'
 import { WeekNav } from '@/components/ui/WeekNav'
+import { DayList } from '@/components/ui/DayList'
+import { todayIn } from '@/lib/timezone'
 
 function toPendingSummary(entry: TimesheetEntry): PendingEntrySummary {
   return {
@@ -41,7 +43,7 @@ export function MyWeekPage() {
   const { selected: view, select: selectView } = useTabParam(viewIds, 'semana', 'vista')
 
   return (
-    <section className="max-w-4xl space-y-4">
+    <section className="max-w-4xl space-y-6">
       <PageHeader title="Mi semana" />
       <Tabs label="Vistas de horas" tabs={views} selected={view} onSelect={selectView}>
         {view === 'semana' ? <WeekTimesheet /> : <TimeHistoryTab />}
@@ -62,23 +64,16 @@ function WeekTimesheet() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WeekNav week={week} isCurrentWeek={isCurrentWeek} onChange={goToWeek} />
         {timesheet.data && (
-          <p className="text-sm">
-            Total de la semana: <strong className="font-mono">{formatDuration(timesheet.data.total_seconds)}</strong>
+          <p className="text-sm text-muted">
+            Total de la semana <strong className="tabular ml-1 text-base font-semibold text-text">{formatDuration(timesheet.data.total_seconds)}</strong>
           </p>
         )}
       </div>
       {!timesheet.data ? (
         <PageState isPending={timesheet.isPending} error={timesheet.error} shape="table" onRetry={() => void timesheet.refetch()} />
       ) : (
-        <StaleContent stale={timesheet.isPlaceholderData} className="space-y-3">
-          {timesheet.data.days.map((day) => (
-            <TimesheetDaySection
-              key={day.date}
-              day={day}
-              timeZone={timesheet.data.timezone}
-              onComplete={(entry) => updateParams({ revisar: String(entry.id) })}
-            />
-          ))}
+        <StaleContent stale={timesheet.isPlaceholderData}>
+          <WeekDays timesheet={timesheet.data} onComplete={(entry) => updateParams({ revisar: String(entry.id) })} />
         </StaleContent>
       )}
       {reviewEntry?.comment_pending && (
@@ -89,5 +84,24 @@ function WeekTimesheet() {
         />
       )}
     </div>
+  )
+}
+
+function WeekDays({ timesheet, onComplete }: { timesheet: Timesheet; onComplete: (entry: TimesheetEntry) => void }) {
+  const byDate = new Map(timesheet.days.map((day) => [day.date, day]))
+  const entriesOf = (date: string) => byDate.get(date)?.entries ?? []
+  return (
+    <DayList
+      label="Registros de la semana"
+      dates={timesheet.days.map((day) => day.date)}
+      today={todayIn(timesheet.timezone)}
+      emptyText="sin registros"
+      isEmpty={(date) => entriesOf(date).length === 0}
+      renderTotal={(date) => <DayTotal seconds={byDate.get(date)?.total_seconds ?? 0} />}
+      renderDay={(date) => {
+        const day = byDate.get(date)
+        return day && <TimesheetDayEntries day={day} timeZone={timesheet.timezone} onComplete={onComplete} />
+      }}
+    />
   )
 }

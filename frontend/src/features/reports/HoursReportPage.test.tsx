@@ -56,22 +56,25 @@ describe('HoursReportPage', () => {
   it('shows sold / consumed / period / % per project for the default period (RF-10.01)', async () => {
     const { fetch } = renderReport()
 
-    const row = (await screen.findByRole('rowheader', { name: 'Bahía Web' })).closest('tr')!
+    const row = (await screen.findByRole('rowheader', { name: /^Bahía Web/ })).closest('tr')!
     expect(fetch).toHaveBeenCalledWith({})
+    // Prefix after the name and the client as a muted line, in the project's own cell.
+    expect(within(row).getByText('bhn')).toBeInTheDocument()
+    expect(within(row).getByRole('rowheader')).toHaveTextContent('Bahía Web')
     expect(within(row).getByText('Bahía')).toBeInTheDocument()
     expect(within(row).getByText('10h 00m')).toBeInTheDocument()
     expect(within(row).getByText('9h 00m')).toBeInTheDocument()
     expect(within(row).getByText('2h 00m')).toBeInTheDocument()
-    expect(within(row).getByText('90% consumido')).toBeInTheDocument()
+    expect(within(row).getByText('90%')).toBeInTheDocument()
     expect(within(row).getByRole('meter')).toHaveAttribute('data-level', 'warning')
-    const internal = screen.getByRole('rowheader', { name: 'Interno' }).closest('tr')!
+    const internal = screen.getByRole('rowheader', { name: /^Interno/ }).closest('tr')!
     expect(within(internal).getByText('Sin tope')).toBeInTheDocument()
     expect(screen.getByLabelText('Desde')).toHaveValue('2026-11-01')
   })
 
   it('refetches for the chosen period', async () => {
     const { fetch } = renderReport()
-    await screen.findByRole('rowheader', { name: 'Bahía Web' })
+    await screen.findByRole('rowheader', { name: /^Bahía Web/ })
 
     fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-10-01' } })
 

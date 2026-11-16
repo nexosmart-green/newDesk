@@ -46,6 +46,9 @@ class Project extends Model
 
     public const EDITABLE = ['client_id', 'name', 'code_prefix', 'description', 'type', 'leader_user_id', 'starts_on', 'ends_on'];
 
+    /** Members whose faces a list row shows (`member_faces`); `members_count` says how many there are in all. */
+    public const MEMBER_FACES = 4;
+
     protected $fillable = ['company_id', 'status', ...self::EDITABLE];
 
     private ?HourBag $hourBagSnapshot = null;

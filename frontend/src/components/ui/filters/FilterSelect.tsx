@@ -26,7 +26,7 @@ export function FilterSelect({ label, value, options, onChange, disabled = false
 
   return (
     <div
-      className={`relative inline-flex min-h-9 min-w-0 items-center gap-1.5 rounded-md border pl-3 pr-2 text-sm transition-colors coarse:min-h-11 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent/40 ${
+      className={`relative inline-flex min-h-9 min-w-0 items-center gap-1.5 rounded-md border pl-3 pr-2 text-sm transition-colors coarse:min-h-11 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent has-[:focus-visible]:border-accent ${
         active ? 'border-accent/60 bg-field text-text' : 'border-field-border bg-field text-muted hover:border-muted/60 hover:text-text'
       } ${disabled ? 'opacity-50' : ''} ${className}`}
     >

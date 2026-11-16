@@ -20,7 +20,7 @@ export function SearchInput({ value, onChange, label = 'Buscar', placeholder, cl
         placeholder={placeholder}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-9 w-full rounded-md border border-field-border bg-field py-1.5 pl-8 pr-3 text-sm transition-colors placeholder:text-muted hover:border-muted/60 focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent/40 coarse:min-h-11 coarse:text-base"
+        className="min-h-9 w-full rounded-md border border-field-border bg-field py-1.5 pl-8 pr-3 text-sm transition-colors placeholder:text-muted hover:border-muted/60 focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent coarse:min-h-11 coarse:text-base"
       />
     </div>
   )

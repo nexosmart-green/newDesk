@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
 import { useCan } from '@/features/auth/useAuth'
+import { CompanyTimeNote } from '@/features/shifts/CompanyTimeNote'
 import { SHIFTS_PERMISSION } from '@/features/shifts/types'
 import type { Week } from '@/lib/week'
 import { WeekNav } from '@/components/ui/WeekNav'
@@ -62,8 +63,8 @@ export function TeamCalendarView({ week, isCurrentWeek, onWeekChange }: TeamCale
                 Nadie del equipo tiene turnos esta semana.
               </EmptyState>
             )}
-            <TeamWeekGrid calendar={weekCalendar.data} today={todayIn(weekCalendar.data.timezone)} />
-            <p className="text-xs text-muted">Horarios en {weekCalendar.data.timezone}. Las licencias se suman cuando esté el módulo.</p>
+            <TeamWeekGrid calendar={weekCalendar.data} today={todayIn(weekCalendar.data.timezone)} canAssign={canManage} />
+            <CompanyTimeNote timeZone={weekCalendar.data.timezone} />
           </StaleContent>
         )}
       </section>

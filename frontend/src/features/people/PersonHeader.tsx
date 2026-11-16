@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useCurrentUser } from '@/features/auth/useAuth'
+import { PersonRole } from './PersonRole'
 import type { PersonProfile } from './types'
 import { useSetPersonActive } from './usePeople'
 
@@ -27,9 +28,7 @@ export function PersonHeader({ person, canManage }: { person: PersonProfile; can
           <h1 className="text-xl font-semibold leading-tight tracking-tight">{person.full_name}</h1>
           {isInactive && <Badge tone="danger">De baja</Badge>}
         </div>
-        <p className="text-sm text-muted">
-          {[person.job_title?.name, person.area?.name].filter(Boolean).join(' · ') || 'Sin puesto asignado'}
-        </p>
+        <PersonRole person={person} fallback="Sin puesto asignado" />
         <p className="break-all text-sm text-muted">{person.email}</p>
       </div>
       {canToggle && (

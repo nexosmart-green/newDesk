@@ -8,7 +8,7 @@ import { TextField } from '@/components/ui/TextField'
 import { fieldErrorOf } from '@/lib/api'
 import { hasChanges } from '@/lib/formState'
 import { WORKING_WEEK, type ShiftRecurrenceInput } from './recurrenceTypes'
-import { shiftLabel, workModeLabels, type ShiftTemplate } from './types'
+import { templateOptionLabel, type ShiftTemplate } from './types'
 import { useCreateShiftRecurrences } from './useRecurrences'
 import { WeekdayPicker } from './Weekdays'
 
@@ -111,7 +111,7 @@ export function RecurrenceFormDialog({ people, templates, today, onClose }: Recu
             >
               {templates.map((template) => (
                 <option key={template.id} value={String(template.id)}>
-                  {shiftLabel(template)} · {workModeLabels[template.mode]}
+                  {templateOptionLabel(template)}
                 </option>
               ))}
             </SelectField>

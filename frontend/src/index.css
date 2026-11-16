@@ -34,6 +34,8 @@
   --color-live: #f6beb6;
   --color-on-live: #4a1d17;
   --color-danger: #f27474;
+  /* Filled destructive buttons: white text passes AA (5.6:1); #f27474 would not (2.8:1). */
+  --color-danger-strong: #b93030;
   --color-warning: #fcbd01;
   --color-success: #4cc46a;
 
@@ -61,6 +63,7 @@
   --color-live: #f6beb6;
   --color-on-live: #4a1d17;
   --color-danger: #c41616;
+  --color-danger-strong: #c41616;
   --color-warning: #8a6500;
   --color-success: #1e7e34;
   /* The sidebar stays dark in light mode, like desk. */
@@ -84,6 +87,7 @@
   --color-live: var(--color-live);
   --color-on-live: var(--color-on-live);
   --color-danger: var(--color-danger);
+  --color-danger-strong: var(--color-danger-strong);
   --color-warning: var(--color-warning);
   --color-success: var(--color-success);
   --color-sidebar: var(--color-sidebar);

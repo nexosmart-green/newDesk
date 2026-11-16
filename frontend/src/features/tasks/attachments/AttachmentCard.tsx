@@ -45,7 +45,7 @@ export function AttachmentCard({ attachment, onOpenImage, onDelete }: Attachment
         >
           <span className="flex flex-col items-center gap-1.5">
             <Icon aria-hidden="true" className={`size-7 sm:size-9 ${kind.tone}`} strokeWidth={1.5} />
-            {kind.extension && <span className="text-xs font-semibold tracking-wide text-muted uppercase">{kind.extension}</span>}
+            {kind.extension && <span className="text-xs font-medium text-muted">.{kind.extension}</span>}
           </span>
         </a>
       )}

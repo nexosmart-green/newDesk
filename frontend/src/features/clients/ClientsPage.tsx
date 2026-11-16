@@ -34,7 +34,7 @@ export function ClientsPage() {
   const change = (changes: Partial<ClientFilters>) => setFilters((current) => ({ ...current, ...changes, page: changes.page ?? 1 }))
 
   return (
-    <section className="max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-6">
       <PageHeader title="Clientes" actions={canManage && <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>} />
       <FilterBar
         active={filters.status !== 'active' ? 1 : 0}

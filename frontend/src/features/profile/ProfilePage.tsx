@@ -2,6 +2,7 @@ import { PageState } from '@/components/ui/PageState'
 import { Tabs, type TabItem } from '@/components/ui/Tabs'
 import { AiConnectionsTab } from '@/features/aiConnections/AiConnectionsTab'
 import { NotificationPreferences } from '@/features/notifications/NotificationPreferences'
+import { PersonRole } from '@/features/people/PersonRole'
 import { useTabParam } from '@/lib/useSearchParamPatch'
 import { AvatarUpload } from './AvatarUpload'
 import { MyTeamList } from './MyTeamList'
@@ -31,14 +32,12 @@ export function ProfilePage() {
   const person = profile.data
 
   return (
-    <section className="max-w-3xl space-y-4">
+    <section className="max-w-3xl space-y-6">
       <header className="flex flex-wrap items-center gap-4">
         <AvatarUpload profile={person} />
         <div>
           <h1 className="text-xl font-semibold leading-tight tracking-tight">{person.full_name}</h1>
-          <p className="text-sm text-muted">
-            {[person.job_title?.name, person.area?.name].filter(Boolean).join(' · ') || person.email}
-          </p>
+          <PersonRole person={person} fallback={person.email} />
           {person.reports_to && <p className="text-sm text-muted">Reporta a {person.reports_to.full_name}</p>}
         </div>
       </header>

@@ -5,6 +5,7 @@ import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { boardColumns } from './boardColumns'
 import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours } from './TaskBits'
+import { TaskCode } from './TaskCode'
 import { TaskStatusSelect } from './TaskStatusSelect'
 import { isAssignedTo, type Task, type TaskFilters, type TaskStatus } from './types'
 import { useSavingStatusCodes, useUpdateTaskStatus } from './useTaskStatusChange'
@@ -71,7 +72,7 @@ export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) 
                       className={`cursor-grab space-y-2 rounded border border-border bg-surface p-2 ${task.is_overdue ? overdueRowClassName : ''}`}
                     >
                       <Link to={`/tareas/${task.code}`} className="block text-sm hover:underline">
-                        <span className="mr-1 font-mono text-xs uppercase text-muted">{task.code}</span>
+                        <TaskCode code={task.code} className="mr-1.5" />
                         {task.title}
                       </Link>
                       <LabelChips labels={task.labels} />
@@ -86,7 +87,7 @@ export function TaskBoard({ tasks, statuses, filters, userId }: TaskBoardProps) 
                       <div className="flex items-center gap-2">
                         <TaskStatusSelect
                           code={task.code}
-                          statusId={task.status?.id}
+                          current={task.status}
                           statuses={statuses}
                           disabled={busy}
                           onChange={(statusId) => move(task.code, statusId)}

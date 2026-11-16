@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageState } from '@/components/ui/PageState'
 import { TemplateFormDialog } from './TemplateFormDialog'
-import { workModeLabels, type ShiftTemplate } from './types'
+import { WorkModeIcon } from '@/features/calendar/WorkModeIcon'
+import { timeRange } from './shiftTime'
+import type { ShiftTemplate } from './types'
 import { useDeleteShiftTemplate, useShiftTemplates } from './useShifts'
 
 type Editing = { template: ShiftTemplate | null } | null
@@ -28,17 +30,16 @@ export function ShiftTemplatesPanel() {
       {!templates.data ? (
         <PageState isPending={templates.isPending} error={templates.error} shape="list" onRetry={() => void templates.refetch()} />
       ) : templates.data.length === 0 ? (
-        <p className="text-sm text-muted">Todavía no hay plantillas. Creá una (ej.: "Completo 09:00–18:00").</p>
+        <p className="text-sm text-muted">Todavía no hay plantillas. Creá una (ej.: «Completo», de 9 a 18).</p>
       ) : (
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface" aria-label="Plantillas de turno">
           {templates.data.map((template) => (
             <li key={template.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
               <span aria-hidden className="h-4 w-4 shrink-0 rounded-full" style={{ backgroundColor: template.color }} />
-              <span className="min-w-0 flex-1">
-                <span className="font-medium">{template.name}</span>{' '}
-                <span className="text-muted">
-                  {template.starts_at}–{template.ends_at} · {workModeLabels[template.mode]}
-                </span>
+              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="font-medium">{template.name}</span>
+                <span className="tabular text-muted">{timeRange(template.starts_at, template.ends_at)}</span>
+                <WorkModeIcon mode={template.mode} withLabel />
               </span>
               <Button variant="secondary" aria-label={`Editar ${template.name}`} onClick={() => setEditing({ template })}>
                 Editar

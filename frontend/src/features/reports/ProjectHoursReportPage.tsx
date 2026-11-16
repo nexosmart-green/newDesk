@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { BackLink } from '@/components/ui/BackLink'
 import { PageState } from '@/components/ui/PageState'
@@ -36,7 +37,7 @@ function BreakdownTable({ title, column, rows }: { title: string; column: string
             {rows.map((row) => (
               <tr key={row.key}>
                 <td className="px-3 py-2">{row.label}</td>
-                <td className="px-3 py-2 text-right font-mono">{formatDuration(row.seconds)}</td>
+                <td className="tabular px-3 py-2 text-right">{formatDuration(row.seconds)}</td>
               </tr>
             ))}
           </tbody>
@@ -56,7 +57,7 @@ export function ProjectHoursReportPage() {
   if (!canSee) return <p className="text-muted">No tenés acceso a los reportes.</p>
 
   return (
-    <section className="max-w-4xl space-y-4">
+    <section className="max-w-4xl space-y-6">
       <BackLink to={`/reportes/horas${search ? `?${search}` : ''}`}>Todos los proyectos</BackLink>
       <PageHeader title={report.data ? `Horas de ${report.data.project.name}` : 'Horas del proyecto'} />
       <ReportPeriodPicker applied={report.data?.period} />
@@ -66,7 +67,7 @@ export function ProjectHoursReportPage() {
         <StaleContent stale={report.isPlaceholderData} className="space-y-4">
           <div className="space-y-2 rounded-lg border border-border bg-surface p-4">
             <p className="text-sm">
-              En el período: <strong className="font-mono">{formatDuration(report.data.consumed_in_period_seconds)}</strong>
+              En el período: <strong className="tabular">{formatDuration(report.data.consumed_in_period_seconds)}</strong>
             </p>
             <HoursBar bag={bagOf(report.data)} />
           </div>
@@ -83,9 +84,7 @@ export function ProjectHoursReportPage() {
                 key: row.code,
                 label: (
                   <>
-                    <Link to={`/tareas/${row.code}`} className="font-mono uppercase text-accent hover:underline">
-                      {row.code}
-                    </Link>{' '}
+                    <TaskCode code={row.code} link className="mr-1.5" />
                     {row.title}
                   </>
                 ),

@@ -10,7 +10,7 @@ const variants: Record<Variant, string> = {
   // Brand teal from desk.nexosmart.es, the AA-safe shade for white text. Flat: tone, not shadow.
   primary: `${control} bg-brand-strong text-white transition-colors hover:bg-brand active:bg-brand-strong`,
   secondary: `${control} border border-border bg-surface text-text transition-colors hover:border-muted/50 hover:bg-surface-2`,
-  danger: `${control} bg-danger text-white transition-opacity hover:opacity-90`,
+  danger: `${control} bg-danger-strong text-white transition-opacity hover:opacity-90`,
   ghost: `${control} text-muted transition-colors hover:bg-surface-2 hover:text-text`,
   /** Only for the running timer: desk's pink means "running now" and nothing else. */
   live: `${control} bg-live text-on-live transition-opacity hover:opacity-90`,

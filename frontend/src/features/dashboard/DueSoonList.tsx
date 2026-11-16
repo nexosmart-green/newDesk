@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
+import { TaskCode } from '@/features/tasks/TaskCode'
 import type { Task } from '@/features/tasks/types'
 import { formatDate } from '@/lib/dates'
 import { todayIn } from '@/lib/timezone'
@@ -39,7 +40,7 @@ export function DueSoonList({ tasks }: { tasks: Task[] }) {
                 className="flex flex-col gap-0.5 rounded-md px-2 py-2 transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <span className="truncate text-sm font-medium">
-                  <span className="mr-1.5 font-medium text-muted">{task.code}</span>
+                  <TaskCode code={task.code} className="mr-1.5" />
                   {task.title}
                 </span>
                 <span className="flex flex-wrap items-center gap-2 text-xs text-muted">

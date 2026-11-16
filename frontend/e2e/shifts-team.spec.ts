@@ -20,6 +20,10 @@ test('the shift coordinator creates a recurring shift, sees the team calendar an
   const fullDay = await template.locator('option', { hasText: 'Completo' }).first().getAttribute('value')
   await template.selectOption(fullDay ?? '')
   await dialog.getByRole('button', { name: 'Todos los días' }).click()
+  // From tomorrow: deleting the rule keeps today's day (only future days go), so starting today would leave a shift behind.
+  const tomorrow = new Date(Date.now() + 86_400_000)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  await dialog.getByLabel('Desde').fill(`${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`)
   await dialog.getByRole('button', { name: 'Crear turno fijo' }).click()
   await expect(page.getByText(/Turno fijo creado: se generaron \d+ días/)).toBeVisible()
 

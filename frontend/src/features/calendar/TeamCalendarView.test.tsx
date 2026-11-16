@@ -24,8 +24,8 @@ const shiftsByDate = {
   '2026-11-10': [buildTeamShift({ id: 13, user_id: 4, mode: 'hybrid' })],
 }
 
-function renderTeam({ permissions = ['shifts.manage'], path = '/calendario?vista=equipo', forbidden = false } = {}) {
-  vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions }))
+function renderTeam({ permissions = ['shifts.manage'], path = '/calendario?vista=equipo', forbidden = false, timezone = 'America/Argentina/Buenos_Aires' } = {}) {
+  vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions, timezone }))
   vi.spyOn(calendarApi, 'fetchCalendarFeedStatus').mockResolvedValue(false)
   vi.spyOn(calendarApi, 'fetchMyCalendar').mockResolvedValue({ timezone: 'America/Argentina/Buenos_Aires', shifts: [], tasks_due: [], holidays: [] })
   const fetchTeam = vi.spyOn(teamCalendarApi, 'fetchTeamCalendar').mockImplementation(async (from, to) => {
@@ -70,12 +70,42 @@ describe('Team calendar (RF-06.05)', () => {
     expect(within(table).getByRole('columnheader', { name: /viernes 13\/11.*Feriado: Día del equipo/i })).toBeInTheDocument()
     // Phone layout: one list per day.
     expect(screen.getByRole('list', { name: 'Turnos del equipo por día' })).toBeInTheDocument()
-    expect(screen.getByRole('listitem', { name: 'Beto Díaz: Tarde 14:00–20:00 (Oficina)' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Beto Díaz: Tarde 14–20 (Oficina)' })).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /Semana siguiente/ }))
     await vi.waitFor(() => expect(fetchTeam).toHaveBeenCalledWith('2026-11-16', '2026-11-22'))
     expect(await screen.findByText('Nadie del equipo tiene turnos esta semana.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Armar turnos' })).toHaveAttribute('href', '/turnos')
+  })
+
+  it('leaves empty days blank, with a "+" to the Turnos grid only for who assigns shifts', async () => {
+    renderTeam()
+
+    const table = await screen.findByRole('table', { name: 'Turnos del equipo por persona y día' })
+    expect(within(table).queryByText('—')).not.toBeInTheDocument()
+    const add = within(table).getByRole('link', { name: 'Asignar turno a Beto Díaz el lunes 9/11' })
+    expect(add).toHaveAttribute('href', '/turnos?semana=2026-11-09')
+    expect(add).toHaveClass('opacity-0', 'group-hover:opacity-100', 'focus-visible:opacity-100')
+    // Weekend columns sit in a quieter tone.
+    expect(within(table).getByRole('columnheader', { name: /sábado 14\/11/i })).toHaveClass('bg-surface-2/60')
+  })
+
+  it('keeps the live pulse for the timer only and names the company zone only when it is not the viewer’s', async () => {
+
+    renderTeam({ timezone: 'Europe/Madrid' })
+
+    await screen.findByRole('region', { name: 'Trabajando ahora: 1' })
+    expect(document.body.querySelector('[class*="animate-ping"]')).toBeNull()
+    expect(screen.getByText(/Son las 09:30 \(hora de Buenos Aires\)/)).toBeInTheDocument()
+    expect(await screen.findByText('Hora de Buenos Aires')).toBeInTheDocument()
+  })
+
+  it('shows no time zone note to someone already on the company clock', async () => {
+    renderTeam()
+
+    await screen.findByRole('table', { name: 'Turnos del equipo por persona y día' })
+    expect(screen.getByText('Son las 09:30')).toBeInTheDocument()
+    expect(screen.queryByText(/hora de/i)).not.toBeInTheDocument()
   })
 
   it('offers the Equipo view to a leader whose team calendar loads', async () => {
@@ -85,6 +115,8 @@ describe('Team calendar (RF-06.05)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Calendario de equipo' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Armar turnos' })).not.toBeInTheDocument()
+    await screen.findByRole('table', { name: 'Turnos del equipo por persona y día' })
+    expect(screen.queryByRole('link', { name: /Asignar turno a/ })).not.toBeInTheDocument()
   })
 
   it('hides the Equipo view when the backend answers 403', async () => {

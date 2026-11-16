@@ -6,6 +6,7 @@ import { CategoryTag, LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { useRunningTimer } from '@/features/timer/useRunningTimer'
 import { overdueRowClassName, TaskAttachmentsBadge, TaskChecklistBadge, TaskAssigneeNames, TaskDue, TaskLoggedHours, TaskStatusLabel } from './TaskBits'
+import { TaskCode } from './TaskCode'
 import { isAssignedTo, type Task } from './types'
 
 interface TaskListProps {
@@ -33,7 +34,7 @@ export function TaskList({ tasks, userId, showProject = false, empty }: TaskList
         >
           <div className="min-w-0 flex-1 space-y-1.5">
             <Link to={`/tareas/${task.code}`} className="block hover:underline">
-              <span className="mr-2 font-mono text-xs uppercase text-muted">{task.code}</span>
+              <TaskCode code={task.code} className="mr-2" />
               <span className="font-medium">{task.title}</span>
             </Link>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

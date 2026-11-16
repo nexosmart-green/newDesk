@@ -20,7 +20,8 @@ final class ProjectList
     {
         return Project::query()
             ->visibleTo($viewer)
-            ->with(['client', 'leader'])
+            // The row shows a few members' faces (the count says how many there are in all).
+            ->with(['client', 'leader', 'members' => fn ($members) => $members->orderBy('users.first_name')->limit(Project::MEMBER_FACES)])
             ->withCount('members')
             ->when($filters['client_id'] ?? null, fn (Builder $query, int $clientId) => $query->where('client_id', $clientId))
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))

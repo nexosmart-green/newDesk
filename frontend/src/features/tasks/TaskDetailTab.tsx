@@ -1,16 +1,16 @@
 import { FileText, Pencil } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { EmptyState } from '@/components/ui/EmptyState'
+import type { ReactNode } from 'react'
+import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
 import { MarkdownView } from '@/components/ui/Markdown'
-import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCan } from '@/features/auth/useAuth'
 import { LabelChips } from '@/features/taskCatalogs/LabelChip'
 import { formatDate } from '@/lib/dates'
 import { formatDuration } from '@/lib/duration'
+import { useEditInPlace } from '@/lib/useEditInPlace'
 import { TaskChecklist } from './checklist/TaskChecklist'
-import { MoveTaskPanel } from './MoveTaskPanel'
 import { TaskAssigneesEditor } from './TaskAssigneesEditor'
 import { TaskDetailsForm } from './TaskDetailsForm'
 import { Panel } from './TaskPanel'
@@ -19,23 +19,25 @@ import { taskPriorityLabels, type Task } from './types'
 import { useTaskStatuses } from './useTasks'
 import { useUpdateTaskStatus } from './useTaskStatusChange'
 
-/** Tab "Detalle": the description reads as formatted text; "Editar detalles" turns it into the form in place. */
+/**
+ * Tab "Detalle": what the task is about on one surface (description, subtasks), and beside it a plain list
+ * of its properties — status first, the people last. "Editar detalles" turns the description into the form in place.
+ */
 export function TaskDetailTab({ task }: { task: Task }) {
-  const [editing, setEditing] = useState(false)
-  const canAssign = useCan('tasks.assign')
+  const { containerRef, editing, start, stop } = useEditInPlace()
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
-      <div className="min-w-0 space-y-4">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+      <div ref={containerRef} className="min-w-0 space-y-8 rounded-lg border border-line bg-surface p-4 sm:p-6">
         {editing ? (
           <Panel title="Editar detalles">
-            <TaskDetailsForm key={task.id} task={task} onDone={() => setEditing(false)} />
+            <TaskDetailsForm key={task.id} task={task} onDone={stop} />
           </Panel>
         ) : (
           <Panel
             title="Descripción"
             action={
-              <Button variant="ghost" onClick={() => setEditing(true)}>
+              <Button variant="ghost" onClick={start} data-edit-trigger>
                 <Pencil aria-hidden="true" className="size-4" />
                 Editar detalles
               </Button>
@@ -48,7 +50,7 @@ export function TaskDetailTab({ task }: { task: Task }) {
                 icon={FileText}
                 bare
                 action={
-                  <Button variant="secondary" onClick={() => setEditing(true)}>
+                  <Button variant="secondary" onClick={start} data-edit-trigger>
                     Agregar descripción
                   </Button>
                 }
@@ -59,27 +61,78 @@ export function TaskDetailTab({ task }: { task: Task }) {
           </Panel>
         )}
         <TaskChecklist task={task} />
-        <Panel title="Mover a otro proyecto">
-          <MoveTaskPanel key={task.id} task={task} />
-        </Panel>
       </div>
-      <aside className="space-y-4" aria-label="Datos de la tarea">
-        <Panel title="Estado">
-          <StatusControl task={task} />
-        </Panel>
-        <Panel title="Datos">
-          <TaskFacts task={task} />
-        </Panel>
-        <Panel title="Asignados">
-          {canAssign ? <TaskAssigneesEditor key={task.id} task={task} /> : <AssigneeNames task={task} />}
-        </Panel>
-      </aside>
+      <TaskProperties task={task} />
     </div>
   )
 }
 
-function AssigneeNames({ task }: { task: Task }) {
-  return <p className="text-sm">{(task.assignees ?? []).map((assignee) => assignee.full_name).join(', ') || 'Sin asignar'}</p>
+function Property({ term, children, stacked = false }: { term: string; children: ReactNode; stacked?: boolean }) {
+  return (
+    <div className={stacked ? 'space-y-2 py-3' : 'grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-3 py-2'}>
+      <dt className="text-muted">{term}</dt>
+      <dd className="min-w-0">{children}</dd>
+    </div>
+  )
+}
+
+const none = (text: string) => <span className="text-muted">{text}</span>
+
+/** Logged hours aren't repeated here: the page header shows them on every tab. */
+function TaskProperties({ task }: { task: Task }) {
+  return (
+    <dl aria-label="Datos de la tarea" className="divide-y divide-line text-sm lg:pt-1">
+      <Property term="Estado">
+        <StatusControl task={task} />
+      </Property>
+      <Property term="Prioridad">{taskPriorityLabels[task.priority]}</Property>
+      <Property term="Categoría">{task.category?.name ?? none('Sin categoría')}</Property>
+      <Property term="Etiquetas">{task.labels && task.labels.length > 0 ? <LabelChips labels={task.labels} /> : none('Ninguna')}</Property>
+      <Property term="Inicio">{task.starts_on ? formatDate(task.starts_on) : none('Sin fecha')}</Property>
+      <Property term="Vencimiento">{task.due_on ? formatDate(task.due_on) : none('Sin fecha')}</Property>
+      <Property term="Estimación">
+        {task.estimate_seconds === null ? none('Sin estimar') : <span className="tabular">{formatDuration(task.estimate_seconds)}</span>}
+      </Property>
+      <Property term="Asignados" stacked>
+        <Assignees task={task} />
+      </Property>
+    </dl>
+  )
+}
+
+function Assignees({ task }: { task: Task }) {
+  const canAssign = useCan('tasks.assign')
+  const { containerRef, editing, start, stop } = useEditInPlace()
+  const assignees = task.assignees ?? []
+  if (editing) {
+    return (
+      <div ref={containerRef}>
+        <TaskAssigneesEditor key={task.id} task={task} onDone={stop} />
+      </div>
+    )
+  }
+
+  return (
+    <div ref={containerRef} className="space-y-2">
+      {assignees.length === 0 ? (
+        none('Sin asignar')
+      ) : (
+        <ul className="space-y-2">
+          {assignees.map((assignee) => (
+            <li key={assignee.id} className="flex items-center gap-2">
+              <Avatar name={assignee.full_name} url={assignee.avatar?.avatar} size="xs" />
+              {assignee.full_name}
+            </li>
+          ))}
+        </ul>
+      )}
+      {canAssign && (
+        <Button variant="link" className="text-sm" onClick={start} data-edit-trigger>
+          Cambiar asignados
+        </Button>
+      )}
+    </div>
+  )
 }
 
 function StatusControl({ task }: { task: Task }) {
@@ -89,42 +142,12 @@ function StatusControl({ task }: { task: Task }) {
     <div className="space-y-2">
       <TaskStatusSelect
         code={task.code}
-        statusId={task.status?.id}
+        current={task.status}
         statuses={statuses.data ?? []}
-        disabled={updateStatus.isPending}
+        disabled={updateStatus.isPending || statuses.isPending}
         onChange={(statusId) => updateStatus.mutate({ code: task.code, statusId })}
       />
       <FieldErrorsAlert error={updateStatus.error} />
     </div>
-  )
-}
-
-function Fact({ term, children }: { term: string; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-[7rem_minmax(0,1fr)] items-baseline gap-2 py-1.5">
-      <dt className="text-muted">{term}</dt>
-      <dd>{children}</dd>
-    </div>
-  )
-}
-
-function TaskFacts({ task }: { task: Task }) {
-  const hasTime = useHasModule(MODULES.time)
-  return (
-    <dl className="divide-y divide-border text-sm">
-      <Fact term="Prioridad">{taskPriorityLabels[task.priority]}</Fact>
-      <Fact term="Categoría">{task.category?.name ?? <span className="text-muted">Sin categoría</span>}</Fact>
-      <Fact term="Etiquetas">
-        {task.labels && task.labels.length > 0 ? <LabelChips labels={task.labels} /> : <span className="text-muted">Ninguna</span>}
-      </Fact>
-      <Fact term="Inicio">{formatDate(task.starts_on)}</Fact>
-      <Fact term="Vencimiento">{formatDate(task.due_on)}</Fact>
-      <Fact term="Estimación">{task.estimate_seconds === null ? '—' : formatDuration(task.estimate_seconds)}</Fact>
-      {hasTime && task.logged_seconds !== undefined && (
-        <Fact term="Registradas">
-          <span className="tabular font-medium">{formatDuration(task.logged_seconds)}</span>
-        </Fact>
-      )}
-    </dl>
   )
 }

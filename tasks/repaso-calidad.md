@@ -63,21 +63,21 @@ Cambios (orden de impacto):
 - [x] Cronómetro rosa: pill `bg-live` con título de tarea; fila de la tarea corriendo con regla rosa y tiempo en vez de ▶; stop nunca `danger`.
 - [x] Inicio: banda "Ahora" (tarea corriendo con tiempo grande y Detener, o "Seguí con…" e Iniciar); contadores como frase con links; barra de hoy en rosa.
 - [x] Filtros en una fila: búsqueda con ícono sin label visible, selects cuyo valor nombra la dimensión, "Más filtros (n)"; mobile: búsqueda + "Filtros".
-- [ ] Detalle de tarea: columna principal una superficie (secciones por título y espacio, no tarjetas); lateral como lista de propiedades; "Mover a otro proyecto" a un menú "⋯".
-- [ ] Semana / calendario: un contenedor, una fila por día, días vacíos agrupados ("Mié 11 a vie 13: sin registros").
+- [x] Detalle de tarea: columna principal una superficie (secciones por título y espacio, no tarjetas); lateral como lista de propiedades; "Mover a otro proyecto" a un menú "⋯".
+- [x] Semana / calendario: un contenedor, una fila por día, días vacíos agrupados ("Mié 11 a vie 13: sin registros").
 - [x] PeriodNav con chevrons + "Hoy", sin "←/→" en texto.
-- [ ] Sin `font-mono` (salvo código real: tokens, 2FA, snippets) ni `uppercase`; códigos de tarea como se guardan, 500, muted.
-- [ ] Reescribir los 24 "A · B · C" como estructura (avatar, línea muted, ícono); plural "1 miembro".
-- [ ] Proyectos: prefijo después del nombre, badge solo si no está Activo, barra de horas sin "consumido" por fila.
-- [ ] Turnos/equipo: celdas vacías en blanco (+ al hover para quien gestiona), finde/feriado con fondo, chips sin truncar, zona horaria solo si difiere ("Hora de Buenos Aires"), sin animate-ping.
-- [ ] iCal como botón secundario en el encabezado; estado de proyecto como badge editable con menú.
+- [x] Sin `font-mono` (salvo código real: tokens, 2FA, snippets) ni `uppercase`; códigos de tarea como se guardan, 500, muted.
+- [x] Reescribir los 24 "A · B · C" como estructura (avatar, línea muted, ícono); plural "1 miembro".
+- [x] Proyectos: prefijo después del nombre, badge solo si no está Activo, barra de horas sin "consumido" por fila.
+- [x] Turnos/equipo: celdas vacías en blanco (+ al hover para quien gestiona), finde/feriado con fondo, chips sin truncar, zona horaria solo si difiere ("Hora de Buenos Aires"), sin animate-ping.
+- [x] iCal como botón secundario en el encabezado; estado de proyecto como badge editable con menú.
 - [x] Login con marca (newDesk sobre el color del sidebar); notificaciones sin "Sin mensaje.", no leídas con punto rosa.
 - [x] `EmptyState` único (ícono, una frase, una acción, sin borde punteado).
-- [ ] Posible bug: en bb1-1 el select de Estado sale vacío (¿el estado actual no está entre las opciones?).
+- [x] Posible bug: en bb1-1 el select de Estado sale vacío (¿el estado actual no está entre las opciones?). → Causa: las opciones salen solo de `/task-statuses` (query aparte, montada recién cuando llega la tarea); mientras carga, si falla o si el estado no está en la caché, ninguna opción coincide y el select queda en blanco. Fix: `TaskStatusSelect` siempre incluye el estado actual de la tarea y queda deshabilitado hasta tener la lista.
 
 ## Cierre
-- [ ] Suites completas (back, front local + UTC), E2E, capturas desktop/mobile claro/oscuro, review independiente.
-- [ ] Commit/push `dev_green`, CI verde, merge a `main`.
+- [x] Suites completas (back, front local + UTC), E2E, capturas desktop/mobile claro/oscuro, review independiente.
+- [x] Commit/push `dev_green`, CI verde, merge a `main`.
 
 ## Estado al cortar (2026-11-12, noche)
 - Hecho y pusheado en `dev_green` (NO en `main`): B1, B2, F1 (commit af37785, CI verde) + F2 y mensajes de éxito del backend que nombran el ítem (commit de cierre).
@@ -85,3 +85,9 @@ Cambios (orden de impacto):
 - Backend tests no corridos localmente desde los mensajes nuevos (MySQL caído por falta de RAM): los verifica el CI.
 - **Mañana:** revisar CI del último commit → F3 (rediseño, ver sección F3) → cierre (suites, E2E con MySQL levantado, capturas claro/oscuro/mobile, review independiente) → merge a `main`.
 - Entorno local: MySQL, Redis y servidores apagados por falta de memoria; Vitest limitado a 2 workers.
+
+## Cierre (2026-11-16)
+- Backend 248 tests (el de /health requiere Redis arriba), frontend 300 (local y TZ=UTC), build, E2E 6/6.
+- Review independiente del rediseño: corregidos contraste del botón de peligro en oscuro (`danger-strong`), toggle Lista/Tablero, select de Estado bloqueado si falla la carga, foco al editar en el lugar (`useEditInPlace`), foco visible en filtros, áreas táctiles, salto de layout en Inicio, "hoy" del calendario por zona del perfil, "+" del equipo en táctil.
+- Bug del select de Estado vacío: las opciones dependían de una lista que todavía no había cargado; ahora siempre incluye el estado de la tarea.
+- E2E ya no deja datos en la base de desarrollo (borra su subtarea; turno fijo desde mañana).

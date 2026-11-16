@@ -35,7 +35,7 @@ export function AllTasksPage() {
   }
 
   return (
-    <section className="max-w-5xl space-y-4">
+    <section className="max-w-5xl space-y-6">
       <PageHeader
         title="Tareas"
         description="Todas las tareas de los proyectos que podés ver."

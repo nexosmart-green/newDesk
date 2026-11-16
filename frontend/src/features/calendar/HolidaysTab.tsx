@@ -65,7 +65,7 @@ export function HolidaysTab() {
         <ul aria-label={`Feriados ${year}`} className="divide-y divide-border rounded-lg border border-border bg-surface">
           {holidays.data.map((holiday) => (
             <li key={holiday.id} className="flex flex-wrap items-center gap-3 p-3 text-sm">
-              <span className="font-mono">{formatDate(holiday.date)}</span>
+              <span className="tabular w-20">{formatDate(holiday.date)}</span>
               <span className="min-w-0 flex-1">{holiday.name}</span>
               <span className="text-xs text-muted">{holidayScopeLabels[holiday.scope]}</span>
               <Button variant="secondary" aria-label={`Borrar ${holiday.name}`} onClick={() => setDeleting(holiday)}>

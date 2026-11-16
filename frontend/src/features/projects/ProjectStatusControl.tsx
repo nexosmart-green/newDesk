@@ -1,68 +1,69 @@
+import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
+import { badgeClassName } from '@/components/ui/badgeStyles'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { FieldErrorsAlert } from '@/components/ui/ErrorAlert'
-import { SelectField } from '@/components/ui/SelectField'
+import { Menu } from '@/components/ui/Menu'
+import { ProjectStatusBadge } from './ProjectStatusBadge'
 import {
   isClosedStatus,
-  isProjectStatus,
   projectStatuses,
   projectStatusLabels,
+  projectStatusTones,
   projectStatusVerbs,
   type ProjectDetail,
   type ProjectStatus,
 } from './types'
 import { useChangeProjectStatus } from './useProjects'
 
-/** RF-03.08: closing stops running timers; reopening is an admin call (`reopen_forbidden`). */
+/**
+ * RF-03.08: the status in the project's header, as a badge that opens a menu for whoever may change it.
+ * Closing (Finalizado, Cancelado) stops running timers, so it asks first in danger style; reopening a closed
+ * project is an admin call (the backend answers `reopen_forbidden`).
+ */
 export function ProjectStatusControl({ project }: { project: ProjectDetail }) {
-  const [status, setStatus] = useState<ProjectStatus>(project.status)
-  const [confirming, setConfirming] = useState(false)
+  const [closingTo, setClosingTo] = useState<ProjectStatus | null>(null)
   const mutation = useChangeProjectStatus(project.id)
-  const reopening = isClosedStatus(project.status) && !isClosedStatus(status)
-  const verb = reopening ? 'Reabrir' : projectStatusVerbs[status].action
-  const actionLabel = status === project.status ? 'Cambiar estado' : `${verb} proyecto`
 
-  function apply() {
-    mutation.mutate(status, { onSettled: () => setConfirming(false) })
-  }
+  if (!project.can.update) return <ProjectStatusBadge status={project.status} />
 
-  function handleApply() {
+  function choose(status: ProjectStatus) {
+    if (status === project.status) return
     mutation.reset()
-    if (isClosedStatus(status) && !isClosedStatus(project.status)) setConfirming(true)
-    else apply()
+    if (isClosedStatus(status) && !isClosedStatus(project.status)) setClosingTo(status)
+    else mutation.mutate(status)
   }
 
+  const verb = closingTo ? projectStatusVerbs[closingTo].action : ''
   return (
-    <div className="space-y-2">
-      <div className="flex items-end gap-2">
-        <SelectField
-          label="Estado"
-          value={status}
-          onChange={(event) => isProjectStatus(event.target.value) && setStatus(event.target.value)}
-        >
-          {projectStatuses.map((value) => (
-            <option key={value} value={value}>
-              {projectStatusLabels[value]}
-            </option>
-          ))}
-        </SelectField>
-        <Button disabled={status === project.status} loading={mutation.isPending && !confirming} onClick={handleApply}>
-          {actionLabel}
-        </Button>
-      </div>
-      {!confirming && <FieldErrorsAlert error={mutation.error} />}
-      {confirming && (
+    <>
+      <Menu
+        label={`Estado: ${projectStatusLabels[project.status]}. Cambiar estado`}
+        align="start"
+        trigger={
+          <>
+            {projectStatusLabels[project.status]}
+            <ChevronDown aria-hidden="true" className="size-3.5" />
+          </>
+        }
+        triggerClassName={`${badgeClassName(projectStatusTones[project.status])} min-h-6 transition-colors hover:bg-surface-2 coarse:min-h-11`}
+        items={projectStatuses.map((status) => ({
+          label: projectStatusLabels[status],
+          checked: status === project.status,
+          disabled: mutation.isPending,
+          onSelect: () => choose(status),
+        }))}
+      />
+      {closingTo && (
         <ConfirmDialog
           title={`¿${verb} «${project.name}»?`}
-          confirmLabel={actionLabel}
+          confirmLabel={`${verb} proyecto`}
           // "Cancelar" next to "Cancelar proyecto" would read as the same thing.
           cancelLabel="Volver"
           danger
           pending={mutation.isPending}
           error={mutation.error}
-          onClose={() => setConfirming(false)}
-          onConfirm={apply}
+          onClose={() => setClosingTo(null)}
+          onConfirm={() => mutation.mutate(closingTo, { onSuccess: () => setClosingTo(null) })}
         >
           <p>
             Los cronómetros que estén corriendo en este proyecto se detienen ahora, y no se van a poder crear tareas ni cargar horas
@@ -71,6 +72,6 @@ export function ProjectStatusControl({ project }: { project: ProjectDetail }) {
           <p>Reabrirlo después lo puede hacer solo un administrador.</p>
         </ConfirmDialog>
       )}
-    </div>
+    </>
   )
 }

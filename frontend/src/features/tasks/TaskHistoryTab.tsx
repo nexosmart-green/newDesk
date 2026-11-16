@@ -47,9 +47,9 @@ export function TaskHistoryTab({ code }: { code: string }) {
                   ))}
                 </dl>
               )}
-              <p className="mt-0.5 text-xs text-muted">
+              <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted">
                 <time dateTime={entry.created_at}>{formatDateTime(entry.created_at)}</time>
-                {source && ` · ${source}`}
+                {source && <span>{source}</span>}
               </p>
             </li>
           )
