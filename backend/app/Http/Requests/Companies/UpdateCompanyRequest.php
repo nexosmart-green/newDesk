@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Companies;
 
+use App\Domain\Assistant\Enums\AssistantModel;
 use App\Domain\Companies\Models\Company;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCompanyRequest extends FormRequest
 {
@@ -22,6 +24,11 @@ class UpdateCompanyRequest extends FormRequest
             'settings.hour_alert_thresholds' => ['sometimes', 'array', 'size:2'],
             'settings.hour_alert_thresholds.0' => ['required_with:settings.hour_alert_thresholds', 'integer', 'min:1', 'max:99'],
             'settings.hour_alert_thresholds.1' => ['required_with:settings.hour_alert_thresholds', 'integer', 'min:1', 'max:100', 'gt:settings.hour_alert_thresholds.0'],
+            // RF-13.10
+            'settings.assistant_enabled' => ['sometimes', 'boolean'],
+            'settings.assistant_model' => ['sometimes', Rule::in(AssistantModel::values())],
+            'settings.assistant_monthly_budget_usd' => ['sometimes', 'numeric', 'min:0', 'max:10000'],
+            'settings.assistant_turn_budget_usd' => ['sometimes', 'numeric', 'min:0.1', 'max:50'],
         ];
     }
 

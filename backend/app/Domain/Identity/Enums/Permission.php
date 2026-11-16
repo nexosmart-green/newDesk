@@ -34,6 +34,8 @@ enum Permission: string
     case McpUse = 'mcp.use';
     /** See/revoke anyone's MCP tokens (RF-12.05). */
     case McpManageTokens = 'mcp.manage_tokens';
+    /** RF-13: talk to the newDesk assistant (web, Discord). Admin only by default. */
+    case AssistantUse = 'assistant.use';
 
     public function label(): string
     {
@@ -59,6 +61,7 @@ enum Permission: string
             self::CompanyManage => 'Configurar la empresa',
             self::McpUse => 'Usar MCP (Claude Code)',
             self::McpManageTokens => 'Ver y revocar tokens MCP de todos',
+            self::AssistantUse => 'Usar el asistente de IA',
         };
     }
 

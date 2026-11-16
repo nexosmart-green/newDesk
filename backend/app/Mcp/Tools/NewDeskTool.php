@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Domain\Assistant\Support\AssistantTurn;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
@@ -29,10 +30,20 @@ abstract class NewDeskTool extends Tool
         return null;
     }
 
-    public function handle(Request $request): Response
+    public function handle(Request $request, AssistantTurn $turn): Response
     {
         /** @var User $user */
         $user = $request->user();
+
+        return $this->call($request, $user, $turn);
+    }
+
+    /**
+     * Normalizes the input, applies the module switch, runs the tool and turns domain errors into the same
+     * messages the web shows. `$turn` is active when an assistant turn makes the call (see NewDeskWriteTool).
+     */
+    protected function call(Request $request, User $user, ?AssistantTurn $turn): Response
+    {
         $request->setArguments(self::normalized($request->all()));
 
         try {
@@ -40,7 +51,7 @@ abstract class NewDeskTool extends Tool
                 $this->ensureModule($user, $this->module());
             }
 
-            return $this->run($request, $user);
+            return $this->perform($request, $user, $turn);
         } catch (BusinessRuleViolation $e) {
             return Response::error($e->getMessage());
         } catch (AuthorizationException $e) {
@@ -50,6 +61,11 @@ abstract class NewDeskTool extends Tool
         } catch (ModelNotFoundException) {
             return Response::error(self::NOT_FOUND);
         }
+    }
+
+    protected function perform(Request $request, User $user, ?AssistantTurn $turn): Response
+    {
+        return $this->run($request, $user);
     }
 
     /** The same switch as the web's `module:` middleware; also for a second module a single call may need. */

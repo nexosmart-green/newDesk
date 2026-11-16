@@ -30,6 +30,8 @@ class SupervisorSync extends Command
             // Mail is throttled to 1/s inside the job middleware, not by worker count.
             'queue' => ['command' => 'queue:work redis --queue=default,mail --sleep=1 --tries=3 --max-time=3600', 'numprocs' => 2, 'stopwaitsecs' => 3600],
             // Runs the minute-level jobs: timer cuts (RF-05.06), forgotten timers, alerts.
+            // RF-13: one assistant turn at a time (`claude -p`, up to ~3 min); the timeout is above the job's own.
+            'assistant' => ['command' => 'queue:work redis --queue=assistant --sleep=1 --tries=1 --timeout=260 --max-time=3600', 'stopwaitsecs' => 300],
             'scheduler' => ['command' => 'schedule:work'],
             'reverb' => ['command' => 'reverb:start --host=0.0.0.0 --port='.config('newdesk.supervisor.reverb_port')],
         ];

@@ -9,5 +9,7 @@ it('renders one supervisord program per background process', function () {
         ->toContain('[program:newdesk-queue]')
         ->toContain('[program:newdesk-scheduler]')
         ->toContain('[program:newdesk-reverb]')
-        ->toContain('programs=newdesk-queue,newdesk-scheduler,newdesk-reverb');
+        ->toContain('[program:newdesk-assistant]')
+        ->toContain('--queue=assistant')
+        ->toContain('programs=newdesk-queue,newdesk-assistant,newdesk-scheduler,newdesk-reverb');
 });

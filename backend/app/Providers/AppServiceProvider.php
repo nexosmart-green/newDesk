@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Assistant\Contracts\AssistantEngine;
+use App\Domain\Assistant\Contracts\ProposalExecutor;
+use App\Domain\Assistant\Support\AssistantTurn;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Notifications\Listeners\SendDomainNotifications;
@@ -9,7 +12,9 @@ use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Tasks\Models\Task;
 use App\Domain\TimeTracking\Listeners\StopTimersOnDomainEvents;
+use App\Infrastructure\ClaudeCode\ClaudeCodeEngine;
 use App\Infrastructure\Images\GdAvatarProcessor;
+use App\Mcp\Support\McpProposalExecutor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -28,6 +33,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActivityContext::class);
+        $this->app->scoped(AssistantTurn::class);
+        $this->app->bind(ProposalExecutor::class, McpProposalExecutor::class);
+        $this->app->bind(AssistantEngine::class, ClaudeCodeEngine::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
     }
 

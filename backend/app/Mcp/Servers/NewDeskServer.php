@@ -28,7 +28,8 @@ class NewDeskServer extends Server
     /** Every tool in one tools/list page (clients that ignore nextCursor still see every tool). */
     public int $defaultPaginationLength = 50;
 
-    protected array $tools = [
+    /** Every tool class; also read by the assistant to run a confirmed proposal through the tool that made it. */
+    public const TOOLS = [
         Tools\GetCurrentUserTool::class,
         Tools\ListMyTasksTool::class,
         Tools\ListProjectsTool::class,
@@ -67,5 +68,9 @@ class NewDeskServer extends Server
         Tools\RejectExtensionRequestTool::class,
         Tools\ListPeopleTool::class,
         Tools\ListTeamShiftsTool::class,
+        // RF-13.05: only inside an assistant turn
+        Tools\ExportReportTool::class,
     ];
+
+    protected array $tools = self::TOOLS;
 }

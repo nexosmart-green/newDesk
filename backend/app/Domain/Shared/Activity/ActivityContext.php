@@ -19,6 +19,13 @@ final class ActivityContext
         $this->tokenName = $tokenName;
     }
 
+    /** @param  string  $channel  where the person confirmed: web | discord */
+    public function useAssistant(string $channel): void
+    {
+        $this->source = ActivitySource::Assistant;
+        $this->tokenName = $channel;
+    }
+
     public function useSystem(): void
     {
         $this->source = ActivitySource::System;

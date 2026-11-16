@@ -31,7 +31,7 @@ it('answers 401 without a token and lists every tool (R1 + RF-13.07 management) 
 
     expect($tools)->toContain('whoami', 'start_timer', 'stop_timer', 'allocate_hours', 'project_hours_report', 'update_checklist')
         ->toContain('hours_report', 'search_projects', 'list_tasks', 'list_clients', 'create_project', 'approve_extension_request', 'team_shifts')
-        ->toHaveCount(37);
+        ->toContain('export_report')->toHaveCount(38);
 });
 
 it('answers whoami with role, permissions and timer; revoked token → 401 (CA-12.02)', function () {

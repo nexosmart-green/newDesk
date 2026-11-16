@@ -31,7 +31,7 @@ require_once __DIR__.'/../Tasks/ParityHelpers.php';
 /** @return list<class-string> */
 function registeredTools(): array
 {
-    return (new ReflectionProperty(NewDeskServer::class, 'tools'))->getDefaultValue();
+    return NewDeskServer::TOOLS;
 }
 
 it('classifies every registered tool: read-only, or a write that can be prepared before it runs (RF-13.02)', function () {

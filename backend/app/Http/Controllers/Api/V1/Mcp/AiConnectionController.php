@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Mcp;
 
+use App\Domain\Assistant\Support\AssistantToken;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Mcp\Actions\IssueMcpToken;
 use App\Domain\Mcp\Actions\RevokeMcpToken;
@@ -26,7 +27,8 @@ class AiConnectionController extends Controller
     {
         return ApiResponse::ok([
             'endpoint' => McpConnectionSnippet::endpoint(),
-            'tokens' => McpTokenResource::collection($request->user()->tokens()->latest('id')->get()),
+            'tokens' => McpTokenResource::collection($request->user()->tokens()
+                ->where('name', 'not like', AssistantToken::NAME_PREFIX.'%')->latest('id')->get()),
         ]);
     }
 

@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Assistant\Models\AssistantMessage;
+use App\Domain\Assistant\Support\AssistantToken;
+use App\Domain\Assistant\Support\AssistantTurn;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Activity\ActivityContext;
@@ -22,19 +25,16 @@ class AuthorizeMcpToken
 {
     public const PER_MINUTE = 60;
 
-    public function __construct(private readonly ActivityContext $context) {}
+    public function __construct(private readonly ActivityContext $context, private readonly AssistantTurn $turn) {}
 
     public function handle(Request $request, Closure $next): Response
     {
+        $this->turn->clear();
         $user = $request->user();
         $token = $user?->currentAccessToken();
 
         if (! $user instanceof User || ! $token instanceof PersonalAccessToken || ! $user->isActive()) {
             return $this->deny('El token no sirve (revocado, vencido o usuario dado de baja). Generá uno nuevo en Mi perfil → Conexiones de IA.', 401);
-        }
-
-        if (! $user->hasPermission(Permission::McpUse)) {
-            return $this->deny('Tu rol no tiene habilitado el uso de MCP. Pedile a un administrador que lo habilite; no reintentes.', 403);
         }
 
         $key = "mcp-token:{$token->id}";
@@ -43,7 +43,37 @@ class AuthorizeMcpToken
         }
         RateLimiter::hit($key, 60);
 
+        if (AssistantToken::is($token)) {
+            return $this->asAssistantTurn($request, $next, $user, $token);
+        }
+
+        if (! $user->hasPermission(Permission::McpUse)) {
+            return $this->deny('Tu rol no tiene habilitado el uso de MCP. Pedile a un administrador que lo habilite; no reintentes.', 403);
+        }
+
         $this->context->useMcp($token->name);
+
+        return $next($request);
+    }
+
+    /**
+     * RF-13: the ephemeral token of an assistant turn. It needs `assistant.use` (not `mcp.use`), belongs to one
+     * answer in progress, and while it is used every write tool leaves a proposal instead of running.
+     */
+    private function asAssistantTurn(Request $request, Closure $next, User $user, PersonalAccessToken $token): Response
+    {
+        if (! $user->hasPermission(Permission::AssistantUse)) {
+            return $this->deny('Tu rol no tiene habilitado el asistente de IA.', 403);
+        }
+
+        $message = AssistantMessage::query()->forCompany($user->company_id)->with('conversation')
+            ->where('access_token_id', $token->id)->first();
+        if ($message === null || ! $message->status->isInProgress() || $message->conversation->user_id !== $user->id) {
+            return $this->deny('El turno del asistente ya terminó.', 401);
+        }
+
+        $this->turn->begin($message);
+        $this->context->useAssistant($message->conversation->channel->value);
 
         return $next($request);
     }
