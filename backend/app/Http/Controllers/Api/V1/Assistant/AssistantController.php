@@ -29,7 +29,12 @@ class AssistantController extends Controller
 
         // The screen says up front when the Admin has the assistant turned off (RF-14.10).
         return AssistantConversationResource::collection($conversations($user))
-            ->additional(['meta' => ['enabled' => (bool) $user->company->setting('assistant_enabled')]]);
+            ->additional(['meta' => [
+                'enabled' => (bool) $user->company->setting('assistant_enabled'),
+                // RF-14.08: whether /newdesk already knows this person (the same id monitoreo uses).
+                'discord_linked' => filled($user->discord_user_id) && filled($user->discord_verified_at),
+                'discord_available' => filled(config('newdesk.assistant.discord.application_id')),
+            ]]);
     }
 
     public function messages(AssistantConversation $conversation, ConversationMessages $messages): AnonymousResourceCollection

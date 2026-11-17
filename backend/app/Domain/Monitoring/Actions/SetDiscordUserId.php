@@ -18,7 +18,8 @@ final class SetDiscordUserId
     {
         return DB::transaction(function () use ($user, $discordUserId, $actor) {
             $before = $user->discord_user_id;
-            $user->forceFill(['discord_user_id' => $discordUserId])->save();
+            // A changed id is no longer the one the person verified for the assistant (RF-14.08).
+            $user->forceFill(['discord_user_id' => $discordUserId, ...($before !== $discordUserId ? ['discord_verified_at' => null] : [])])->save();
             ($this->recordActivity)('user.discord_id_changed', $user, $actor, ['discord_user_id' => $before], ['discord_user_id' => $discordUserId]);
 
             return $user;

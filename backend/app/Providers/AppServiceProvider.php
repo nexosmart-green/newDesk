@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use App\Domain\Assistant\Actions\SendWeeklySummary;
 use App\Domain\Assistant\Contracts\AssistantEngine;
+use App\Domain\Assistant\Contracts\DiscordInteractionClient;
 use App\Domain\Assistant\Contracts\ProposalExecutor;
+use App\Domain\Assistant\Events\AssistantTurnFinished;
+use App\Domain\Assistant\Listeners\RelayAnswerToDiscord;
 use App\Domain\Assistant\Support\AssistantTurn;
 use App\Domain\Assistant\Support\SummaryChannels\DiscordSummaryChannel;
 use App\Domain\Assistant\Support\SummaryChannels\MailSummaryChannel;
@@ -29,6 +32,7 @@ use App\Infrastructure\Agent\CurlAgentGateway;
 use App\Infrastructure\Claude\UnixSocketClaudeRunner;
 use App\Infrastructure\ClaudeCode\ClaudeCodeEngine;
 use App\Infrastructure\Discord\DiscordBotGateway;
+use App\Infrastructure\Discord\DiscordInteractionHttpClient;
 use App\Infrastructure\Discord\MutedDiscordGateway;
 use App\Infrastructure\Images\GdAvatarProcessor;
 use App\Mcp\Support\McpProposalExecutor;
@@ -56,6 +60,8 @@ class AppServiceProvider extends ServiceProvider
         // RF-14.06: where the weekly summary goes.
         $this->app->tag([DiscordSummaryChannel::class, MailSummaryChannel::class, WebSummaryChannel::class], 'assistant.summary-channels');
         $this->app->when(SendWeeklySummary::class)->needs('$channels')->giveTagged('assistant.summary-channels');
+        // RF-14.08: /newdesk on monitoreo's Discord app.
+        $this->app->bind(DiscordInteractionClient::class, DiscordInteractionHttpClient::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
         $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
         $this->app->bind(DiscordGateway::class, fn () => filled($token = config('newdesk.monitoring.discord.bot_token'))
@@ -81,6 +87,8 @@ class AppServiceProvider extends ServiceProvider
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
         $this->registerValidationReplacers();
 
+        // RF-14.08: a turn asked from Discord answers there.
+        Event::listen(AssistantTurnFinished::class, RelayAnswerToDiscord::class);
         Event::subscribe(StopTimersOnDomainEvents::class);
         Event::subscribe(SendDomainNotifications::class);
 
@@ -148,6 +156,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('guest', fn (Request $request) => Limit::perMinute(20)->by('guest|'.$request->ip()));
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(240)->by($request->user()?->id ?: $request->ip()));
+
+        // RF-14.08: Discord's interactions (signed; the assistant has its own per-person limits on top).
+        // Per Discord account, so one member can't use up everyone's (PING has no user and is cheap).
+        RateLimiter::for('discord-interactions', fn (Request $request) => Limit::perMinute(30)->by('discord|'
+            .($request->json('member.user.id') ?? $request->json('user.id') ?? 'discord-system')));
 
         // RF-04.09: up to 20 MB each, so a runaway client cannot fill the disk.
         RateLimiter::for('task-attachments', fn (Request $request) => Limit::perMinute(30)->by('attachments|'.($request->user()?->id ?: $request->ip())));

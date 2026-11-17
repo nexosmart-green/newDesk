@@ -46,6 +46,15 @@ export interface ConversationList {
   conversations: AssistantConversation[]
   /** The Admin can turn the assistant off (Configuración → Asistente). */
   enabled: boolean
+  /** RF-14.08: /newdesk already knows this person, and the server has the Discord app set up. */
+  discordLinked: boolean
+  discordAvailable: boolean
+}
+
+export interface DiscordLinkCode {
+  code: string
+  command: string
+  expires_in_minutes: number
 }
 
 export interface AskInput {

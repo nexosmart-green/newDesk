@@ -57,5 +57,11 @@ return [
         'timeout_seconds' => (int) env('ASSISTANT_TIMEOUT_SECONDS', 120),
         'workdir' => env('ASSISTANT_WORKDIR', storage_path('app/assistant/workdir')),
         'turns_per_hour' => (int) env('ASSISTANT_TURNS_PER_HOUR', 20),
+        // RF-14.08: /newdesk in Discord, on monitoreo's app and bot (newdesk.monitoring.discord.bot_token / guild_id).
+        'discord' => [
+            'application_id' => env('DISCORD_APPLICATION_ID'),
+            // Verifies that interactions come from Discord (Ed25519, hex).
+            'public_key' => env('DISCORD_PUBLIC_KEY'),
+        ],
     ],
 ];

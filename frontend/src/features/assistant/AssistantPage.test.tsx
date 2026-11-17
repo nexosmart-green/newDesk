@@ -36,10 +36,12 @@ const answer: AssistantMessage = {
   files: [{ uuid: 'u1', name: 'horas-por-persona-2026-11-16.xlsx', format: 'xlsx', size: 6200, url: '/api/v1/assistant/files/u1', expires_at: '2026-11-23T00:00:00+00:00' }],
 }
 
-function renderPage(path = '/asistente', { enabled = true, permissions = ['assistant.use'] } = {}) {
+function renderPage(path = '/asistente', { enabled = true, permissions = ['assistant.use'], discordLinked = true } = {}) {
   vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions }))
   vi.spyOn(assistantApi, 'fetchConversations').mockResolvedValue({
     enabled,
+    discordLinked,
+    discordAvailable: true,
     conversations: [{ id: 7, title: 'cargale 20 h a bhn', channel: 'web', last_message_at: '2026-11-16T15:00:05+00:00' }],
   })
   renderRoutes([{ path: '/asistente', element: <AssistantPage /> }], path)
@@ -125,5 +127,26 @@ describe('AssistantPage, a slow answer', () => {
     renderPage('/asistente?c=7')
 
     expect(await screen.findByText(/tarda más de lo normal/)).toBeInTheDocument()
+  })
+})
+
+describe('AssistantPage, Discord', () => {
+  it('gives an unlinked person the one-time /newdesk vincular command (RF-14.08)', async () => {
+    const create = vi.spyOn(assistantApi, 'createDiscordLinkCode').mockResolvedValue({ code: 'ABCD2345', command: '/newdesk vincular codigo:ABCD2345', expires_in_minutes: 10 })
+    renderPage('/asistente', { discordLinked: false })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Conectar Discord' }))
+
+    expect(create).toHaveBeenCalledOnce()
+    const dialog = await screen.findByRole('dialog', { name: 'Conectar Discord' })
+    expect(within(dialog).getByText('/newdesk vincular codigo:ABCD2345')).toBeInTheDocument()
+    expect(within(dialog).getByText(/vence en 10 minutos/)).toBeInTheDocument()
+  })
+
+  it('does not offer it to someone already linked', async () => {
+    renderPage('/asistente')
+
+    expect(await screen.findByRole('button', { name: '¿Qué bolsas se están por agotar?' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Conectar Discord' })).not.toBeInTheDocument()
   })
 })

@@ -223,10 +223,36 @@ Pendiente conocido: el resumen queda congelado el lunes; una carga manual retroa
 semana (CA-14.06 vale al momento del envío).
 
 ### Fase 4 — Discord (RF-14.08)
-- [ ] App de Discord (coordinar con `feat/monitoreo`, que ya manda avisos a Discord: misma app/configuración).
-- [ ] Endpoint de Interactions en Laravel (verificación de firma Ed25519), respuesta diferida + cola (límite de 3 s de Discord).
-- [ ] `/newdesk vincular`, `/newdesk <pedido>`, botones Confirmar/Cancelar (solo quien pidió), adjuntos.
-- [ ] Fase 2 de Discord (después): DMs / texto libre con un proceso gateway bajo Supervisord.
+
+Plan (2026-11-17, Juani: reusar el bot de monitoreo). Monitoreo ya tiene la app/bot (token, guild, colas `discord`) y
+`users.discord_user_id` (lo carga un Admin, `SetDiscordUserId`); no tiene endpoint de interacciones.
+- **Misma app:** se suman `DISCORD_APPLICATION_ID` y `DISCORD_PUBLIC_KEY`; el endpoint de interacciones de la app pasa a ser
+  `POST /api/discord/interactions` (firma Ed25519 verificada en un middleware; sin firma válida, 401).
+- **Vincular = la misma columna `discord_user_id`** (vía `SetDiscordUserId`, con actividad): en el asistente web "Conectar
+  Discord" da un código de 10 min; `/newdesk vincular codigo:…` lo canjea. Si el Admin ya cargó el id, no hace falta.
+- **`/newdesk pedir pedido:…`:** respuesta diferida efímera (3 s de Discord) → `AskAssistant` con canal discord (sigue la
+  conversación de Discord de las últimas 2 h) → al terminar el turno, un listener edita el mensaje original con la respuesta,
+  los botones Confirmar/Cancelar de cada propuesta y los reportes como adjuntos. El token de la interacción vive 15 min:
+  se guarda cifrado en caché, nunca en la base.
+- **Efímero, no hilo:** desvío consciente de la spec ("respuesta en hilo"): en un canal compartido mostraría clientes y
+  horas a todos (CA-14.09). Solo lo ve quien pidió.
+- **Botones:** solo los resuelve quien pidió (policy `resolve`, CA-14.08); el mensaje se actualiza con cómo terminó.
+- **Sin vincular / sin permiso / asistente apagado / tope:** mensaje efímero claro, no se ejecuta nada (CA-14.08).
+- `php artisan assistant:discord-commands` registra `/newdesk` en el guild con el token del bot.
+- [x] 1. Config + middleware de firma + endpoint + PING.
+- [x] 2. Vinculación (código web + `/newdesk vincular`).
+- [x] 3. `/newdesk pedir` + relay de la respuesta (edición del original, botones, adjuntos) + botones.
+- [x] 4. Registro del comando, botón "Conectar Discord" en la web, docs (`.env.example`, cómo configurar el portal).
+- [x] 5. Suites, review, commit + push.
+
+**Revisión Fase 4 (2026-11-17)** — sin bypass de firma ni suplantación por botones. Corregido: el token de la
+interacción ya no puede llegar a un log (errores del cliente sin URL); el resumen de cada propuesta siempre entra (se
+recorta solo el texto) y pasadas 5 se manda a la web; el token se guarda antes de encolar el turno; el relay va en la cola
+`discord` de monitoreo y no bloquea el worker del asistente (reintenta solo 429/5xx); una cuenta de Discord = un usuario
+en todas las empresas; el asistente solo confía en vínculos hechos por la persona (`discord_verified_at`, que
+`SetDiscordUserId` borra si el id cambia: un admin de monitoreo no puede actuar como otro); rate limit por cuenta;
+canje del código con lock.
+- [ ] Después: DMs / texto libre con un proceso gateway bajo Supervisord.
 
 ## Investigación (2026-11-16) — resumen
 

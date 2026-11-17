@@ -24,7 +24,7 @@ async function simulateAssistant(page: Page) {
     await route.fulfill({ response, json: body })
   })
   await page.route('**/api/v1/assistant/conversations', (route) =>
-    route.fulfill({ json: { data: messageCalls ? [{ id: 7, title: question.content, channel: 'web', last_message_at: now() }] : [], meta: { enabled: true } } }),
+    route.fulfill({ json: { data: messageCalls ? [{ id: 7, title: question.content, channel: 'web', last_message_at: now() }] : [], meta: { enabled: true, discord_linked: true, discord_available: false } } }),
   )
   await page.route('**/api/v1/assistant/messages', (route) => route.fulfill({ status: 202, json: { data: thinking, message: null, errors: null } }))
   await page.route('**/api/v1/assistant/conversations/7/messages', (route) => {

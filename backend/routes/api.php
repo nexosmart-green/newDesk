@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DiscordInteractionController;
 use App\Http\Controllers\Api\ErrorLogController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\V1\Auth\InvitationController;
@@ -9,11 +10,16 @@ use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Middleware\RejectMcpTokens;
+use App\Http\Middleware\VerifyDiscordSignature;
 use Illuminate\Support\Facades\Route;
 
 // Observability (/bug-report contract) — outside auth.
 Route::get('/health', [HealthController::class, 'index']);
 Route::get('/errors', [ErrorLogController::class, 'index']);
+
+// RF-14.08: Discord's interactions endpoint for /newdesk (signed by Discord; no session or token).
+Route::post('/discord/interactions', DiscordInteractionController::class)
+    ->middleware([VerifyDiscordSignature::class, 'throttle:discord-interactions']);
 
 Route::prefix('v1')->group(function () {
     // Guest auth flows.

@@ -5,6 +5,7 @@ namespace App\Domain\Assistant\Actions;
 use App\Domain\Assistant\Contracts\AssistantEngine;
 use App\Domain\Assistant\Enums\MessageRole;
 use App\Domain\Assistant\Enums\MessageStatus;
+use App\Domain\Assistant\Events\AssistantTurnFinished;
 use App\Domain\Assistant\Models\AssistantMessage;
 use App\Domain\Assistant\Support\AssistantAnswer;
 use App\Domain\Assistant\Support\AssistantEngineFailed;
@@ -61,6 +62,7 @@ final class AnswerAssistantMessage
                 'last_message_at' => now(),
             ])->save();
             ($this->abandon)->revokeToken($answer);
+            AssistantTurnFinished::dispatch($answer->id);
         } catch (AssistantEngineFailed $e) {
             ($this->abandon)($answer, $e->getMessage(), $e->costUsd);
         } catch (Throwable $e) {

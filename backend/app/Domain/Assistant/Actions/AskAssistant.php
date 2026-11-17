@@ -11,6 +11,7 @@ use App\Domain\Assistant\Models\AssistantMessage;
 use App\Domain\Assistant\Support\AssistantLimits;
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -22,7 +23,11 @@ final class AskAssistant
 {
     public function __construct(private readonly AssistantLimits $limits) {}
 
-    public function __invoke(User $user, string $text, AssistantChannel $channel, ?AssistantConversation $conversation = null): AssistantMessage
+    /**
+     * @param  (Closure(AssistantMessage): void)|null  $beforeQueue  what the channel needs in place before the turn can
+     *                                                               finish (Discord keeps its interaction token)
+     */
+    public function __invoke(User $user, string $text, AssistantChannel $channel, ?AssistantConversation $conversation = null, ?Closure $beforeQueue = null): AssistantMessage
     {
         $text = trim($text);
         $this->limits->ensureCanAsk($user);
@@ -52,6 +57,9 @@ final class AskAssistant
             ]);
         });
 
+        if ($beforeQueue !== null) {
+            $beforeQueue($answer);
+        }
         RunAssistantTurn::dispatch($answer->id)->afterCommit();
 
         return $answer;

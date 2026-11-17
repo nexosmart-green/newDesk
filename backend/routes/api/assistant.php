@@ -2,6 +2,7 @@
 
 use App\Domain\Identity\Enums\Permission;
 use App\Http\Controllers\Api\V1\Assistant\AssistantController;
+use App\Http\Controllers\Api\V1\Assistant\AssistantDiscordController;
 use App\Http\Controllers\Api\V1\Assistant\AssistantFileController;
 use App\Http\Controllers\Api\V1\Assistant\AssistantProposalController;
 use App\Http\Controllers\Api\V1\Assistant\AssistantUsageController;
@@ -16,6 +17,7 @@ Route::middleware('can:'.Permission::AssistantUse->value)->prefix('assistant')->
     Route::post('/proposals/{proposal}/confirm', [AssistantProposalController::class, 'confirm']);
     Route::post('/proposals/{proposal}/cancel', [AssistantProposalController::class, 'cancel']);
     Route::get('/files/{file:uuid}', [AssistantFileController::class, 'download']);
+    Route::post('/discord-link', AssistantDiscordController::class)->middleware('throttle:guest');
 });
 
 // RF-14.10: usage of the month for whoever configures the company.

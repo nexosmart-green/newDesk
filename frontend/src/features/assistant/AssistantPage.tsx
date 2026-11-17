@@ -8,6 +8,7 @@ import { PageState } from '@/components/ui/PageState'
 import { useCan } from '@/features/auth/useAuth'
 import { useSearchParamPatch } from '@/lib/useSearchParamPatch'
 import { Composer } from './Composer'
+import { ConnectDiscordButton } from './ConnectDiscordButton'
 import { ConversationList } from './ConversationList'
 import { Suggestions } from './Suggestions'
 import { Thread } from './Thread'
@@ -34,7 +35,7 @@ export function AssistantPage() {
     return <PageState isPending={conversations.isPending} error={conversations.error} onRetry={() => void conversations.refetch()} />
   }
 
-  const { conversations: list, enabled } = conversations.data
+  const { conversations: list, enabled, discordLinked, discordAvailable } = conversations.data
   const busy = messages.data?.some(isInProgress) ?? false
 
   function send(text: string) {
@@ -70,6 +71,7 @@ export function AssistantPage() {
                 />
               </div>
             )}
+            {enabled && discordAvailable && !discordLinked && <ConnectDiscordButton />}
             {conversationId !== null && (
               <Button variant="secondary" onClick={() => patch({ c: null })}>
                 Nueva conversación

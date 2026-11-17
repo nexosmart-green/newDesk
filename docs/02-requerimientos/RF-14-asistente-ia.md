@@ -46,6 +46,18 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 - Números siempre del sistema (plantilla). La IA puede reescribirla, y su texto solo se usa si conserva cada
   "nombre + horas", los mismos números y no agrega links ni menciones; si no, sale la plantilla.
 
+### Cómo quedó Discord (2026-11-17)
+
+- Misma app y bot que monitoreo (RF-13). `/newdesk pedir pedido:…` y `/newdesk vincular codigo:…`.
+- **Respuestas efímeras, no en hilo** (desvío de RF-14.08, decidido por CA-14.09): solo las ve quien preguntó; en un hilo
+  de un canal compartido todos verían clientes y horas.
+- Vincular: "Conectar Discord" en el asistente web da un código de un solo uso (10 min). El asistente **solo** actúa por
+  vínculos hechos así (`discord_verified_at`); un id cargado por un Admin en monitoreo sirve para menciones, no para actuar
+  en nombre de la persona. Una cuenta de Discord, un solo usuario de newDesk.
+- Configuración (una vez): en el portal de desarrolladores de la app de monitoreo copiar Application ID y Public Key a
+  `DISCORD_APPLICATION_ID` / `DISCORD_PUBLIC_KEY`, poner como Interactions Endpoint URL `https://<dominio>/api/discord/interactions`
+  y correr `php artisan assistant:discord-commands`.
+
 ## Criterios de aceptación
 
 - **CA-14.02** Dado un Admin que pide "cargale 20 h a bhn", cuando el asistente responde, entonces muestra la propuesta (proyecto, horas, motivo) y **no** cambia nada hasta que el mismo usuario confirma; si cancela, no queda ningún cambio.
