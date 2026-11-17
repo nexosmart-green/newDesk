@@ -3,7 +3,7 @@ export const ASSISTANT_PERMISSION = 'assistant.use'
 export type MessageStatus = 'pending' | 'running' | 'done' | 'failed'
 export type ProposalStatus = 'pending' | 'confirmed' | 'cancelled' | 'failed' | 'expired'
 
-/** RF-13.02: a change the assistant prepared that waits for the person who asked. */
+/** RF-14.02: a change the assistant prepared that waits for the person who asked. */
 export interface AssistantProposal {
   id: number
   summary: string
@@ -13,7 +13,7 @@ export interface AssistantProposal {
   resolved_at: string | null
 }
 
-/** RF-13.05: a report file attached to an answer. */
+/** RF-14.05: a report file attached to an answer. */
 export interface AssistantFile {
   uuid: string
   name: string

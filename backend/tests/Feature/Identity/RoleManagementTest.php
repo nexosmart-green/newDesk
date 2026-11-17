@@ -8,7 +8,7 @@ it('lists roles with their permissions and the permission catalog', function () 
     $admin = adminUser();
 
     $this->actingAs($admin)->getJson('/api/v1/roles')
-        ->assertOk()->assertJsonCount(3, 'data')->assertJsonPath('errors', null);
+        ->assertOk()->assertJsonCount(5, 'data')->assertJsonPath('errors', null); // Admin, Gestor, Colaborador, Desarrollador, Cliente
     $this->actingAs($admin)->getJson('/api/v1/permissions')
         ->assertOk()->assertJsonFragment(['value' => 'hours.allocate', 'label' => 'Cargar / ampliar horas']);
 });

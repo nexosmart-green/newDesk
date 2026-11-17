@@ -33,7 +33,7 @@ it('finds the bags running out with the same definition as the web list (RF-03.0
         ->and(mcpResult(mcpCall(mcpToken($admin), 'search_projects', ['limit' => 1]))['json'])->toMatchArray(['total' => 2, 'has_more' => true]);
 });
 
-it('creates and edits projects with people by e-mail, same rules and activity as the web (RF-13.07)', function () {
+it('creates and edits projects with people by e-mail, same rules and activity as the web (RF-14.07)', function () {
     $admin = adminUser();
     $ana = userWithRole($admin);
     ['project' => $existing] = bagProject($admin, [], 0, 'bhn');

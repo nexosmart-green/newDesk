@@ -1,9 +1,12 @@
 <?php
 
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Http\Middleware\EnsureClientUser;
 use App\Http\Middleware\EnsureModuleAccess;
+use App\Http\Middleware\EnsureTeamUser;
 use App\Http\Middleware\EnsureTwoFactorWhenRequired;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\RejectMcpTokens;
 use App\Http\Middleware\RemoveStackHeaders;
 use App\Http\Responses\ApiResponse;
 use App\Support\PolicyDenialMessage;
@@ -14,7 +17,9 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -34,6 +39,12 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
     )
+    // The SPA's Echo authorizes private channels with its Sanctum session: /api/v1/broadcasting/auth.
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', [
+        'prefix' => 'api/v1',
+        // Personal tokens open only the MCP endpoints (RF-12): broadcasting stays session-only too.
+        'middleware' => ['api', 'auth:sanctum', 'active', RejectMcpTokens::class],
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         // API-only backend: guests get a 401 JSON, never a redirect to a non-existent login route.
@@ -43,9 +54,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RemoveStackHeaders::class);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
+            'team' => EnsureTeamUser::class,
+            'client' => EnsureClientUser::class,
             'two-factor' => EnsureTwoFactorWhenRequired::class,
             'module' => EnsureModuleAccess::class,
         ]);
+        // Who may enter is decided before route-model binding: the wrong side gets 403, never a 404
+        // that tells whether the record exists (CA-13.14).
+        foreach ([EnsureUserIsActive::class, EnsureTeamUser::class, EnsureClientUser::class] as $gate) {
+            $middleware->prependToPriorityList(SubstituteBindings::class, $gate);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions) use ($sensitiveInput, $traceShort): void {
         $exceptions->dontReport([BusinessRuleViolation::class]);
@@ -116,6 +134,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return match (true) {
+                // A response already built for this case (e.g. a rate limiter's own answer).
+                $e instanceof HttpResponseException => $e->getResponse(),
                 $e instanceof ValidationException => ApiResponse::error($fallback[422], 422, $e->errors()),
                 $e instanceof BusinessRuleViolation => ApiResponse::error($e->getMessage(), $e->status, $e->errors(), ['code' => $e->ruleCode, ...$e->context]),
                 $e instanceof AuthenticationException => ApiResponse::error($fallback[401], 401),
@@ -127,7 +147,9 @@ return Application::configure(basePath: dirname(__DIR__))
                     403,
                     data: PolicyDenialMessage::codeOf($e) !== null ? ['code' => PolicyDenialMessage::codeOf($e)] : null,
                 ),
-                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException => ApiResponse::error($fallback[404], 404),
+                // A policy's denyAsNotFound() may also arrive as a plain 404 HttpException.
+                $e instanceof ModelNotFoundException, $e instanceof NotFoundHttpException,
+                $e instanceof HttpException && $e->getStatusCode() === 404 => ApiResponse::error($fallback[404], 404),
                 $e instanceof HttpException && $e->getStatusCode() < 500 => ApiResponse::error($fallback[$e->getStatusCode()] ?? $fallback['4xx'], $e->getStatusCode()),
                 $e instanceof HttpException => ApiResponse::error($fallback[500], $e->getStatusCode()),
                 default => ApiResponse::error(config('app.debug') ? $e->getMessage() : $fallback[500], 500),

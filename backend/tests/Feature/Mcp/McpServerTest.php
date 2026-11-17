@@ -22,7 +22,7 @@ it('issues an nd_ token shown once, stored hashed, with the ready-to-copy comman
     $this->actingAs($dev)->getJson('/api/v1/me/ai-tokens')->assertJsonMissing(['plain_text_token' => $plain])->assertJsonPath('data.tokens.0.name', 'Notebook');
 });
 
-it('answers 401 without a token and lists every tool (R1 + RF-13.07 management) in one page', function () {
+it('answers 401 without a token and lists every tool (R1 + RF-14.07 management) in one page', function () {
     $this->postJson('/mcp', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'])->assertUnauthorized();
 
     $tools = test()->withHeaders(['Authorization' => 'Bearer '.mcpToken(userWithRole(adminUser()))])

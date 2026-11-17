@@ -8,7 +8,7 @@ use App\Domain\Assistant\Models\AssistantProposal;
 use App\Domain\Assistant\Support\PendingProposal;
 use Illuminate\Support\Facades\DB;
 
-/** RF-13.02: cancelling leaves no change at all (CA-13.02). Who may cancel is AssistantProposalPolicy::resolve. */
+/** RF-14.02: cancelling leaves no change at all (CA-14.02). Who may cancel is AssistantProposalPolicy::resolve. */
 final class CancelAssistantProposal
 {
     public function __construct(private readonly PendingProposal $pending) {}

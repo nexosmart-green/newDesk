@@ -1,16 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { dashboardKey, extensionRequestsKey, projectHoursKey, projectKey, projectListsKey, timerKey } from '@/lib/queryKeys'
+import { dashboardKey, extensionRequestsKey, hoursKey, projectHoursKey, projectKey, projectListsKey, timerKey } from '@/lib/queryKeys'
 import { refreshQueries } from '@/lib/refreshQueries'
 import {
   allocateHours,
   approveExtension,
+  fetchDailyHours,
+  fetchEntries,
   fetchExtensionRequests,
   fetchProjectEntries,
   fetchProjectHours,
   rejectExtension,
   requestExtension,
 } from './hoursApi'
-import type { AllocationInput, ProjectEntryFilters } from './types'
+import type { AllocationInput, DailyHoursFilters, MyEntryFilters, ProjectEntryFilters } from './types'
 
 export function useProjectHours(projectId: number) {
   return useQuery({ queryKey: [...projectHoursKey(projectId), 'bag'], queryFn: () => fetchProjectHours(projectId) })
@@ -20,6 +22,22 @@ export function useProjectEntries(projectId: number, filters: ProjectEntryFilter
   return useQuery({
     queryKey: [...projectHoursKey(projectId), 'entries', filters],
     queryFn: () => fetchProjectEntries(projectId, filters),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useEntries(filters: MyEntryFilters) {
+  return useQuery({
+    queryKey: [...hoursKey, 'entries', filters],
+    queryFn: () => fetchEntries(filters),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useDailyHours(filters: DailyHoursFilters) {
+  return useQuery({
+    queryKey: [...hoursKey, 'days', filters],
+    queryFn: () => fetchDailyHours(filters),
     placeholderData: keepPreviousData,
   })
 }

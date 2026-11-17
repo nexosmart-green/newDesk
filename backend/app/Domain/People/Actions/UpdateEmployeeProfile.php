@@ -58,7 +58,7 @@ final class UpdateEmployeeProfile
             }
             $visited[$currentId] = true;
 
-            $current = User::query()->where('company_id', $user->company_id)->with('profile')->find($currentId);
+            $current = User::query()->where('company_id', $user->company_id)->team()->with('profile')->find($currentId);
             if ($current === null) {
                 throw new BusinessRuleViolation('La persona a la que reporta ya no está en la empresa. Recargá y elegí otra.', 'reports_to_invalid');
             }

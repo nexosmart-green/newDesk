@@ -13,7 +13,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 require_once __DIR__.'/AssistantHelpers.php';
 
-it('answers through the MCP with an ephemeral token of the asker that dies with the turn (RF-13.01)', function () {
+it('answers through the MCP with an ephemeral token of the asker that dies with the turn (RF-14.01)', function () {
     $admin = adminUser();
     enableAssistant($admin);
     bagProject($admin, [], 3600);
@@ -98,7 +98,7 @@ it('answers only roles with assistant.use, when the Admin turned it on, one turn
     askAssistant($admin, 'y otra cosa', $conversationId)->assertStatus(409)->assertJsonPath('message', 'Todavía estoy respondiendo lo anterior. Esperá a que termine.');
 });
 
-it('stops at the monthly cap and at the hourly turns per person (RF-13.09)', function () {
+it('stops at the monthly cap and at the hourly turns per person (RF-14.09)', function () {
     $admin = adminUser();
     enableAssistant($admin, ['assistant_monthly_budget_usd' => 1]);
     fakeAssistant(fn () => new AssistantAnswer('caro', 's', 1.2, 10));
@@ -141,7 +141,7 @@ it('rejects an assistant token outside its turn and never shows it among the per
     $this->actingAs($admin)->getJson('/api/v1/me/ai-tokens')->assertOk()->assertJsonCount(0, 'data.tokens');
 });
 
-it('shows the month usage and the models to whoever configures the company, and saves the assistant settings (RF-13.10)', function () {
+it('shows the month usage and the models to whoever configures the company, and saves the assistant settings (RF-14.10)', function () {
     $admin = adminUser();
     enableAssistant($admin);
     fakeAssistant(fn () => new AssistantAnswer('ok', 's', 0.75, 10));
@@ -163,4 +163,21 @@ it('tells the screen whether the assistant is turned on', function () {
     $this->actingAs($admin)->getJson('/api/v1/assistant/conversations')->assertOk()->assertJsonPath('meta.enabled', false)->assertJsonPath('meta.total', 0);
     enableAssistant($admin);
     $this->actingAs($admin)->getJson('/api/v1/assistant/conversations')->assertJsonPath('meta.enabled', true);
+});
+
+it('keeps the assistant token out of any MCP server other than newDesk', function () {
+    $admin = adminUser();
+    enableAssistant($admin);
+    $status = null;
+    fakeAssistant(function (AssistantQuestion $question) use (&$status) {
+        app('auth')->forgetGuards();
+        $status = test()->withHeaders(['Authorization' => "Bearer {$question->token}", 'Accept' => 'application/json, text/event-stream'])
+            ->postJson('/mcp/monitoreo', ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => (object) []])->status();
+
+        return 'ok';
+    });
+
+    runAssistantTurn(askAssistant($admin, 'hola')->json('data.id'));
+
+    expect($status)->toBe(403);
 });

@@ -23,14 +23,15 @@
 | RF-10 Reportes | `RF-10-reportes.md` | R2 |
 | RF-11 Configuración de empresa | `RF-11-configuracion-empresa.md` | R1 |
 | RF-12 Servidor MCP (Claude Code) | `RF-12-mcp-claude-code.md` | R1 |
-| RF-13 Asistente de IA (web + Discord) | `RF-13-asistente-ia.md` | R1.5 |
+| RF-13 Monitoreo de servidores y proyectos | `RF-13-monitoreo.md` | R1 (rama `feat/monitoreo`) |
+| RF-14 Asistente de IA (web + Discord) | `RF-14-asistente-ia.md` | R1.5 |
 | RNF | `RNF-no-funcionales.md` | Transversal |
 
 ## Matriz de permisos (base)
 
 Permisos granulares agrupados en roles editables por el dueño (P-02 ✅ confirmado). "Gestor" = rol de ejemplo con permiso de cargar horas.
 
-| Acción | Admin | Gestor | Colaborador | Cliente ⚠P-03 |
+| Acción | Admin | Gestor | Colaborador | Cliente (P-03 ✅) |
 |---|---|---|---|---|
 | ABM clientes | ✔ | — | — | — |
 | ABM proyectos | ✔ | ✔ | — | — |
@@ -44,3 +45,6 @@ Permisos granulares agrupados en roles editables por el dueño (P-02 ✅ confirm
 | Ver asistencia de todos | ✔ | su equipo | la propia | — |
 | Ver avance del proyecto | ✔ | ✔ | ✔ | el propio |
 | Usar MCP (token personal) | ✔ | ✔ | ✔ (configurable, `mcp.use`) | — |
+| Ver monitoreo (`monitoring.view`) | ✔ | — | — (rol Desarrollador ✔) | — |
+| Administrar monitoreo (`monitoring.manage`) | ✔ | — | — | — |
+| Portal de estado y reportes de sus proyectos (RF-13.07/08) | — | — | — | ✔ |

@@ -90,7 +90,7 @@ export const shiftRecurrencesKey = [...shiftsKey, 'recurrences'] as const
 // Reports
 export const hoursReportsKey = ['reports', 'hours'] as const
 
-// Assistant (RF-13)
+// Assistant (RF-14)
 export const assistantKey = ['assistant'] as const
 export const assistantConversationsKey = [...assistantKey, 'conversations'] as const
 export const assistantMessagesKey = (conversationId: number) => [...assistantKey, 'messages', conversationId] as const

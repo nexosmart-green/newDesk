@@ -9,7 +9,7 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** RF-13.10: Configuración → Asistente shows what the assistant used this month and the models to choose from. */
+/** RF-14.10: Configuración → Asistente shows what the assistant used this month and the models to choose from. */
 class AssistantUsageController extends Controller
 {
     public function __invoke(Request $request, AssistantMonthlySpend $spend): JsonResponse

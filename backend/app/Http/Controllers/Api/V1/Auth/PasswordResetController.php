@@ -16,7 +16,7 @@ class PasswordResetController extends Controller
     public function forgot(ForgotPasswordRequest $request): JsonResponse
     {
         // Only active users can reset; the answer is identical either way (no account enumeration).
-        Password::broker()->sendResetLink(['email' => $request->string('email')->value(), 'status' => UserStatus::Active->value]);
+        Password::broker()->sendResetLink(['email' => $request->string('email')->value(), 'status' => UserStatus::Active->value, 'client_id' => null]);
 
         return ApiResponse::ok(message: 'Si el email está registrado, te va a llegar un enlace para restablecer la contraseña. Revisá también la carpeta de spam.');
     }

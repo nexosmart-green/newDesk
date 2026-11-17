@@ -16,7 +16,8 @@ return new class extends Migration
     public function up(): void
     {
         $rows = [];
-        foreach (DB::table('roles')->pluck('id') as $roleId) {
+        // The client portal role (RF-13.07) has no permission at all.
+        foreach (DB::table('roles')->where('name', '!=', 'Cliente')->pluck('id') as $roleId) {
             foreach (self::MODULES as $permission) {
                 $rows[] = ['role_id' => $roleId, 'permission' => $permission];
             }

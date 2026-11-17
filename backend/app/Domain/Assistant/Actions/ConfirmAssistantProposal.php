@@ -12,9 +12,9 @@ use App\Domain\Shared\Activity\ActivityContext;
 use Illuminate\Support\Facades\DB;
 
 /**
- * RF-13.02: the person who asked confirms a proposal. It runs once (row lock: a double click or a second
+ * RF-14.02: the person who asked confirms a proposal. It runs once (row lock: a double click or a second
  * channel sees it resolved), prepared again with the role they have NOW, and is recorded with source
- * `assistant` and the channel (RF-13.04). If the action refuses it, the proposal ends `failed` with the reason.
+ * `assistant` and the channel (RF-14.04). If the action refuses it, the proposal ends `failed` with the reason.
  * Who may confirm is AssistantProposalPolicy::resolve.
  */
 final class ConfirmAssistantProposal

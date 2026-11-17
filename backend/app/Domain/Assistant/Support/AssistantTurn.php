@@ -8,7 +8,7 @@ use App\Domain\Assistant\Models\AssistantProposal;
 
 /**
  * Request-scoped: set by AuthorizeMcpToken when the MCP request comes from an assistant turn. While it is
- * active, write tools do not run: they leave a proposal for the person to confirm (RF-13.02).
+ * active, write tools do not run: they leave a proposal for the person to confirm (RF-14.02).
  */
 final class AssistantTurn
 {

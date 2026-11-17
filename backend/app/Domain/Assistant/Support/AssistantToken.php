@@ -5,7 +5,7 @@ namespace App\Domain\Assistant\Support;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * The ephemeral token a turn of the assistant uses to reach the MCP as the person who asked (RF-13).
+ * The ephemeral token a turn of the assistant uses to reach the MCP as the person who asked (RF-14).
  * Recognized by its ability, never by name, and kept out of the personal token lists.
  */
 final class AssistantToken

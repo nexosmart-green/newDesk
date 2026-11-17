@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
- * RF-13.01: one conversation of one person with the assistant = one Claude Code session (`--resume`).
+ * RF-14.01: one conversation of one person with the assistant = one Claude Code session (`--resume`).
  *
  * @property int $id
  * @property int $company_id

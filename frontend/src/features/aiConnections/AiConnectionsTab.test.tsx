@@ -20,6 +20,7 @@ const issued: IssuedToken = {
   token: { ...existing, id: 2, name: 'CLI' },
   plain_text_token: 'nd_1|secret',
   claude_code_command: command,
+  monitoreo_claude_code_command: null,
   project_mcp_json: {
     mcpServers: {
       newdesk: { type: 'http', url: 'https://desk.test/mcp', headers: { Authorization: 'Bearer ${NEWDESK_TOKEN}' } },
@@ -29,7 +30,11 @@ const issued: IssuedToken = {
 
 function renderTab(permissions: string[]) {
   vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(buildUser({ permissions }))
-  vi.spyOn(aiConnectionsApi, 'fetchMyAiTokens').mockResolvedValue({ endpoint: 'https://desk.test/mcp', tokens: [existing] })
+  vi.spyOn(aiConnectionsApi, 'fetchMyAiTokens').mockResolvedValue({
+    endpoint: 'https://desk.test/mcp',
+    monitoreo_endpoint: permissions.includes('monitoring.view') ? 'https://desk.test/mcp/monitoreo' : null,
+    tokens: [existing],
+  })
   renderRoutes([{ path: '/perfil', element: <AiConnectionsTab /> }], '/perfil')
 }
 
@@ -58,6 +63,22 @@ describe('AiConnectionsTab', () => {
     expect(screen.queryByText(command)).not.toBeInTheDocument()
   })
 
+  it('also shows the monitoring MCP command when the role can see monitoring', async () => {
+    const monitoreoCommand =
+      'claude mcp add --transport http monitoreo https://desk.test/mcp/monitoreo --header "Authorization: Bearer nd_1|secret"'
+    vi.spyOn(aiConnectionsApi, 'createAiToken').mockResolvedValue({ ...issued, monitoreo_claude_code_command: monitoreoCommand })
+    renderTab(['mcp.use', 'monitoring.view'])
+
+    expect(await screen.findByText('https://desk.test/mcp/monitoreo')).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: 'Generar token' }))
+    await userEvent.type(screen.getByLabelText('Nombre'), 'CLI')
+    await userEvent.click(screen.getByRole('button', { name: 'Generar' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Token «CLI» generado' })
+    expect(within(dialog).getByText(monitoreoCommand)).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Copiar comando de monitoreo' })).toBeInTheDocument()
+  })
+
   it('revokes a token only after confirming', async () => {
     const revoke = vi.spyOn(aiConnectionsApi, 'revokeAiToken').mockResolvedValue()
     renderTab(['mcp.use'])
@@ -75,5 +96,6 @@ describe('AiConnectionsTab', () => {
     expect(await screen.findByText(/Tu rol no tiene habilitado el uso de MCP/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Generar token' })).not.toBeInTheDocument()
     expect(await screen.findByText('Notebook')).toBeInTheDocument()
+    expect(screen.queryByText(/Monitoreo:/)).not.toBeInTheDocument()
   })
 })

@@ -12,7 +12,7 @@ use Laravel\Mcp\Support\ValidationMessages;
 
 /**
  * Base of every tool that changes data. Writing is split in two steps so a write can be shown to a person
- * before it happens (RF-13.02): `prepare()` validates, resolves and authorizes WITHOUT writing and describes
+ * before it happens (RF-14.02): `prepare()` validates, resolves and authorizes WITHOUT writing and describes
  * the change; the returned PreparedWrite runs the domain action. Read tools extend NewDeskTool with #[IsReadOnly].
  *
  * Called from an assistant turn, the write does NOT run: it stays as a proposal for the person who asked.
@@ -44,7 +44,7 @@ abstract class NewDeskWriteTool extends NewDeskTool
     }
 
     /**
-     * A person confirmed a proposal (RF-13.02): prepare it again with their role AT THIS MOMENT and run it,
+     * A person confirmed a proposal (RF-14.02): prepare it again with their role AT THIS MOMENT and run it,
      * with the same module switch and error messages as any MCP call.
      *
      * @param  array<string, mixed>  $arguments

@@ -21,7 +21,7 @@ final class ResetPassword
     public function __invoke(string $email, #[\SensitiveParameter] string $token, #[\SensitiveParameter] string $password): void
     {
         $status = Password::broker()->reset(
-            ['email' => $email, 'token' => $token, 'password' => $password, 'status' => UserStatus::Active->value],
+            ['email' => $email, 'token' => $token, 'password' => $password, 'status' => UserStatus::Active->value, 'client_id' => null],
             fn (User $user, string $newPassword) => DB::transaction(function () use ($user, $newPassword) {
                 $user->forceFill(['password' => $newPassword])->setRememberToken(null);
                 $user->save();

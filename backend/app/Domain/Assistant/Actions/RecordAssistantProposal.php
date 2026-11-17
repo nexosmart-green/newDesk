@@ -7,7 +7,7 @@ use App\Domain\Assistant\Models\AssistantMessage;
 use App\Domain\Assistant\Models\AssistantProposal;
 
 /**
- * RF-13.02: keeps a write the assistant prepared (already validated and authorized for the person) without
+ * RF-14.02: keeps a write the assistant prepared (already validated and authorized for the person) without
  * running it. Confirming it is ConfirmAssistantProposal.
  */
 final class RecordAssistantProposal

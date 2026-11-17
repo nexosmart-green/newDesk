@@ -8,7 +8,7 @@ use App\Domain\Projects\Models\Project;
 use App\Domain\TimeTracking\Models\HourExtensionRequest;
 
 /**
- * Compact shapes of the management tools (RF-13.07): clients, projects with their client and leader, people and
+ * Compact shapes of the management tools (RF-14.07): clients, projects with their client and leader, people and
  * extension requests. People show only what the company directory shows to anyone: never rates or personal data.
  */
 final class McpManagementPresenter

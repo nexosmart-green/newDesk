@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { TaskCode } from '@/features/tasks/TaskCode'
+import { entrySourceLabels } from '@/features/timer/types'
 import { formatDuration } from '@/lib/duration'
 import { zonedPartsOf } from '@/lib/timezone'
 import type { TimesheetDay, TimesheetEntry } from './types'
@@ -28,6 +29,12 @@ function EntryRow({ entry, timeZone, onComplete }: EntryRowProps) {
           <Link to={`/tareas/${entry.task.code}`} className="hover:text-accent hover:underline">
             {entry.task.title}
           </Link>
+          {entry.source === 'day_clock' && (
+            <>
+              {' '}
+              <Badge>{entrySourceLabels.day_clock}</Badge>
+            </>
+          )}
         </p>
         <p className="text-xs text-muted">{entry.project}</p>
         {entry.comment_pending ? (

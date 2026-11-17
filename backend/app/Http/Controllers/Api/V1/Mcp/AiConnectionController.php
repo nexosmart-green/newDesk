@@ -27,6 +27,7 @@ class AiConnectionController extends Controller
     {
         return ApiResponse::ok([
             'endpoint' => McpConnectionSnippet::endpoint(),
+            'monitoreo_endpoint' => McpConnectionSnippet::monitoreoEndpoint($request->user()),
             'tokens' => McpTokenResource::collection($request->user()->tokens()
                 ->where('name', 'not like', AssistantToken::NAME_PREFIX.'%')->latest('id')->get()),
         ]);
@@ -35,13 +36,15 @@ class AiConnectionController extends Controller
     public function store(IssueMcpTokenRequest $request, IssueMcpToken $issue): JsonResponse
     {
         $token = $issue($request->user(), $request->tokenName(), $request->expiresInDays());
+        $monitoreo = McpConnectionSnippet::monitoreoEndpoint($request->user());
 
         return ApiResponse::ok([
             'token' => McpTokenResource::make($token->accessToken),
             // Shown ONCE: only the hash is stored.
             'plain_text_token' => $token->plainTextToken,
             'claude_code_command' => McpConnectionSnippet::claudeCodeCommand($token->plainTextToken),
-            'project_mcp_json' => McpConnectionSnippet::projectMcpJson(),
+            'monitoreo_claude_code_command' => $monitoreo === null ? null : McpConnectionSnippet::claudeCodeCommand($token->plainTextToken, 'monitoreo', $monitoreo),
+            'project_mcp_json' => McpConnectionSnippet::projectMcpJson($monitoreo),
         ], 'Copiá el token ahora: no se vuelve a mostrar.', 201);
     }
 

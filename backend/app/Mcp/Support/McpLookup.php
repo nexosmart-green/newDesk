@@ -101,7 +101,7 @@ final class McpLookup
     {
         return array_map(function (string|int $person) use ($user) {
             $value = trim((string) $person);
-            $found = User::query()->where('company_id', $user->company_id)
+            $found = User::query()->where('company_id', $user->company_id)->team()
                 ->where(ctype_digit($value) ? 'id' : 'email', ctype_digit($value) ? (int) $value : mb_strtolower($value))
                 ->value('id');
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 /**
- * RF-13 engine: Claude Code headless (`claude -p`), isolated so it can ONLY use the newDesk MCP:
+ * RF-14 engine: Claude Code headless (`claude -p`), isolated so it can ONLY use the newDesk MCP:
  *  - `--tools ""` turns off every built-in tool (shell, files, web) and `--setting-sources ""` ignores the
  *    machine's settings, hooks and plugins; `--strict-mcp-config` loads only our MCP; `--permission-mode dontAsk`
  *    denies whatever is not in `--allowedTools`;

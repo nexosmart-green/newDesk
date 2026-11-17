@@ -41,6 +41,7 @@ export function buildUser(overrides: Partial<CurrentUser> = {}, modules: ModuleP
     role: { id: 1, name: 'Admin' },
     two_factor: { enabled: false, required: false },
     company: { id: 1, name: 'NexoSmart', currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires' },
+    client: null,
     ...overrides,
     permissions: [...modules, ...(overrides.permissions ?? [])],
   }

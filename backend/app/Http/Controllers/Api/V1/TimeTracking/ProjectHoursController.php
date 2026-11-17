@@ -7,6 +7,7 @@ use App\Domain\TimeTracking\Actions\AllocateHours;
 use App\Domain\TimeTracking\Models\HourAllocation;
 use App\Domain\TimeTracking\Queries\ProjectTimeEntries;
 use App\Domain\TimeTracking\Support\HourBag;
+use App\Domain\TimeTracking\Support\ManualEntryWindow;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TimeTracking\AllocateHoursRequest;
 use App\Http\Requests\TimeTracking\ProjectTimeEntriesRequest;
@@ -31,9 +32,10 @@ class ProjectHoursController extends Controller
         return ApiResponse::ok([...HourBag::of($project)->toArray(), 'allocations' => HourAllocationResource::collection($allocations)]);
     }
 
-    public function entries(ProjectTimeEntriesRequest $request, Project $project, ProjectTimeEntries $entries): AnonymousResourceCollection
+    public function entries(ProjectTimeEntriesRequest $request, Project $project, ProjectTimeEntries $entries, ManualEntryWindow $window): AnonymousResourceCollection
     {
-        return TimeEntryResource::collection($entries->paginate($project, $request->filters(), $request->user()->effectiveTimezone()));
+        return TimeEntryResource::collection($entries->paginate($project, $request->filters(), $request->user()->effectiveTimezone()))
+            ->additional(['meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()]]);
     }
 
     public function allocate(AllocateHoursRequest $request, Project $project, AllocateHours $allocateHours): JsonResponse

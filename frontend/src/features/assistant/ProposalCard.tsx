@@ -17,7 +17,7 @@ interface ProposalCardProps {
 }
 
 /**
- * RF-13.02: what the assistant wants to change, waiting for this person. Nothing happened yet, and the card
+ * RF-14.02: what the assistant wants to change, waiting for this person. Nothing happened yet, and the card
  * says so; once resolved it stays in the thread as a one-line record of how it ended.
  */
 export function ProposalCard({ proposal, conversationId }: ProposalCardProps) {

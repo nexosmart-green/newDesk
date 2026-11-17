@@ -46,7 +46,7 @@ function renderPage(path = '/asistente', { enabled = true, permissions = ['assis
 }
 
 describe('AssistantPage', () => {
-  it('asks a frequent question from an empty conversation and opens it (RF-13.01)', async () => {
+  it('asks a frequent question from an empty conversation and opens it (RF-14.01)', async () => {
     const ask = vi.spyOn(assistantApi, 'askAssistant').mockResolvedValue({ ...answer, status: 'pending', content: null, proposals: [], files: [] })
     vi.spyOn(assistantApi, 'fetchMessages').mockResolvedValue([question, { ...answer, status: 'pending', content: null, proposals: [], files: [] }])
     renderPage()
@@ -59,7 +59,7 @@ describe('AssistantPage', () => {
     expect(screen.getByText('Esperá a que termine la respuesta para seguir.')).toBeInTheDocument()
   })
 
-  it('shows the answer with its table, the report to download and the change waiting for confirmation (RF-13.02/05)', async () => {
+  it('shows the answer with its table, the report to download and the change waiting for confirmation (RF-14.02/05)', async () => {
     vi.spyOn(assistantApi, 'fetchMessages').mockResolvedValue([question, answer])
     const resolve = vi.spyOn(assistantApi, 'resolveProposal').mockResolvedValue({ data: { ...proposal, status: 'confirmed' }, message: 'Listo, quedó hecho.', errors: null })
     renderPage('/asistente?c=7')

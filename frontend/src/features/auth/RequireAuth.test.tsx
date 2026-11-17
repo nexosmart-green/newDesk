@@ -8,6 +8,7 @@ function renderProtected(initialPath: string) {
   return renderRoutes(
     [
       { path: '/login', element: <LocationProbe /> },
+      { path: '/portal', element: <LocationProbe /> },
       {
         element: <RequireAuth />,
         children: [
@@ -36,6 +37,15 @@ describe('RequireAuth', () => {
     renderProtected('/')
 
     expect(await screen.findByText('Inicio')).toBeInTheDocument()
+  })
+
+  it('sends a client user to the portal, never to the 2FA setup', async () => {
+    vi.spyOn(authApi, 'fetchCurrentUser').mockResolvedValue(
+      buildUser({ client: { id: 1, name: 'Playinn' }, two_factor: { required: true, enabled: false } }),
+    )
+    renderProtected('/')
+
+    expect(await screen.findByTestId('location')).toHaveTextContent('/portal')
   })
 
   it('sends guests to the login', async () => {

@@ -5,8 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * RF-13: assistant conversations (one Claude Code session each), their messages (with the estimated cost of each
- * turn), the write proposals waiting for a human (RF-13.02) and the report files it generates (RF-13.05).
+ * RF-14: assistant conversations (one Claude Code session each), their messages (with the estimated cost of each
+ * turn), the write proposals waiting for a human (RF-14.02) and the report files it generates (RF-14.05).
  */
 return new class extends Migration
 {
@@ -39,7 +39,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['conversation_id', 'id']);
-            $table->index(['company_id', 'created_at']);         // monthly spend (RF-13.09)
+            $table->index(['company_id', 'created_at']);         // monthly spend (RF-14.09)
             $table->index('access_token_id');
         });
 

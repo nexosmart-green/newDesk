@@ -14,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
-/** RF-13.02: only the person who asked confirms or cancels what the assistant proposed. */
+/** RF-14.02: only the person who asked confirms or cancels what the assistant proposed. */
 class AssistantProposalController extends Controller
 {
     public function confirm(Request $request, AssistantProposal $proposal, ConfirmAssistantProposal $confirm): JsonResponse

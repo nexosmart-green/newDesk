@@ -19,7 +19,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * RF-13.01: the web channel of the assistant. Asking queues a turn (202); the screen polls the answer.
+ * RF-14.01: the web channel of the assistant. Asking queues a turn (202); the screen polls the answer.
  */
 class AssistantController extends Controller
 {
@@ -27,7 +27,7 @@ class AssistantController extends Controller
     {
         $user = $request->user();
 
-        // The screen says up front when the Admin has the assistant turned off (RF-13.10).
+        // The screen says up front when the Admin has the assistant turned off (RF-14.10).
         return AssistantConversationResource::collection($conversations($user))
             ->additional(['meta' => ['enabled' => (bool) $user->company->setting('assistant_enabled')]]);
     }

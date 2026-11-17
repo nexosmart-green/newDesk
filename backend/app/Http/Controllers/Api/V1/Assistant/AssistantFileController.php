@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/** RF-13.05: download of a report the assistant generated (only its owner, while it has not expired). */
+/** RF-14.05: download of a report the assistant generated (only its owner, while it has not expired). */
 class AssistantFileController extends Controller
 {
     private const MIME = [

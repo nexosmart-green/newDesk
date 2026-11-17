@@ -1,4 +1,4 @@
-/** What an owner asks most (RF-13 origin): a click asks it as is. */
+/** What an owner asks most (RF-14 origin): a click asks it as is. */
 const SUGGESTIONS = [
   '¿Qué bolsas se están por agotar?',
   '¿Qué tareas del equipo están vencidas?',

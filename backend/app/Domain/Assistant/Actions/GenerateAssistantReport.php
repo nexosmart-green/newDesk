@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * RF-13.05: writes a report as a file on the private disk, owned by whoever asked and tied to the answer that
+ * RF-14.05: writes a report as a file on the private disk, owned by whoever asked and tied to the answer that
  * offers it. It expires in a week (AssistantFile::TTL_DAYS).
  */
 final class GenerateAssistantReport

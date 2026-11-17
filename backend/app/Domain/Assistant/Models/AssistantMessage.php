@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * A question of the person or an answer of the assistant. Answers carry the (estimated) cost of their turn,
- * which feeds the monthly cap (RF-13.09).
+ * which feeds the monthly cap (RF-14.09).
  *
  * @property int $id
  * @property int $company_id

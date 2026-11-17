@@ -4,7 +4,7 @@ namespace App\Domain\Assistant\Enums;
 
 use App\Domain\Identity\Enums\Permission;
 
-/** RF-13.05: the reports the assistant can hand over as a file. */
+/** RF-14.05: the reports the assistant can hand over as a file. */
 enum ReportKind: string
 {
     case HoursByProject = 'hours_by_project';

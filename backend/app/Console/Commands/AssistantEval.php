@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * RF-13 eval (manual, never in CI): real turns of `claude -p` against THIS database through the local MCP,
+ * RF-14 eval (manual, never in CI): real turns of `claude -p` against THIS database through the local MCP,
  * with the questions an owner asks. Expected numbers come from the same queries the web uses, at run time.
  * Writes must end as proposals with nothing changed. Costs real usage: run it on purpose.
  */

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * RF-13.02: a write the assistant prepared (validated, authorized, described) but did NOT run. Only the person
+ * RF-14.02: a write the assistant prepared (validated, authorized, described) but did NOT run. Only the person
  * who asked can confirm it; confirming re-prepares it with their role at that moment and runs the domain action.
  *
  * @property int $id

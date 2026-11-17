@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * RF-10.01 (R1): hours per project and period — sold / consumed / % / per person — plus per task for the
- * project detail, and the period's hours per client and per person (RF-13.07). Closed entries only (a running timer is not "consumed in the period" until it stops).
+ * project detail, and the period's hours per client and per person (RF-14.07). Closed entries only (a running timer is not "consumed in the period" until it stops).
  * Dates are local to the company; filtering is by range on started_at (index-friendly).
  */
 final class HoursReport

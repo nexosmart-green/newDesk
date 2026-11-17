@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Tasks\Models\Task;
+use App\Domain\TimeTracking\Models\DayClock;
 use App\Domain\TimeTracking\Models\TimeEntry;
 
 /**
@@ -39,8 +40,8 @@ final class TimerRules
         }
     }
 
-    /** RF-03.08 / RF-04 closed kinds / RF-05.05. Call with the project locked. */
-    public function assertTrackable(Project $project, Task $task): void
+    /** RF-03.08 / RF-04 closed kinds. The day split (RF-05.19) checks only this: it may overdraw the bag. */
+    public function assertOpen(Project $project, Task $task): void
     {
         if ($project->status->isClosed()) {
             throw new BusinessRuleViolation("{$project->name} está {$project->status->label()}: no admite horas.", 'project_closed');
@@ -49,6 +50,25 @@ final class TimerRules
         if ($task->completed_at !== null || $task->status->isClosed()) {
             throw new BusinessRuleViolation("{$task->code} está cerrada: reabrila para cargarle horas.", 'task_closed');
         }
+    }
+
+    /** RF-05.19: a running or not yet split day clock blocks the ▶ (and another day). Call inside the user lock. */
+    public function assertNoDayClock(User $user): void
+    {
+        $day = DayClock::query()->forCompany($user->company_id)->where('user_id', $user->id)->unsplit()->first();
+        if ($day === null) {
+            return;
+        }
+
+        throw $day->isRunning()
+            ? new BusinessRuleViolation('Tenés el reloj del día corriendo: frenalo antes de usar el cronómetro de una tarea.', 'day_clock_running', context: ['day_clock_id' => $day->id])
+            : new BusinessRuleViolation('Tenés un día sin repartir: repartilo antes de seguir.', 'day_split_pending', context: ['day_clock_id' => $day->id]);
+    }
+
+    /** RF-03.08 / RF-04 closed kinds / RF-05.05. Call with the project locked. */
+    public function assertTrackable(Project $project, Task $task): void
+    {
+        $this->assertOpen($project, $task);
 
         $bag = HourBag::of($project);
         if ($bag->isExhausted()) {

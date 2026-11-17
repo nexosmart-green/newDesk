@@ -21,7 +21,7 @@ final class PeopleDirectory
         $skillId = $filters['skill_id'] ?? null;
 
         return User::query()
-            ->where('company_id', $companyId)
+            ->where('company_id', $companyId)->team()
             ->with(['profile.jobTitle', 'profile.area'])
             ->when(! ($filters['include_inactive'] ?? false), fn (Builder $query) => $query->active())
             ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where(fn (Builder $inner) => $inner

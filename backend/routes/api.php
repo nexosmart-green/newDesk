@@ -27,19 +27,26 @@ Route::prefix('v1')->group(function () {
         Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept']);
     });
 
+    // Client portal (RF-13.07): its own login and routes, closed to the team.
+    Route::prefix('portal')->group(base_path('routes/portal.php'));
+
     Route::middleware(['auth:sanctum', 'active', RejectMcpTokens::class, 'throttle:api'])->group(function () {
-        // Reachable before an Admin has enabled the mandatory 2FA.
+        // Shared with the portal's client users; reachable before an Admin has enabled the mandatory 2FA.
         Route::post('/auth/logout', [SessionController::class, 'destroy']);
         Route::get('/me', [MeController::class, 'show']);
-        Route::post('/me/two-factor', [TwoFactorSetupController::class, 'store']);
-        Route::post('/me/two-factor/confirm', [TwoFactorSetupController::class, 'confirm']);
-        Route::delete('/me/two-factor', [TwoFactorSetupController::class, 'destroy']);
 
-        Route::middleware('two-factor')->group(function () {
-            // One file per domain module: routes/api/<module>.php.
-            foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
-                require $moduleRoutes;
-            }
+        // Team only from here on: client users live in the portal (CA-13.14).
+        Route::middleware('team')->group(function () {
+            Route::post('/me/two-factor', [TwoFactorSetupController::class, 'store']);
+            Route::post('/me/two-factor/confirm', [TwoFactorSetupController::class, 'confirm']);
+            Route::delete('/me/two-factor', [TwoFactorSetupController::class, 'destroy']);
+
+            Route::middleware('two-factor')->group(function () {
+                // One file per domain module: routes/api/<module>.php.
+                foreach (glob(__DIR__.'/api/*.php') ?: [] as $moduleRoutes) {
+                    require $moduleRoutes;
+                }
+            });
         });
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Domain\Clients\Models;
 
 use App\Domain\Clients\Enums\ClientStatus;
+use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Concerns\BelongsToCompany;
 use Database\Factories\ClientFactory;
@@ -43,8 +44,20 @@ class Client extends Model
         return $this->hasMany(Project::class);
     }
 
+    /** Portal users of this client (RF-13.07). @return HasMany<User, $this> */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function displayName(): string
     {
         return $this->trade_name ?: $this->legal_name;
+    }
+
+    /** Monitoring checks it and its portal users log in only while this holds (RF-13.07). */
+    public function isActive(): bool
+    {
+        return $this->status === ClientStatus::Active && ! $this->trashed();
     }
 }

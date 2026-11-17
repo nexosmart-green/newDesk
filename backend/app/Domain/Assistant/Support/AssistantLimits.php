@@ -10,7 +10,7 @@ use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
- * RF-13.09/10: the assistant answers only if the Admin turned it on, the company is under its monthly cap
+ * RF-14.09/10: the assistant answers only if the Admin turned it on, the company is under its monthly cap
  * and the person is under their hourly turns.
  */
 final class AssistantLimits

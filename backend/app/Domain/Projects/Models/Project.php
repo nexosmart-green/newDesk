@@ -7,9 +7,11 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Enums\ProjectStatus;
 use App\Domain\Projects\Enums\ProjectType;
 use App\Domain\Projects\Policies\ProjectPolicy;
+use App\Domain\Shared\Casts\EncryptedFor;
 use App\Domain\Shared\Concerns\BelongsToCompany;
 use App\Domain\TimeTracking\Models\TimeEntry;
 use App\Domain\TimeTracking\Support\HourBag;
+use Carbon\CarbonImmutable;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,6 +38,20 @@ use Illuminate\Support\Carbon;
  * @property int $allocated_seconds Σ hour_allocations (cache)
  * @property int $hour_alert_level last consumption alert sent (RF-05.07)
  * @property int $task_sequence
+ * @property string|null $slug
+ * @property string|null $primary_color
+ * @property string|null $logo_path
+ * @property string|null $logo_type
+ * @property CarbonImmutable|null $logo_updated_at
+ * @property string|null $domain
+ * @property CarbonImmutable|null $domain_expires_at
+ * @property CarbonImmutable|null $domain_expires_manual
+ * @property CarbonImmutable|null $domain_checked_at
+ * @property int $domain_notice_level
+ * @property string|null $errors_url
+ * @property string|null $errors_token
+ * @property string|null $discord_channel_id
+ * @property bool $portal_active
  */
 #[UseFactory(ProjectFactory::class)]
 class Project extends Model
@@ -46,14 +62,22 @@ class Project extends Model
 
     public const EDITABLE = ['client_id', 'name', 'code_prefix', 'description', 'type', 'leader_user_id', 'starts_on', 'ends_on'];
 
+    // RF-13.06/07 (monitoreo's portal_projects). The logo, the errors token and the domain lookups
+    // are written by their own actions.
+    public const STATUS_PAGE = ['slug', 'primary_color', 'domain', 'domain_expires_manual', 'errors_url', 'discord_channel_id', 'portal_active'];
+
     /** Members whose faces a list row shows (`member_faces`); `members_count` says how many there are in all. */
     public const MEMBER_FACES = 4;
 
-    protected $fillable = ['company_id', 'status', ...self::EDITABLE];
+    protected $fillable = ['company_id', 'status', ...self::EDITABLE, ...self::STATUS_PAGE];
+
+    // Write-only: the API says `has_errors_token`, never the token.
+    protected $hidden = ['errors_token'];
 
     private ?HourBag $hourBagSnapshot = null;
 
-    protected $attributes = ['status' => ProjectStatus::Active->value, 'consumed_seconds' => 0, 'allocated_seconds' => 0, 'hour_alert_level' => 0, 'task_sequence' => 0];
+    protected $attributes = ['status' => ProjectStatus::Active->value, 'consumed_seconds' => 0, 'allocated_seconds' => 0, 'hour_alert_level' => 0, 'task_sequence' => 0,
+        'portal_active' => true, 'domain_notice_level' => 0];
 
     protected function casts(): array
     {
@@ -66,6 +90,13 @@ class Project extends Model
             'allocated_seconds' => 'integer',
             'hour_alert_level' => 'integer',
             'task_sequence' => 'integer',
+            'logo_updated_at' => 'immutable_datetime',
+            'domain_expires_at' => 'immutable_datetime',
+            'domain_expires_manual' => 'immutable_date',
+            'domain_checked_at' => 'immutable_datetime',
+            'domain_notice_level' => 'integer',
+            'errors_token' => EncryptedFor::class,
+            'portal_active' => 'boolean',
         ];
     }
 

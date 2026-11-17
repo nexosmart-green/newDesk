@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { Button } from '@/components/ui/Button'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
+import { MODULES, useHasModule } from '@/features/auth/modules'
 import { useCurrentUser } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { CreateTaskDialog } from './CreateTaskDialog'
 import { TaskFiltersBar } from './TaskFiltersBar'
 import { TaskList } from './TaskList'
 import { TasksEmptyState } from './TasksEmptyState'
@@ -17,12 +21,18 @@ export function MyTasksPage() {
   const { filters, change } = useTaskFilters('mine', searchParams.has('vencidas') ? { overdue: true } : undefined)
   const statuses = useTaskStatuses()
   const tasks = useMyTasks({ ...filters, search: useDebouncedValue(filters.search) })
+  const canCreate = useHasModule(MODULES.projects)
+  const [creating, setCreating] = useState(false)
 
   return (
     <section className="max-w-4xl space-y-4">
-      <header className="space-y-0.5">
-        <h1 className="text-xl font-semibold leading-tight tracking-tight">Mis tareas</h1>
-        <p className="text-sm text-muted">Las tareas que tenés asignadas, de todos tus proyectos.</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-semibold leading-tight tracking-tight">Mis tareas</h1>
+          <p className="text-sm text-muted">Las tareas que tenés asignadas, de todos tus proyectos.</p>
+        </div>
+        {/* CA-04.07b: create here, picking the project; "Crear e iniciar" starts its timer. */}
+        {canCreate && <Button onClick={() => setCreating(true)}>Nueva tarea</Button>}
       </header>
       <TaskFiltersBar filters={filters} statuses={statuses.data ?? []} onChange={change} />
       {!tasks.data ? (
@@ -37,6 +47,7 @@ export function MyTasksPage() {
           />
         </StaleContent>
       )}
+      {creating && <CreateTaskDialog onClose={() => setCreating(false)} />}
     </section>
   )
 }

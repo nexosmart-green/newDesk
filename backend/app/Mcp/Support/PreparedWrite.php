@@ -6,7 +6,7 @@ use Closure;
 use Laravel\Mcp\Response;
 
 /**
- * A write that is already validated, resolved and authorized, but not executed yet (RF-13.02).
+ * A write that is already validated, resolved and authorized, but not executed yet (RF-14.02).
  * `summary` is what a person reads before confirming it ("Cargar 20 h a bhn — motivo: …").
  */
 final class PreparedWrite

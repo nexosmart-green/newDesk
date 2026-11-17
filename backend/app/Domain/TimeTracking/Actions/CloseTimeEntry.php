@@ -34,7 +34,8 @@ final class CloseTimeEntry
         $entry->loadMissing(['task', 'user']);
         // Signed difference: an end before the start (stale cut time) counts as 0, never as |diff|.
         $elapsed = max(0, (int) $entry->started_at->diffInSeconds($endAt, false));
-        $seconds = $project->type->hasHourCap()
+        // R-6: a ▶ running when a day split overdrew the bag keeps its whole time.
+        $seconds = $project->type->hasHourCap() && ! $entry->uncapped
             ? min($elapsed, max(0, $project->allocated_seconds - $project->consumed_seconds))
             : $elapsed;
 

@@ -41,7 +41,7 @@ final class Calendar
 
         return [
             'timezone' => $timezone,
-            'people' => User::query()->where('company_id', $companyId)->active()
+            'people' => User::query()->where('company_id', $companyId)->team()->active()
                 ->orderBy('first_name')->orderBy('last_name')->get()
                 ->map(fn (User $person) => [
                     'id' => $person->id,

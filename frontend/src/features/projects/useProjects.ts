@@ -15,16 +15,21 @@ import {
 } from './projectsApi'
 import { projectStatusVerbs, type CreateProjectInput, type ProjectDetail, type ProjectFilters, type ProjectStatus, type SaveProjectInput } from './types'
 
-export function useProjects(filters: ProjectFilters) {
+export function useProjects(filters: ProjectFilters, { enabled = true } = {}) {
   return useQuery({
     queryKey: [...projectListsKey, filters],
     queryFn: () => fetchProjects(filters),
     placeholderData: keepPreviousData,
+    enabled,
   })
 }
 
+/** Active projects the person sees (first page): the pickers of "Mover a otro proyecto" and "Nueva tarea". */
+export const ACTIVE_PROJECTS = { client_id: null, status: 'active', search: '', running_out: false, page: 1 } as const
+
+/** `id` 0 = none chosen yet: nothing is fetched. */
 export function useProject(id: number) {
-  return useQuery({ queryKey: projectKey(id), queryFn: () => fetchProject(id) })
+  return useQuery({ queryKey: projectKey(id), queryFn: () => fetchProject(id), enabled: id > 0 })
 }
 
 /** The members come with the project detail (shared cache: the project page has usually loaded it). */

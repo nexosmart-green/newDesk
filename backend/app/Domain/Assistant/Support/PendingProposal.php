@@ -6,7 +6,7 @@ use App\Domain\Assistant\Enums\ProposalStatus;
 use App\Domain\Assistant\Models\AssistantProposal;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 
-/** A proposal is resolved once, and only while it has not expired (RF-13.02). */
+/** A proposal is resolved once, and only while it has not expired (RF-14.02). */
 final class PendingProposal
 {
     private const EXPIRED = 'La propuesta venció: pedíselo de nuevo al asistente.';

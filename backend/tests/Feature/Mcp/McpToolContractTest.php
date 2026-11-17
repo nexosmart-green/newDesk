@@ -34,7 +34,7 @@ function registeredTools(): array
     return NewDeskServer::TOOLS;
 }
 
-it('classifies every registered tool: read-only, or a write that can be prepared before it runs (RF-13.02)', function () {
+it('classifies every registered tool: read-only, or a write that can be prepared before it runs (RF-14.02)', function () {
     foreach (registeredTools() as $tool) {
         $readOnly = (new ReflectionClass($tool))->getAttributes(IsReadOnly::class) !== [];
         $writes = is_subclass_of($tool, NewDeskWriteTool::class);

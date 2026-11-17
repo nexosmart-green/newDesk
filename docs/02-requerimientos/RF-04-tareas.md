@@ -20,6 +20,7 @@
 - **CA-04.01** Códigos correlativos sin huecos ni duplicados aunque dos personas creen tareas en el mismo segundo (secuencia por proyecto con lock, no `max()+1`).
 - **CA-04.02** Dado que el usuario ya tiene un timer corriendo en otra tarea, cuando hace "Crear e iniciar", entonces se le pide el comentario del timer anterior; con el comentario, el anterior se detiene y guarda y arranca el nuevo (ver RF-05.02).
 - **CA-04.02b** Dado un proyecto sin horas disponibles, cuando se hace "Crear e iniciar", entonces la tarea se crea pero el timer no arranca y se muestra el motivo.
+- **CA-04.07b** (pedido 2026-11-10) Desde "Mis tareas", "Nueva tarea" pide el proyecto (los activos que la persona ve; si hay uno solo, viene elegido), ofrece sus miembros como asignados con la persona marcada si es miembro, y permite **Crear** o **▶ Crear e iniciar** con las reglas de CA-04.02/02b. La tarea creada aparece en la lista con su ▶.
 - **CA-04.03** Pasar una tarea a un estado de tipo "cerrada" detiene cualquier timer corriendo sobre ella.
 - **CA-04.12a** Dada `bhn-7` con 3 h registradas en BH News, cuando se mueve a Otro Cliente, entonces pasa a `otr-N` (siguiente correlativo del destino), BH News consume 3 h menos, Otro Cliente 3 h más, y `bhn-7` sigue abriendo la tarea.
 - **CA-04.12b** Si el destino es una bolsa sin horas suficientes para las horas que trae la tarea, el movimiento se rechaza entero con el motivo (como R-4); no se mueve a medias.

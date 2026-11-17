@@ -64,6 +64,25 @@ return [
             ]) : [],
         ],
 
+        // monitoreo's database, only read by `monitoring:import` (RF-13.12). The session is
+        // read-only so not even a bug can write it (CA-13.23).
+        'monitoreo_legacy' => [
+            'driver' => 'mysql',
+            'host' => env('MONITOREO_DB_HOST', '127.0.0.1'),
+            'port' => env('MONITOREO_DB_PORT', '3306'),
+            'database' => env('MONITOREO_DB_DATABASE', 'monitoreo'),
+            'username' => env('MONITOREO_DB_USERNAME', 'root'),
+            'password' => env('MONITOREO_DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? [
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND) => 'SET SESSION TRANSACTION READ ONLY',
+            ] : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

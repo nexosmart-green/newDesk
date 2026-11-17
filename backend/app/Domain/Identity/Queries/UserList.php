@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * RF-01 user administration list: every user of the company (any status), by name.
+ * RF-01 user administration list: every team user of the company (any status; portal clients are not team), by name.
  */
 final class UserList
 {
@@ -24,7 +24,7 @@ final class UserList
     public function __invoke(Company $company, array $filters): LengthAwarePaginator
     {
         return $company->users()
-            ->with('role')
+            ->with('role')->team()
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where(fn (Builder $inner) => $inner
                 ->where('first_name', 'like', "%{$search}%")

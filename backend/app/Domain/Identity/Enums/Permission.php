@@ -34,7 +34,11 @@ enum Permission: string
     case McpUse = 'mcp.use';
     /** See/revoke anyone's MCP tokens (RF-12.05). */
     case McpManageTokens = 'mcp.manage_tokens';
-    /** RF-13: talk to the newDesk assistant (web, Discord). Admin only by default. */
+    /** Servers, alerts, project status and client reports (RF-13). */
+    case MonitoringView = 'monitoring.view';
+    /** What monitoreo's admin did: servers, components, client portal users (RF-13). */
+    case MonitoringManage = 'monitoring.manage';
+    /** RF-14: talk to the newDesk assistant (web, Discord). Admin only by default. */
     case AssistantUse = 'assistant.use';
 
     public function label(): string
@@ -61,6 +65,8 @@ enum Permission: string
             self::CompanyManage => 'Configurar la empresa',
             self::McpUse => 'Usar MCP (Claude Code)',
             self::McpManageTokens => 'Ver y revocar tokens MCP de todos',
+            self::MonitoringView => 'Ver monitoreo',
+            self::MonitoringManage => 'Administrar monitoreo',
             self::AssistantUse => 'Usar el asistente de IA',
         };
     }

@@ -20,6 +20,12 @@ final class ManualEntryWindow
         return now($user->effectiveTimezone())->startOfDay()->subDays($daysBack)->utc();
     }
 
+    /** RF-05.20: entries that started before this cannot be changed by $user; null = no limit (`time.manage`). */
+    public function editableSince(User $user): ?Carbon
+    {
+        return $user->hasPermission(Permission::TimeManage) ? null : $this->earliestAllowed($user);
+    }
+
     public function allows(User $user, Carbon $startedAt): bool
     {
         return $user->hasPermission(Permission::TimeManage) || $startedAt->greaterThanOrEqualTo($this->earliestAllowed($user));

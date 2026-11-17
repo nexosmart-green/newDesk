@@ -13,7 +13,7 @@ type AssistantSettings = Pick<CompanySettings, 'assistant_enabled' | 'assistant_
 
 const usd = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })
 
-/** RF-13.10 (`company.manage`): turn the assistant on or off, its model and its usage caps. */
+/** RF-14.10 (`company.manage`): turn the assistant on or off, its model and its usage caps. */
 export function AssistantSettingsTab() {
   const company = useCompany()
   const usage = useAssistantUsage(true)

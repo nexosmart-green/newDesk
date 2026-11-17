@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * RF-13.01: a person asks. Saves the question and an answer `pending`, and queues the turn; the channel shows
+ * RF-14.01: a person asks. Saves the question and an answer `pending`, and queues the turn; the channel shows
  * "pensando…" until the answer is done. One turn at a time per conversation. Who may ask is AssistantConversationPolicy.
  */
 final class AskAssistant

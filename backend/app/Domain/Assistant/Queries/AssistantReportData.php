@@ -14,7 +14,7 @@ use App\Domain\TimeTracking\Support\HourBag;
 use App\Domain\TimeTracking\Support\ReportPeriod;
 
 /**
- * RF-13.05: the rows of each file report, from THE SAME queries as the web and the MCP tools (never recomputed).
+ * RF-14.05: the rows of each file report, from THE SAME queries as the web and the MCP tools (never recomputed).
  * Authorization is the caller's (the export_report tool applies the same gates as the web).
  */
 final class AssistantReportData

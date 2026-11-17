@@ -9,7 +9,7 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-/** RF-13.05 Excel: hours as decimal numbers (so they can be summed), a bold header and a title row. */
+/** RF-14.05 Excel: hours as decimal numbers (so they can be summed), a bold header and a title row. */
 final class XlsxReportWriter implements ReportWriter
 {
     public function format(): string

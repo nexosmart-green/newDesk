@@ -22,7 +22,7 @@ final class ActiveCompanyPeople
      */
     public function resolveOrFail(int $companyId, array $userIds): Collection
     {
-        $people = User::query()->where('company_id', $companyId)->active()->whereKey($userIds)
+        $people = User::query()->where('company_id', $companyId)->team()->active()->whereKey($userIds)
             ->orderBy('first_name')->orderBy('last_name')->get();
 
         if ($people->count() !== count(array_unique($userIds))) {

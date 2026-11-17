@@ -2,7 +2,7 @@
 
 namespace App\Domain\Assistant\Enums;
 
-/** Where a person talks to the assistant (RF-13): one core, several channels. */
+/** Where a person talks to the assistant (RF-14): one core, several channels. */
 enum AssistantChannel: string
 {
     case Web = 'web';

@@ -30,7 +30,7 @@ class Company extends Model
         'forgotten_timer_max_hours' => 10,
         'forgotten_timer_after_shift_hours' => 1,
         'hour_alert_thresholds' => [80, 100],
-        // RF-13.09/10. With a subscription the cost Claude Code reports is an estimate: these are usage guards.
+        // RF-14.09/10. With a subscription the cost Claude Code reports is an estimate: these are usage guards.
         'assistant_enabled' => false,
         'assistant_model' => 'claude-opus-5-5',
         'assistant_monthly_budget_usd' => 200,

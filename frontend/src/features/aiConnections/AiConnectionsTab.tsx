@@ -26,6 +26,12 @@ export function AiConnectionsTab() {
             Endpoint: <code className="font-mono">{tokens.data.endpoint}</code>
           </>
         )}
+        {tokens.data?.monitoreo_endpoint && (
+          <>
+            {' '}
+            · Monitoreo: <code className="font-mono">{tokens.data.monitoreo_endpoint}</code>
+          </>
+        )}
       </p>
       {canUseMcp ? (
         <Button onClick={() => setCreating(true)}>Generar token</Button>

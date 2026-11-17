@@ -1,10 +1,10 @@
-# Plan — Asistente de IA (RF-13)
+# Plan — Asistente de IA (RF-14)
 
-Spec: `docs/02-requerimientos/RF-13-asistente-ia.md`. Rama `dev_green`. Investigación del 2026-11-16 (abajo).
+Spec: `docs/02-requerimientos/RF-14-asistente-ia.md`. Rama `dev_green`. Investigación del 2026-11-16 (abajo).
 
 ## Fases
 
-### Fase 1 — Herramientas de gestión (RF-13.07) — sin IA todavía
+### Fase 1 — Herramientas de gestión (RF-14.07) — sin IA todavía
 
 Plan detallado (2026-11-16, skills `mcp-builder` + `mcp-server-dev` aplicados). Lo que ya había: 20 tools sobre
 `NewDeskTool` (Template Method), `McpLookup` (resuelve + autoriza `view`), `McpPresenter`, tests por HTTP real
@@ -29,7 +29,7 @@ Plan detallado (2026-11-16, skills `mcp-builder` + `mcp-server-dev` aplicados). 
 - **Queries nuevas mínimas:** `HoursReport::byClient()` y `HoursReport::byPerson()` junto a `overview()`/`project()`
   (misma base `entries()`, mismo período `ReportPeriod`, solo registros cerrados). Sin endpoint web en esta fase (no hay
   pantalla en RF-10); se prueban contra `overview()` para el mismo rango: total por cliente = total por persona = total
-  por proyecto (base de CA-13.06).
+  por proyecto (base de CA-14.06).
 - **Listados paginados** (`limit` default 25, máx 50, `offset`; respuesta con `total`, `has_more`, `next_offset`).
 - **Annotations:** `#[IsReadOnly]` en lecturas; `#[IsDestructive]` en `remove_project_member`, `reject_extension_request`
   y `change_*_status`; `#[IsIdempotent]` en los `change_*_status`.
@@ -61,7 +61,7 @@ Plan detallado (2026-11-16, skills `mcp-builder` + `mcp-server-dev` aplicados). 
 - [x] 4. Lecturas: `hours_report`, `search_projects`, `list_tasks`, `list_clients`, `list_people`, `team_shifts`, `list_extension_requests` + presenter.
 - [x] 5. Escrituras de clientes y proyectos (6 tools).
 - [x] 6. Ampliaciones (2 tools de escritura).
-- [x] 7. `NewDeskServer`: registrar (paginación ≥ 36), actualizar `#[Instructions]` con las tools de gestión; RF-12/RF-13 docs (tabla de tools).
+- [x] 7. `NewDeskServer`: registrar (paginación ≥ 36), actualizar `#[Instructions]` con las tools de gestión; RF-12/RF-14 docs (tabla de tools).
 - [x] 8. Tests (un archivo por grupo en `tests/Feature/Mcp/`):
   - paridad web/MCP en escrituras: mismo resultado en DB, misma `Activity` (source `mcp`), **mismo mensaje de error** que la web ante la misma regla (ej. reabrir sin `projects.reopen`, cliente con CUIT inválido, ampliación ya resuelta);
   - permisos: Colaborador recibe el error de rol y no cambia nada; módulo apagado → mensaje de módulo; otra empresa → "no existe o no tenés acceso";
@@ -90,7 +90,7 @@ Plan detallado (2026-11-16, skills `mcp-builder` + `mcp-server-dev` aplicados). 
   `search_projects`, `list_tasks`, `list_extension_requests` y respondió con los números del sistema (USD 0,20, 6 turnos).
   `${NEWDESK_TOKEN}` en el JSON de `--mcp-config` se expande desde el entorno → el token no se escribe en disco (Fase 2).
 
-### Fase 2 — Núcleo del asistente con `claude -p` + chat web (RF-13.01–05, 09, 10)
+### Fase 2 — Núcleo del asistente con `claude -p` + chat web (RF-14.01–05, 09, 10)
 Motor: **Claude Code en modo no interactivo (`claude -p`)** lanzado por el backend. **No** se usa el SDK de Anthropic.
 
 Plan detallado (2026-11-16). Flags verificados con `claude --help` 2.1.325 y prueba real de Fase 1.
@@ -115,11 +115,11 @@ token por variable de entorno `NEWDESK_TOKEN` (el JSON de `--mcp-config` usa `${
 
 **MCP con token de asistente**
 - `AuthorizeMcpToken`: token con ability `assistant` exige `assistant.use` (no `mcp.use`), `ActivityContext::useAssistant($canal)`
-  → `ActivitySource::Assistant` (nuevo) + `token_name` = canal (RF-13.04). Rate limit propio.
+  → `ActivitySource::Assistant` (nuevo) + `token_name` = canal (RF-14.04). Rate limit propio.
 - `NewDeskWriteTool::run`: si el pedido viene de un token de asistente, **no ejecuta**: `RecordAssistantProposal` guarda
   tool + argumentos normalizados + resumen de `prepare()` (ya validado y autorizado) y responde
   "Propuesta #N: <resumen>. No está hecha: la persona tiene que confirmarla." Así un rol sin permiso ni siquiera llega a
-  propuesta (CA-13.03) y nada se escribe sin humano (CA-13.02).
+  propuesta (CA-14.03) y nada se escribe sin humano (CA-14.02).
 - `ConfirmAssistantProposal` (action): solo quien pidió, solo `pending` y no vencida (24 h), con lock (doble clic = una
   ejecución); vuelve a correr `prepare()` con el rol **actual** y ejecuta como esa persona con source `assistant`; guarda
   resultado o error. `CancelAssistantProposal`. Las propuestas viejas vencen solas.
@@ -129,7 +129,7 @@ token por variable de entorno `NEWDESK_TOKEN` (el JSON de `--mcp-config` usa `${
 `assistant_proposals` (mensaje, tool, argumentos json, resumen, estado, resultado, resuelta por/en),
 `assistant_files` (reportes generados: path privado, tipo, vence). Todo con `company_id` + `BelongsToCompany`.
 
-**Permiso y configuración (RF-13.09/10)**
+**Permiso y configuración (RF-14.09/10)**
 - `Permission::AssistantUse` ("Usar el asistente de IA"); migración que lo da a los roles Admin existentes; `DefaultRoles`.
 - Settings de empresa (mismo `settings` json + `DEFAULT_SETTINGS`): `assistant_enabled` (false por defecto),
   `assistant_model`, `assistant_monthly_budget_usd`, `assistant_turn_budget_usd`. Pestaña Configuración → Asistente
@@ -137,7 +137,7 @@ token por variable de entorno `NEWDESK_TOKEN` (el JSON de `--mcp-config` usa `${
 - Tope mensual = suma de `cost_usd` del mes (zona de la empresa); alcanzado → mensaje claro y no despacha.
   Rate limit por usuario (ej. 20 turnos/hora).
 
-**Reportes en archivo (RF-13.05)**: tool `export_report` (`kind`: hours_by_project/client/person, bags, overdue_tasks;
+**Reportes en archivo (RF-14.05)**: tool `export_report` (`kind`: hours_by_project/client/person, bags, overdue_tasks;
 `format`: xlsx/pdf; período) → `GenerateAssistantReport` arma el archivo desde **las mismas queries** y devuelve un link
 firmado de descarga (solo quien lo pidió, vence en 7 días). Librerías: `phpoffice/phpspreadsheet` (xlsx) y
 `dompdf/dompdf` (pdf) (decisión 2).
@@ -155,7 +155,7 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 **Pasos**
 - [x] 1. Permiso + migración + settings + `ActivitySource::Assistant`.
 - [x] 2. Tablas, modelos, factories.
-- [x] 3. Token efímero + `AuthorizeMcpToken` + propuestas en `NewDeskWriteTool` + confirmar/cancelar (con tests: CA-13.02/03/04, doble confirmación, otro usuario, vencida, rol degradado entre propuesta y confirmación).
+- [x] 3. Token efímero + `AuthorizeMcpToken` + propuestas en `NewDeskWriteTool` + confirmar/cancelar (con tests: CA-14.02/03/04, doble confirmación, otro usuario, vencida, rol degradado entre propuesta y confirmación).
 - [x] 4. `AssistantEngine` + `ClaudeCodeEngine` + job + `AskAssistant` + límites (tests con `Process::fake`: argumentos exactos, token por env y nunca en el comando, revocado aunque falle, timeout, JSON inválido, tope y rate limit).
 - [x] 5. API web (conversaciones, mensajes, confirmar/cancelar, descargas) + `export_report` + archivos.
 - [x] 6. Supervisor: programa `assistant` (`queue:work redis --queue=assistant --timeout=200`, 1 proceso) en `SupervisorSync`.
@@ -185,11 +185,34 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
    `total_cost_usd` es estimación: sirve de guarda de uso, no de facturación), 2 USD por turno, 20 turnos/hora por
    persona, 1 turno a la vez (cola `assistant` con 1 proceso) para no agotar los límites del plan.
 
-### Fase 3 — Resumen semanal en texto (RF-13.06)
-- [ ] Job lunes 9:00 (hora de la empresa): arma los números con queries existentes → `claude -p` (sin tools, solo redactar a partir de los datos) → Discord + mail a Admins + chat web.
-- [ ] Sin IA disponible (tope alcanzado / caída): sale el resumen con números en plantilla fija.
+### Fase 3 — Resumen semanal en texto (RF-14.06)
 
-### Fase 4 — Discord (RF-13.08)
+Plan (2026-11-17). Base: `main` (con monitoreo) ya mergeado en `dev_green`; Discord se reusa del `Notifier` de monitoreo.
+
+- **Números = sistema:** `Queries/WeeklySummaryData` arma la semana anterior (lunes a domingo, zona de la empresa) con las
+  mismas queries: `HoursReport::overview/byPerson` (total, por proyecto y por persona), `ProjectList` con `running_out`,
+  `TaskList` vencidas (cantidad + las 5 más viejas), `PendingExtensionRequests`, y lo destacable calculado (no por IA):
+  semana contra la anterior, proyecto y persona con más horas, bolsas activas sin movimiento.
+- **Texto:** `Support/WeeklySummaryTemplate` lo escribe en plantilla fija (markdown corto). Si el asistente está prendido y
+  bajo el tope, `claude -p` **sin MCP ni herramientas** reescribe esos datos en un párrafo breve en voseo (el motor gana un
+  método `compose()`); si falla o no hay IA, sale la plantilla (RF-14.09). El costo se suma al tope mensual.
+- **Guardado:** tabla `assistant_weekly_summaries` (empresa, semana, texto, `ai|template`, costo), única por empresa+semana
+  → el job es idempotente (reintentos o dos servidores no lo mandan dos veces).
+- **Salida (canales detrás de una interfaz, CA-14.09):** Discord → `Notifier::summary()` (canal `DISCORD_SUMMARY_CHANNEL_ID`
+  de monitoreo, cola `discord`); mail → a la lista que configure el Admin (`assistant_summary_emails`; vacía = usuarios
+  activos con rol Admin); web → una conversación "Resumen de la semana del …" para cada persona con `assistant.use`.
+- **Cuándo:** `assistant:weekly-summary` cada hora; manda a cada empresa cuyo lunes 9:00 local ya pasó y que todavía no
+  tiene el resumen de esa semana (mismo patrón que `tasks:notify-due`). Interruptor `assistant_weekly_summary_enabled`.
+- **A pedido:** tool MCP de lectura `weekly_summary` (`projects.manage` + módulo reportes) con los mismos datos, para
+  "resumime la semana" en el chat.
+- **Configuración:** en Configuración → Asistente: prender/apagar el resumen y los mails destinatarios.
+- [ ] 1. `WeeklySummaryData` + tests (CA-14.06: horas == reporte web del mismo rango; empresa ajena; semana sin datos).
+- [ ] 2. Plantilla + `compose()` del motor + fallback + costo al tope (tests con motor fake).
+- [ ] 3. Tabla, acción `SendWeeklySummary`, canales (Discord fake, Mail::fake, web) + idempotencia + CA-14.09.
+- [ ] 4. Comando programado + settings + pestaña (front) + tool `weekly_summary`.
+- [ ] 5. Suites, eval real de una redacción, review, commit + push.
+
+### Fase 4 — Discord (RF-14.08)
 - [ ] App de Discord (coordinar con `feat/monitoreo`, que ya manda avisos a Discord: misma app/configuración).
 - [ ] Endpoint de Interactions en Laravel (verificación de firma Ed25519), respuesta diferida + cola (límite de 3 s de Discord).
 - [ ] `/newdesk vincular`, `/newdesk <pedido>`, botones Confirmar/Cancelar (solo quien pidió), adjuntos.
@@ -201,6 +224,6 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 - **Decisión de Juani (2026-11-16): el motor es `claude -p`** (Claude Code headless), no la API de Anthropic. Ventajas: reusa el MCP tal cual (mismas tools y permisos), sin SDK nuevo en el backend.
 - **Managed Agents** (Anthropic hostea loop + agenda): viable — MCP con token en vault (`static_bearer`), MCP pide aprobación por defecto (`always_ask`), deployments con cron. Descartado: el asistente necesita UI propia y Discord igual.
 - **Skills/plugins para construirlo (instalados 2026-11-16):** `claude-api`, `xlsx`/`pdf`/`dataviz` (ya estaban); skill `mcp-builder` (oficial anthropics/skills, en `~/.agents/skills`: diseño de tools + evals); plugin oficial `mcp-server-dev` (deploy remoto, auth, patrones de tools). `laravel-best-practices` NO existe en el marketplace oficial (dato erróneo del relevamiento). Discord: API oficial (Interactions), sin dependencias de terceros.
-- **Plugin oficial `discord` (no instalado):** puente Discord ↔ una sesión de Claude Code con MCP. Sirve para prototipar en un día (bot → Claude Code con el MCP de newDesk), pero todos actúan con el token del dueño de la sesión, una sola conversación compartida y depende de una PC con Claude Code abierto: no reemplaza RF-13.08.
-- **Plugin oficial `mcp-tunnels` (no instalado):** túnel de Anthropic para exponer un MCP privado a claude.ai sin abrirlo a internet; útil si se hace RF-13.11.
+- **Plugin oficial `discord` (no instalado):** puente Discord ↔ una sesión de Claude Code con MCP. Sirve para prototipar en un día (bot → Claude Code con el MCP de newDesk), pero todos actúan con el token del dueño de la sesión, una sola conversación compartida y depende de una PC con Claude Code abierto: no reemplaza RF-14.08.
+- **Plugin oficial `mcp-tunnels` (no instalado):** túnel de Anthropic para exponer un MCP privado a claude.ai sin abrirlo a internet; útil si se hace RF-14.11.
 - **Riesgos:** datos sensibles (clientes, horas por persona) fuera del sistema → solo canal/mails configurados por Admin; costo → tope mensual; prompt injection desde datos (títulos/comentarios) → las escrituras siempre pasan por confirmación humana.

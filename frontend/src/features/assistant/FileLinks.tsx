@@ -2,7 +2,7 @@ import { FileSpreadsheet, FileText } from 'lucide-react'
 import { formatFileSize } from '@/lib/fileSize'
 import type { AssistantFile } from './types'
 
-/** RF-13.05: the reports attached to an answer. Plain links: the session cookie authorizes the download. */
+/** RF-14.05: the reports attached to an answer. Plain links: the session cookie authorizes the download. */
 export function FileLinks({ files }: { files: AssistantFile[] }) {
   if (files.length === 0) return null
 

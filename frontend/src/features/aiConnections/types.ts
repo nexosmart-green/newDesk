@@ -17,6 +17,8 @@ export interface CompanyAiToken extends AiToken {
 export interface MyAiTokens {
   /** The MCP endpoint, e.g. `https://desk.nexosmart.com/mcp`. */
   endpoint: string
+  /** The monitoring MCP endpoint; null without `monitoring.view`. */
+  monitoreo_endpoint: string | null
   tokens: AiToken[]
 }
 
@@ -44,5 +46,7 @@ export interface IssuedToken {
   token: AiToken
   plain_text_token: string
   claude_code_command: string
+  /** Same token for the monitoring MCP; null without `monitoring.view` (then `project_mcp_json` has no `monitoreo` either). */
+  monitoreo_claude_code_command: string | null
   project_mcp_json: ProjectMcpJson
 }

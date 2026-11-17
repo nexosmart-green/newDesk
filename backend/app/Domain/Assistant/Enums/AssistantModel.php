@@ -3,7 +3,7 @@
 namespace App\Domain\Assistant\Enums;
 
 /**
- * Models the Admin can choose for the assistant (RF-13.10), passed to `claude --model`.
+ * Models the Admin can choose for the assistant (RF-14.10), passed to `claude --model`.
  */
 enum AssistantModel: string
 {

@@ -23,6 +23,8 @@ export interface CurrentUser {
   permissions: string[]
   two_factor: TwoFactorStatus
   company: Company
+  /** Set for a client's user (monitoring portal, RF-13.07): they only use /portal. Null for the team. */
+  client: { id: number; name: string } | null
 }
 
 export type LoginResult = { status: 'authenticated'; user: CurrentUser } | { status: 'two_factor_required' }

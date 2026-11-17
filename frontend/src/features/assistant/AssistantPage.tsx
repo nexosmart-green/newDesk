@@ -17,7 +17,7 @@ import { useAskAssistant, useConversationMessages, useConversations } from './us
 const MOBILE_CONVERSATIONS = 15
 
 /**
- * RF-13.01: the web channel of the assistant (`assistant.use`). Conversations on the left, the thread and the
+ * RF-14.01: the web channel of the assistant (`assistant.use`). Conversations on the left, the thread and the
  * composer on the right; on phones the conversations are a menu. The open one lives in `?c=`.
  */
 export function AssistantPage() {

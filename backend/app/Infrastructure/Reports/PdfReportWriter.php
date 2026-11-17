@@ -8,7 +8,7 @@ use App\Domain\Shared\Support\Duration;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-/** RF-13.05 PDF: a plain, printable table; hours as "12h 30m". Remote resources are off (no fetches). */
+/** RF-14.05 PDF: a plain, printable table; hours as "12h 30m". Remote resources are off (no fetches). */
 final class PdfReportWriter implements ReportWriter
 {
     public function format(): string

@@ -27,7 +27,7 @@ class HoursReportController extends Controller
         ]);
     }
 
-    /** RF-13.07: the period's hours per client (same query as the MCP tool `hours_report` with group_by=client). */
+    /** RF-14.07: the period's hours per client (same query as the MCP tool `hours_report` with group_by=client). */
     public function clients(HoursReportRequest $request): JsonResponse
     {
         $period = $request->period();
@@ -38,7 +38,7 @@ class HoursReportController extends Controller
         ]);
     }
 
-    /** RF-13.07: the period's hours per person across projects (MCP `hours_report` with group_by=person). */
+    /** RF-14.07: the period's hours per person across projects (MCP `hours_report` with group_by=person). */
     public function people(HoursReportRequest $request): JsonResponse
     {
         $period = $request->period();

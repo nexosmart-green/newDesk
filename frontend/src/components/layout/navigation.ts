@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Building2,
   CalendarDays,
@@ -6,6 +7,7 @@ import {
   CheckSquare,
   Clock,
   FolderKanban,
+  History,
   LayoutDashboard,
   ListTodo,
   MessagesSquare,
@@ -51,6 +53,7 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
   const canSeeReports = useCan(REPORTS_PERMISSION)
   const canSeeSettings = useCanAny(SETTINGS_PERMISSIONS)
   const canUseAssistant = useCan(ASSISTANT_PERMISSION)
+  const canSeeMonitoring = useCan('monitoring.view')
 
   const visible = (items: Array<NavItem | false>) => items.filter((item): item is NavItem => item !== false)
 
@@ -63,6 +66,7 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
           hasProjects && { to: '/mis-tareas', label: 'Mis tareas', icon: CheckSquare },
           hasProjects && { to: '/tareas', label: 'Tareas', icon: ListTodo, exact: true },
           hasTime && { to: '/mi-semana', label: 'Mi semana', icon: Clock },
+          hasTime && { to: '/mis-horas', label: 'Mis horas', icon: History },
           hasCalendar && { to: '/calendario', label: 'Calendario', icon: CalendarDays },
         ]),
       },
@@ -76,6 +80,10 @@ export function useNavGroups(): { groups: NavGroup[]; footer: NavItem[] } {
           hasReports && canSeeReports && { to: '/reportes/horas', label: 'Reportes', icon: BarChart3 },
           canUseAssistant && { to: '/asistente', label: 'Asistente', icon: MessagesSquare },
         ]),
+      },
+      {
+        label: 'Operación',
+        items: visible([canSeeMonitoring && { to: '/monitoreo', label: 'Monitoreo', icon: Activity }]),
       },
     ],
     footer: visible([canSeeSettings && { to: '/configuracion', label: 'Configuración', icon: Settings }]),

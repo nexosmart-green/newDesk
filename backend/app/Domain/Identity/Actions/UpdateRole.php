@@ -22,6 +22,9 @@ final class UpdateRole
                 'system_role_locked',
             );
         }
+        if ($role->isPortal()) {
+            throw new BusinessRuleViolation("El rol {$role->name} es el de los usuarios del portal de clientes y no se edita.", 'system_role_locked');
+        }
 
         return DB::transaction(function () use ($actor, $role, $name, $permissions) {
             $before = ['name' => $role->name, 'permissions' => $role->permissionValues()];

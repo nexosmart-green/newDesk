@@ -12,7 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Throwable;
 
 /**
- * One assistant turn on the `assistant` queue (a single worker: one turn at a time, RF-13.09). Never retried:
+ * One assistant turn on the `assistant` queue (a single worker: one turn at a time, RF-14.09). Never retried:
  * a failed turn says so instead of running twice.
  */
 final class RunAssistantTurn implements ShouldQueue

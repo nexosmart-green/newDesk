@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// RF-13 in a real browser, desktop and mobile, as the collaborator (one login per project and run).
+// RF-14 in a real browser, desktop and mobile, as the collaborator (one login per project and run).
 // The real part: a role without `assistant.use` has no "Asistente". The flow part simulates the assistant's
 // API (never the real engine, which answers through `claude -p`): the screen, polling, proposal and toast.
 const now = () => new Date().toISOString()

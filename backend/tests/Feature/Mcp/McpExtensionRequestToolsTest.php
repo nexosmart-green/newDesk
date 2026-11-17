@@ -5,7 +5,7 @@ use App\Domain\Shared\Activity\ActivitySource;
 
 require_once __DIR__.'/McpTestHelpers.php';
 
-it('lists pending extension requests and approves one loading hours, like the web (RF-05.08, RF-13.07)', function () {
+it('lists pending extension requests and approves one loading hours, like the web (RF-05.08, RF-14.07)', function () {
     $admin = adminUser();
     $dev = userWithRole($admin);
     ['project' => $project] = bagProject($admin, [$dev], 3600);

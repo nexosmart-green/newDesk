@@ -29,7 +29,7 @@ function hoursFixture(): array
     return compact('admin', 'ana', 'beto');
 }
 
-it('reports the hours of the whole company by project, client and person with the same totals as the web (RF-13.07)', function () {
+it('reports the hours of the whole company by project, client and person with the same totals as the web (RF-14.07)', function () {
     ['admin' => $admin, 'ana' => $ana, 'beto' => $beto] = hoursFixture();
     $token = mcpToken($admin);
     $range = ['from' => '2026-11-01', 'to' => '2026-11-15'];

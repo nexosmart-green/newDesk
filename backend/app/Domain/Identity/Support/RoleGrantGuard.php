@@ -16,6 +16,10 @@ final class RoleGrantGuard
     /** The actor may assign $role only if they hold every permission in it. */
     public function assertCanGrant(User $actor, Role $role): void
     {
+        if ($role->isPortal()) {
+            throw new BusinessRuleViolation("El rol {$role->name} es solo para los usuarios del portal de clientes.", 'portal_role', 403);
+        }
+
         $missing = array_diff($role->permissionValues(), $actor->role->permissionValues());
 
         if ($missing !== [] || ($role->is_system && ! $actor->role->is_system)) {

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Assistant\Actions\CleanUpAssistant;
 use Illuminate\Console\Command;
 
-/** RF-13: closes stuck turns, expires proposals, purges expired reports and assistant tokens (every 5 minutes). */
+/** RF-14: closes stuck turns, expires proposals, purges expired reports and assistant tokens (every 5 minutes). */
 class AssistantHousekeeping extends Command
 {
     protected $signature = 'assistant:housekeeping';

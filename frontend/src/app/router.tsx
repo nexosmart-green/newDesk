@@ -2,14 +2,18 @@ import { createBrowserRouter } from 'react-router'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth, SECURITY_PATH } from '@/features/auth/RequireAuth'
+import { monitoringRoutes, portalRoutes } from '@/features/monitoreo/routes'
 import { HomePage } from './HomePage'
 
 /**
  * Each feature module adds its routes as children of the authenticated layout. Everything except
  * the login and the Panel (the page people open every morning) is lazy so the main chunk stays small.
+ * Monitoring is authenticated but brings its own full-screen layout; its client portal lives outside
+ * both and has its own guard.
  */
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  portalRoutes,
   {
     path: '/recuperar-contrasena',
     lazy: async () => ({ Component: (await import('@/features/auth/ForgotPasswordPage')).ForgotPasswordPage }),
@@ -43,6 +47,7 @@ export const router = createBrowserRouter([
             lazy: async () => ({ Component: (await import('@/features/tasks/MyTasksPage')).MyTasksPage }),
           },
           { path: '/tareas', lazy: async () => ({ Component: (await import('@/features/tasks/AllTasksPage')).AllTasksPage }) },
+          { path: '/mis-horas', lazy: async () => ({ Component: (await import('@/features/hours/MyHoursPage')).MyHoursPage }) },
           { path: '/tareas/:code', lazy: async () => ({ Component: (await import('@/features/tasks/TaskPage')).TaskPage }) },
           {
             path: '/personas',
@@ -117,6 +122,8 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      // Full screen with its own sidebar and a way back: monitoring does not live inside the shell.
+      monitoringRoutes,
     ],
   },
 ])

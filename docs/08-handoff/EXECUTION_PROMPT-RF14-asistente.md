@@ -1,10 +1,10 @@
-# Prompt de arranque — Asistente de IA de newDesk (RF-13)
+# Prompt de arranque — Asistente de IA de newDesk (RF-14)
 
 Copiar desde la línea siguiente en una sesión nueva de Claude Code abierta en `C:\NexoSmart\Projects\newDesk`.
 
 ---
 
-Vas a construir el **Asistente de IA de newDesk** (RF-13). Trabajás en el repo `C:\NexoSmart\Projects\newDesk` (Laravel 12 + PHP 8.3 en `backend/`, React 19 + Vite + TS en `frontend/`), rama **`dev_green`**. Soy Juani, dev a cargo; hablame en castellano rioplatense.
+Vas a construir el **Asistente de IA de newDesk** (RF-14). Trabajás en el repo `C:\NexoSmart\Projects\newDesk` (Laravel 12 + PHP 8.3 en `backend/`, React 19 + Vite + TS en `frontend/`), rama **`dev_green`**. Soy Juani, dev a cargo; hablame en castellano rioplatense.
 
 ## Qué es
 
@@ -15,7 +15,7 @@ Un asistente al que **solo los administradores** (permiso nuevo `assistant.use`,
 ## Leé primero (en este orden)
 
 1. `C:\NexoSmart\Projects\newDesk\CLAUDE.md` y `C:\Users\GREEN\.claude\CLAUDE.md` (reglas globales: plan en `tasks/`, commits convencionales en inglés, pushear siempre, verificar antes de dar por terminado).
-2. `C:\NexoSmart\Projects\newDesk\docs\02-requerimientos\RF-13-asistente-ia.md` — la spec (requerimientos + criterios de aceptación).
+2. `C:\NexoSmart\Projects\newDesk\docs\02-requerimientos\RF-14-asistente-ia.md` — la spec (requerimientos + criterios de aceptación).
 3. `C:\NexoSmart\Projects\newDesk\tasks\asistente-ia.md` — el plan por fases y la investigación ya hecha. Es tu checklist: tildá a medida que avanzás.
 4. `C:\NexoSmart\Projects\newDesk\docs\02-requerimientos\RF-12-mcp-claude-code.md` y el MCP actual: `backend/routes/ai.php`, `backend/app/Mcp/Servers/NewDeskServer.php`, `backend/app/Mcp/Tools/*`, `backend/app/Mcp/Support/*`, `backend/app/Http/Middleware/AuthorizeMcpToken.php`.
 5. `C:\NexoSmart\Projects\newDesk\docs\04-arquitectura\convenciones-de-codigo.md` y `arquitectura.md` (dominios en `app/Domain/<Módulo>/{Actions,Queries,Policies,Support}`, controllers finos, `BusinessRuleViolation` con mensajes en voseo, envelope `{data,message,errors}`, `RecordActivity`).

@@ -6,7 +6,7 @@ use App\Domain\Assistant\Models\AssistantConversation;
 use App\Domain\Identity\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-/** RF-13.01: my conversations with the assistant, the most recent first. */
+/** RF-14.01: my conversations with the assistant, the most recent first. */
 final class MyAssistantConversations
 {
     /** @return LengthAwarePaginator<int, AssistantConversation> */

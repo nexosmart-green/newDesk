@@ -68,8 +68,9 @@ activity_log (id, subject_type, subject_id, project_id NULL, actor_id, event, be
 ## Invariantes (tests obligatorios)
 
 1. Un usuario tiene como máximo 1 `time_entry` con `ended_at NULL`.
-2. Para proyectos `bag`/`monthly`: `Σ seconds(time_entries) ≤ Σ hour_allocations` (+ tolerancia R-1, recortada al cerrar).
+2. Para proyectos `bag`/`monthly`: `Σ seconds(time_entries) ≤ Σ hour_allocations` (+ tolerancia R-1, recortada al cerrar). **Excepción RF-05.19:** el reparto del reloj del día y los ▶ que quedaron `uncapped` (R-6) pueden dejarla en negativo; se avisa a Admin + líder.
 3. `projects.consumed_seconds = Σ seconds` de sus registros cerrados (reconciliación nocturna).
 4. `tasks.number` correlativo sin huecos por proyecto.
 5. `hour_allocations` y `access_events_raw` nunca se actualizan ni borran.
 6. Todo `time_entry` cerrado tiene `comment` no vacío o `comment_pending = true`; un usuario con `comment_pending` no puede abrir otro timer.
+7. Un usuario tiene como máximo 1 `day_clock` sin repartir (`split_at NULL`, corriendo o pendiente): UNIQUE sobre la columna generada `unsplit_user_id`. Con uno así no puede abrir un ▶ ni otro día (RF-05.19).

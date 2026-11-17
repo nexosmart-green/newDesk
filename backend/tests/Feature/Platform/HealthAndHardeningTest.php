@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Monitoring\Polling\PollerSignals;
+
 it('answers the root with a neutral status and no stack headers', function () {
     $response = $this->get('/');
 
@@ -9,10 +11,23 @@ it('answers the root with a neutral status and no stack headers', function () {
 });
 
 it('reports health with every service up', function () {
+    app(PollerSignals::class)->markTick(now()->getTimestamp());
+
     $this->getJson('/api/health')
         ->assertOk()
         ->assertJsonPath('status', 'ok')
-        ->assertJsonPath('services.database', true);
+        ->assertJsonPath('services.database', true)
+        ->assertJsonPath('services.poller', true);
+});
+
+it('reports degraded when the monitoring poller stops ticking (RF-13.02)', function () {
+    app(PollerSignals::class)->markTick(now()->getTimestamp());
+    $this->travel(PollerSignals::TICK_STALE_AFTER)->seconds();
+
+    $this->getJson('/api/health')
+        ->assertStatus(503)
+        ->assertJsonPath('status', 'degraded')
+        ->assertJsonPath('services.poller', false);
 });
 
 it('protects the error log with ERRORS_TOKEN', function () {

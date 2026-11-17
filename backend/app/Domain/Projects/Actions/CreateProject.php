@@ -5,6 +5,7 @@ namespace App\Domain\Projects\Actions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Projects\Support\EnsureProjectAssignable;
+use App\Domain\Projects\Support\ProjectSlug;
 use App\Domain\Shared\Activity\RecordActivity;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,7 @@ final class CreateProject
                 ...Arr::only($data, Project::EDITABLE),
                 'code_prefix' => mb_strtolower((string) $data['code_prefix']),
                 'company_id' => $actor->company_id,
+                'slug' => ProjectSlug::available((string) $data['name'], $actor->company_id),
             ]);
 
             $project->members()->attach(collect($members)->mapWithKeys(fn (User $member) => [

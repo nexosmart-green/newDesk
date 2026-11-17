@@ -31,3 +31,4 @@ Nada se pierde: el inbox procesado es la trazabilidad pedido → requerimiento.
 ## Procesados
 
 - `procesados/2026-11-06-kickoff.md` — pedido inicial (→ RF-01 a RF-09).
+- `procesados/2026-11-06-monitoreo.md` — integrar monitoreo (→ RF-13, ADR-0002).

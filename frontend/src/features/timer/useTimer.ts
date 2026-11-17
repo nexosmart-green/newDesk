@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { toast } from '@/components/ui/toast/toastStore'
 import { MODULES, useHasModule } from '@/features/auth/modules'
-import { formatDuration } from '@/lib/duration'
+import { formatDuration, formatSignedDuration } from '@/lib/duration'
 import { toastTextOf } from '@/lib/errorText'
 import { dashboardKey, hoursKey, projectsKey, taskKey, tasksKey, timesheetKey } from '@/lib/queryKeys'
 import { refreshQueries } from '@/lib/refreshQueries'
@@ -12,12 +12,15 @@ import {
   deleteTimeEntry,
   fetchTimer,
   logManualTime,
+  splitDay,
+  startDay,
   startTimer,
+  stopDay,
   stopTimer,
 } from './timerApi'
-import { confirmStarted, optimisticStart, optimisticStop, rollback, timerKey, type StartingTask } from './timerOptimistic'
+import { confirmDayClock, confirmStarted, optimisticStart, optimisticStop, rollback, timerKey, type StartingTask } from './timerOptimistic'
 import { broadcastTimerChanged, subscribeTimerChanged } from './timerSync'
-import type { CorrectEntryInput, ManualEntryInput } from './types'
+import type { CorrectEntryInput, DayPartInput, DaySplitResult, ManualEntryInput } from './types'
 
 export { timerKey }
 /**
@@ -144,6 +147,57 @@ export function useDeleteTimeEntry() {
     onSuccess: (message) => {
       toast.success(message ?? 'Registro borrado.')
       return changed([hoursKey])
+    },
+  })
+}
+
+/** RF-05.19: refusals (a ▶ running, a day still to split…) toast with the server's reason. */
+export function useStartDay() {
+  const queryClient = useQueryClient()
+  const changed = useTimeDataChanged()
+  return useMutation({
+    mutationFn: startDay,
+    onSuccess: (dayClock) => {
+      confirmDayClock(queryClient, dayClock)
+      return changed()
+    },
+  })
+}
+
+export function useStopDay() {
+  const queryClient = useQueryClient()
+  const changed = useTimeDataChanged()
+  return useMutation({
+    mutationFn: stopDay,
+    onSuccess: (dayClock) => {
+      confirmDayClock(queryClient, dayClock)
+      return changed()
+    },
+  })
+}
+
+function overdrawnText(overdrawn: DaySplitResult['overdrawn']): string {
+  // `seconds` is how far below zero the bag ended; the sign the server uses doesn't matter here.
+  return overdrawn.map((project) => `${project.name} (${formatSignedDuration(-Math.abs(project.seconds))})`).join(', ')
+}
+
+/** The split dialog shows refusals on the parts themselves, hence `silentError`. New tasks may appear. */
+export function useSplitDay() {
+  const queryClient = useQueryClient()
+  const changed = useTimeDataChanged()
+  return useMutation({
+    meta: { silentError: true },
+    mutationFn: ({ dayClockId, parts }: { dayClockId: number; parts: DayPartInput[] }) => splitDay(dayClockId, parts),
+    onSuccess: ({ data, message }, { parts }) => {
+      toast.success(message ?? (parts.length > 0 ? 'Día repartido.' : 'Listo: ese día no suma horas.'))
+      if (data.overdrawn.length > 0) {
+        toast.info(`${overdrawnText(data.overdrawn)}. Ya les avisamos al admin y al responsable.`, {
+          title: 'Bolsas en negativo',
+          duration: 10_000,
+        })
+      }
+      confirmDayClock(queryClient, null)
+      return Promise.all([changed(), queryClient.invalidateQueries({ queryKey: ['tasks'] })])
     },
   })
 }

@@ -28,6 +28,6 @@ class GetActiveTimerTool extends NewDeskTool
     {
         $active = $this->timerState->active($user);
 
-        return $this->json(['active_timer' => $active ? McpPresenter::entry($active) : null]);
+        return $this->json(['active_timer' => $active ? McpPresenter::entry($active) : null, 'day_clock' => McpPresenter::dayClock($user)]);
     }
 }

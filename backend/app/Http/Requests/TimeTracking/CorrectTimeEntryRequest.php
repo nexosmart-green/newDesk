@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 
-/** RF-05.15: the comment is mandatory; date + from/to (person's timezone) only when the times change. */
+/** RF-05.15: the comment is mandatory; date + from/to (person's timezone) only when the times change; task_id only when it moves (RF-05.20). */
 class CorrectTimeEntryRequest extends FormRequest
 {
     /** Authorize BEFORE validating: other people's entries are 404 even with an invalid body. */
@@ -27,6 +27,8 @@ class CorrectTimeEntryRequest extends FormRequest
             'from' => ['required_with:date', 'date_format:H:i'],
             'to' => ['required_with:date', 'date_format:H:i'],
             'comment' => ['required', 'string', 'max:'.TimeTrackingLimits::ENTRY_COMMENT_MAX],
+            // RF-05.20: move the entry to another task (and its project).
+            'task_id' => ['nullable', 'integer'],
         ];
     }
 

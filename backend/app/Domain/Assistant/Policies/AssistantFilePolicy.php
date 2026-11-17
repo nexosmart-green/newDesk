@@ -7,7 +7,7 @@ use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use Illuminate\Auth\Access\Response;
 
-/** RF-13.05: a generated report is downloaded only by whoever asked for it, while it has not expired. */
+/** RF-14.05: a generated report is downloaded only by whoever asked for it, while it has not expired. */
 class AssistantFilePolicy
 {
     public function download(User $user, AssistantFile $file): Response

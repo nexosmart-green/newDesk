@@ -14,7 +14,7 @@ final class DeleteRole
 
     public function __invoke(User $actor, Role $role): void
     {
-        if ($role->is_system) {
+        if ($role->is_system || $role->isPortal()) {
             throw new BusinessRuleViolation("El rol {$role->name} es del sistema y no se puede borrar.", 'system_role_locked');
         }
 

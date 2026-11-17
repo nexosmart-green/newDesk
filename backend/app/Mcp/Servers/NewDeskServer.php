@@ -50,7 +50,7 @@ class NewDeskServer extends Server
         Tools\ListMyShiftsTool::class,
         Tools\AllocateHoursTool::class,
         Tools\GetProjectHoursReportTool::class,
-        // RF-13.07: management
+        // RF-14.07: management
         Tools\GetHoursReportTool::class,
         Tools\SearchProjectsTool::class,
         Tools\ListTasksTool::class,
@@ -68,7 +68,7 @@ class NewDeskServer extends Server
         Tools\RejectExtensionRequestTool::class,
         Tools\ListPeopleTool::class,
         Tools\ListTeamShiftsTool::class,
-        // RF-13.05: only inside an assistant turn
+        // RF-14.05: only inside an assistant turn
         Tools\ExportReportTool::class,
     ];
 

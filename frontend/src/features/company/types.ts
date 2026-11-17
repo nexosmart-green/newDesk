@@ -4,7 +4,7 @@ export interface CompanySettings {
   forgotten_timer_after_shift_hours: number
   /** [warning %, critical %] of a project's sold hours (RF-11). */
   hour_alert_thresholds: [number, number]
-  /** RF-13.10: the AI assistant. With a subscription the cost is an estimate (a usage guard). */
+  /** RF-14.10: the AI assistant. With a subscription the cost is an estimate (a usage guard). */
   assistant_enabled: boolean
   assistant_model: string
   assistant_monthly_budget_usd: number

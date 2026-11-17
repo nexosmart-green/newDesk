@@ -1,0 +1,22 @@
+{
+  "scanned_at": "2026-10-14T08:00:49Z",
+  "items": [
+    {"path": "/var/www/api2025.tufarmapoint.com/tfp-api", "manager": "npm", "report_only": true,
+     "counts": {"critical": 1, "high": 1, "moderate": 1, "low": 0},
+     "findings": [
+       {"package": "form-data", "severity": "critical", "title": "form-data uses unsafe random function for choosing boundary", "url": "https://github.com/advisories/GHSA-fjxv-7rqg-78g4", "fix_available": true},
+       {"package": "axios", "severity": "high", "title": "Axios is vulnerable to DoS attack through lack of data size check", "url": "https://github.com/advisories/GHSA-4hjh-wcwx-xvwj", "fix_available": true},
+       {"package": "brace-expansion", "severity": "moderate", "title": "brace-expansion Regular Expression Denial of Service vulnerability", "url": "https://github.com/advisories/GHSA-v6h2-p8h4-qcjw", "fix_available": true}
+     ]},
+    {"path": "/var/www/api2025.tufarmapoint.com/tfp_api/api", "manager": "composer", "report_only": true,
+     "counts": {"critical": 0, "high": 0, "moderate": 0, "low": 0}, "findings": []},
+    {"path": "/var/www/clubolimpo.com.ar/api", "manager": "composer",
+     "counts": {"critical": 0, "high": 1, "moderate": 0, "low": 1},
+     "findings": [
+       {"package": "league/commonmark", "severity": "high", "title": "league/commonmark allows cross-site scripting via embed extension", "cve": "CVE-2025-46734", "url": "https://github.com/thephpleague/commonmark/security/advisories/GHSA-3527-qv2q-pfvx"},
+       {"package": "swiftmailer/swiftmailer", "severity": "low", "title": "Paquete abandonado, usar symfony/mailer"}
+     ]},
+    {"path": "/var/www/clubolimpo.com.ar/olimpo_app", "manager": "npm", "error": "npm audit: request to https://registry.npmjs.org/-/npm/v1/security/advisories/bulk failed",
+     "counts": {"critical": 0, "high": 0, "moderate": 0, "low": 0}, "findings": []}
+  ]
+}

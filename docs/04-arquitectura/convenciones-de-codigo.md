@@ -97,13 +97,13 @@ Shared                                   app/Domain/Shared/
 - **Lectura o escritura, sin término medio** (lo verifica `McpToolContractTest`): las de lectura llevan `#[IsReadOnly]`;
   las que cambian datos extienden **`NewDeskWriteTool`** e implementan `prepare()`: valida, resuelve, autoriza y describe
   el cambio **sin escribir** y devuelve un `PreparedWrite` (resumen + closure que llama a la Action). Así el mismo
-  código sirve para ejecutar ya (MCP personal) o para dejar una **propuesta** (asistente, RF-13.02) que al confirmar se
+  código sirve para ejecutar ya (MCP personal) o para dejar una **propuesta** (asistente, RF-14.02) que al confirmar se
   vuelve a preparar con el rol de ese momento. Reglas que la acción rechazaría igual (proyecto interno, pedido ya
   resuelto) se chequean también en `prepare()` con el **mismo guard** de `Support/`, para no proponer algo que va a fallar.
 - Los argumentos llegan normalizados como un formulario web (trim, `''` → `null`) y las reglas de validación se comparten
   con el FormRequest (`ClientRules`, `ProjectRules`), nunca copiadas.
 
-### Asistente (`app/Domain/Assistant`, RF-13)
+### Asistente (`app/Domain/Assistant`, RF-14)
 
 - Motor detrás de `Contracts/AssistantEngine` → `app/Infrastructure/ClaudeCode/ClaudeCodeEngine` (`claude -p` aislado: solo
   el MCP de newDesk, sin herramientas propias ni settings de la máquina, pregunta por stdin, token por entorno). Los tests

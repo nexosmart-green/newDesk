@@ -12,3 +12,8 @@ export function formatClock(totalSeconds: number): string {
   const pad = (value: number) => value.toString().padStart(2, '0')
   return `${pad(Math.floor(safe / 3600))}:${pad(Math.floor((safe % 3600) / 60))}:${pad(safe % 60)}`
 }
+
+/** For balances that can go below zero (`formatDuration` clamps): `−0h 59m`. */
+export function formatSignedDuration(totalSeconds: number): string {
+  return `${totalSeconds < 0 ? '−' : ''}${formatDuration(Math.abs(totalSeconds))}`
+}

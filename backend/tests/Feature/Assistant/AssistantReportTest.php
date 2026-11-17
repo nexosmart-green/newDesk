@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 require_once __DIR__.'/AssistantHelpers.php';
 require_once __DIR__.'/../Tasks/ParityHelpers.php';
 
-it('hands over Excel and PDF reports built from the same queries, attached to the answer (RF-13.05)', function () {
+it('hands over Excel and PDF reports built from the same queries, attached to the answer (RF-14.05)', function () {
     $admin = adminUser();
     enableAssistant($admin);
     $dev = userWithRole($admin);

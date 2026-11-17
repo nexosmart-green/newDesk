@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Models;
 
+use App\Domain\Identity\DefaultRoles;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Shared\Concerns\BelongsToCompany;
 use Database\Factories\RoleFactory;
@@ -31,6 +32,12 @@ class Role extends Model
     protected function casts(): array
     {
         return ['is_system' => 'boolean'];
+    }
+
+    /** The client portal users' role (RF-13.07): only given from Monitoreo, never edited or deleted. */
+    public function isPortal(): bool
+    {
+        return $this->name === DefaultRoles::CLIENT;
     }
 
     /** @return HasMany<User, $this> */

@@ -44,11 +44,11 @@ Todas validan con las mismas policies que la API web. Las de escritura usan los 
 | `allocate_hours` | Cargar/ampliar horas de un proyecto (motivo obligatorio) | `hours.allocate` |
 | `project_hours_report` | Horas por persona/tarea de un proyecto | `projects.manage` |
 
-## Tools de gestión (RF-13.07)
+## Tools de gestión (RF-14.07)
 
 Mismas reglas: el módulo del rol, la misma policy/Gate y la misma acción de dominio que la web. Las de escritura
 extienden `NewDeskWriteTool` (se preparan —validan, resuelven, autorizan y se describen— antes de ejecutarse; base de
-las confirmaciones del asistente, RF-13.02). Listados con `limit` (máx. 50) / `page` y `total` / `has_more`.
+las confirmaciones del asistente, RF-14.02). Listados con `limit` (máx. 50) / `page` y `total` / `has_more`.
 
 | Tool | Qué hace | Permiso |
 |---|---|---|

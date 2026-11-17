@@ -7,7 +7,7 @@ use App\Domain\Shared\Activity\ActivitySource;
 
 require_once __DIR__.'/McpTestHelpers.php';
 
-it('creates, edits only what is sent and inactivates clients like the web, logged with source mcp (RF-13.07)', function () {
+it('creates, edits only what is sent and inactivates clients like the web, logged with source mcp (RF-14.07)', function () {
     $admin = adminUser();
     $token = mcpToken($admin);
 

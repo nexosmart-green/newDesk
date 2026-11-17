@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Models;
 
+use App\Domain\Clients\Models\Client;
 use App\Domain\Companies\Models\Company;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Enums\UserStatus;
@@ -30,12 +31,14 @@ use Laravel\Sanctum\HasApiTokens;
  * @property int $id
  * @property int $company_id
  * @property int $role_id
+ * @property int|null $client_id
  * @property string $first_name
  * @property string $last_name
  * @property string $email
  * @property UserStatus $status
  * @property string $locale
  * @property string|null $timezone
+ * @property string|null $discord_user_id
  * @property string|null $two_factor_secret
  * @property list<string>|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -48,12 +51,14 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'company_id', 'role_id', 'first_name', 'last_name', 'email', 'password',
-        'status', 'locale', 'timezone',
+        'company_id', 'role_id', 'client_id', 'first_name', 'last_name', 'email', 'password',
+        'status', 'locale', 'timezone', 'discord_user_id',
     ];
 
-    /** Mirrors the column defaults so fresh instances behave like reloaded ones. */
+    /** Mirrors the column defaults so fresh instances behave like reloaded ones (team by default: isClient() needs no reload). */
     protected $attributes = [
+        'client_id' => null,
+        'discord_user_id' => null,
         'locale' => 'es',
         'timezone' => null,
         'avatar_path' => null,
@@ -107,6 +112,24 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class)->withoutGlobalScopes();
     }
 
+    /** @return BelongsTo<Client, $this> */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class)->withoutGlobalScopes();
+    }
+
+    /** A client user only reaches the portal (RF-13.07, CA-13.14). */
+    public function isClient(): bool
+    {
+        return $this->client_id !== null;
+    }
+
+    /** Everyone but the client portal users: the people, assignees, shifts and admins of newDesk. */
+    public function scopeTeam(Builder $query): Builder
+    {
+        return $query->whereNull('client_id');
+    }
+
     /** @return HasOne<EmployeeProfile, $this> */
     public function profile(): HasOne
     {
@@ -140,6 +163,23 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;
+    }
+
+    /** Inactivating a client also signs its portal users out (D-038). */
+    public function canLogin(): bool
+    {
+        return $this->isActive() && ($this->client_id === null || $this->client?->isActive() === true);
+    }
+
+    /**
+     * The client user that may enter the portal with exactly this address, byte for byte (D-076):
+     * the column's collation ignores accents, so `ana@exámple.com` would find `ana@example.com`.
+     */
+    public static function portalUserByEmail(string $email): ?self
+    {
+        $user = self::query()->where('email', $email)->whereNotNull('client_id')->first();
+
+        return $user !== null && $user->email === $email && $user->canLogin() ? $user : null;
     }
 
     /**

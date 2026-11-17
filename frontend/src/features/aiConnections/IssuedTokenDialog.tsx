@@ -23,6 +23,13 @@ export function IssuedTokenDialog({ issued, onClose }: { issued: IssuedToken; on
           <p className="text-xs text-muted">Pegalo en la terminal:</p>
           <CopyableValue value={issued.claude_code_command} label="Copiar comando de Claude Code" />
         </div>
+        {issued.monitoreo_claude_code_command && (
+          <div className="space-y-1">
+            <h3 className="font-medium">Conectar el MCP de monitoreo</h3>
+            <p className="text-xs text-muted">El mismo token sirve para monitoreo. Pegalo también en la terminal:</p>
+            <CopyableValue value={issued.monitoreo_claude_code_command} label="Copiar comando de monitoreo" />
+          </div>
+        )}
         <div className="space-y-1">
           <h3 className="font-medium">O en el proyecto: .mcp.json</h3>
           <p className="text-xs text-muted">
