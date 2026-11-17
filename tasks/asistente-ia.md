@@ -159,9 +159,11 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 - [x] 4. `AssistantEngine` + `ClaudeCodeEngine` + job + `AskAssistant` + límites (tests con `Process::fake`: argumentos exactos, token por env y nunca en el comando, revocado aunque falle, timeout, JSON inválido, tope y rate limit).
 - [x] 5. API web (conversaciones, mensajes, confirmar/cancelar, descargas) + `export_report` + archivos.
 - [x] 6. Supervisor: programa `assistant` (`queue:work redis --queue=assistant --timeout=200`, 1 proceso) en `SupervisorSync`.
-- [x] 7. Front: pantalla `/asistente` + pestaña Configuración → Asistente; capturas claro/oscuro/mobile revisadas. ⏳ Falta: E2E Playwright (ver "Mañana").
+- [x] 7. Front: pantalla `/asistente` + pestaña Configuración → Asistente; capturas claro/oscuro/mobile revisadas. E2E `e2e/assistant.spec.ts` (desktop + mobile): sin permiso no aparece; con la API del asistente simulada (nunca el motor real) pregunta, "Pensando…", tabla, Confirmar y toast.
 - [x] 8. Eval real: `php artisan assistant:eval admin@nexosmart.com` → 8/8 OK, USD 0,23 estimados (lecturas con números del sistema, 3 escrituras quedaron como propuesta sin tocar datos, Excel adjunto, fuera de tema rechazado). Limpia sus conversaciones.
 - [x] 9. Review independiente hecho y corregido (turno colgado tras timeout, catch Throwable + `failed()` del job + `assistant:housekeeping` cada 5 min, costo de timeouts al tope, nombres `assistant:` reservados, purga de reportes vencidos, descarga exige `assistant.use`, propuestas visibles en respuesta fallida, tope de 4 archivos por turno). Convenciones actualizadas.
+
+**Cierre de Fase 2 (2026-11-17)** — Vitest 307/307 (local y `TZ=UTC`), build OK, E2E 8 pasan / 4 skip (por diseño), backend 310/310 (2026-11-16). Sin herramientas de GitHub en esa PC (sin `gh`, MCP caído): **el CI hay que mirarlo en Actions**. Siguiente: Fase 3 (resumen semanal) — avisar antes de Fase 4 (Discord).
 
 **Estado al cortar (2026-11-16, tarde)** — commit de cierre en `dev_green` (NO en `main`).
 - Backend: `php artisan test` 310/310 después de los fixes del review.
