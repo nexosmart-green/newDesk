@@ -14,6 +14,7 @@ final class PendingExtensionRequests
     public function __invoke(int $companyId): Collection
     {
         return HourExtensionRequest::query()->forCompany($companyId)->pending()
+            ->whereHas('project') // a deleted project's requests have nothing left to extend
             ->with(['project', 'requester'])->oldest()->get();
     }
 }

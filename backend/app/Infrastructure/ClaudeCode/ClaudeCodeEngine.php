@@ -33,27 +33,59 @@ final class ClaudeCodeEngine implements AssistantEngine
     {
         $workdir = $this->workdir();
 
+        return $this->run(
+            $this->command($question, $workdir.DIRECTORY_SEPARATOR.'mcp.json'),
+            $question->text, [self::TOKEN_ENV => $question->token], $question->budgetUsd, $question->sessionId,
+        );
+    }
+
+    /** Writing only (RF-14.06): no MCP, no tools at all, nothing remembered. The text goes by stdin. */
+    public function compose(string $instructions, string $text, string $model, float $budgetUsd): AssistantAnswer
+    {
+        $this->workdir();
+
+        return $this->run([
+            $this->config->get('newdesk.assistant.binary'),
+            '-p',
+            '--output-format', 'json',
+            '--model', $model,
+            '--strict-mcp-config',
+            '--tools', '',
+            '--permission-mode', 'dontAsk',
+            '--setting-sources', '',
+            '--no-session-persistence',
+            '--append-system-prompt', $instructions,
+            '--max-budget-usd', number_format($budgetUsd, 2, '.', ''),
+        ], $text, [], $budgetUsd, null);
+    }
+
+    /**
+     * @param  list<string>  $command
+     * @param  array<string, string>  $env
+     */
+    private function run(array $command, string $input, array $env, float $budgetUsd, ?string $resumed): AssistantAnswer
+    {
         try {
-            $result = Process::path($workdir)
+            $result = Process::path($this->config->get('newdesk.assistant.workdir'))
                 ->timeout($this->config->get('newdesk.assistant.timeout_seconds'))
-                ->env([self::TOKEN_ENV => $question->token])
-                ->input($question->text)
-                ->run($this->command($question, $workdir.DIRECTORY_SEPARATOR.'mcp.json'));
+                ->env($env)
+                ->input($input)
+                ->run($command);
         } catch (ProcessTimedOutException) {
             // It may have spent up to its budget before being cut: count it all, so the monthly cap can't be dodged.
-            throw new AssistantEngineFailed('Tardé demasiado en responder. Probá con un pedido más concreto.', $question->budgetUsd);
+            throw new AssistantEngineFailed('Tardé demasiado en responder. Probá con un pedido más concreto.', $budgetUsd);
         }
 
         // Before any work (no JSON, or an error that cost nothing) a missing `--resume` session is the usual cause.
         $output = json_decode($result->output(), true);
         if (! is_array($output) || ! isset($output['type'])) {
-            throw new AssistantEngineFailed(self::UNAVAILABLE, mayRetryFresh: $question->sessionId !== null);
+            throw new AssistantEngineFailed(self::UNAVAILABLE, mayRetryFresh: $resumed !== null);
         }
 
         $cost = (float) ($output['total_cost_usd'] ?? 0);
         $sessionId = $output['session_id'] ?? null;
         if (($output['is_error'] ?? false) || ($output['subtype'] ?? '') !== 'success' || ! is_string($output['result'] ?? null)) {
-            throw new AssistantEngineFailed($this->failureMessage($output), $cost, $sessionId, $question->sessionId !== null && $cost === 0.0);
+            throw new AssistantEngineFailed($this->failureMessage($output), $cost, $sessionId, $resumed !== null && $cost === 0.0);
         }
 
         return new AssistantAnswer(trim($output['result']), $sessionId, $cost, (int) ($output['duration_ms'] ?? 0));

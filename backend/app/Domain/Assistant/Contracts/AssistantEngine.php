@@ -14,4 +14,11 @@ interface AssistantEngine
 {
     /** @throws AssistantEngineFailed with a message a person can read */
     public function answer(AssistantQuestion $question): AssistantAnswer;
+
+    /**
+     * Writes a text from the given material only: no MCP, no tools, no session (the weekly summary, RF-14.06).
+     *
+     * @throws AssistantEngineFailed
+     */
+    public function compose(string $instructions, string $text, string $model, float $budgetUsd): AssistantAnswer;
 }

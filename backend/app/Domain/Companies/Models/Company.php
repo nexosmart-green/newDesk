@@ -35,6 +35,12 @@ class Company extends Model
         'assistant_model' => 'claude-opus-5-5',
         'assistant_monthly_budget_usd' => 200,
         'assistant_turn_budget_usd' => 2,
+        // RF-14.06: off until an Admin turns it on (it mails client names and hours per person, CA-14.09).
+        'assistant_weekly_summary_enabled' => false,
+        /** Empty = the company's active Admins. */
+        'assistant_summary_emails' => [],
+        /** monitoreo's Discord summary channel is server-wide: the company opts in (CA-14.09). */
+        'assistant_summary_discord' => false,
     ];
 
     protected $fillable = ['name', 'tax_id', 'logo_path', 'currency', 'timezone', 'settings'];

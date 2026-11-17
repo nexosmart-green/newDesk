@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Domain\Assistant\Actions\SendWeeklySummary;
 use App\Domain\Assistant\Contracts\AssistantEngine;
 use App\Domain\Assistant\Contracts\ProposalExecutor;
 use App\Domain\Assistant\Support\AssistantTurn;
+use App\Domain\Assistant\Support\SummaryChannels\DiscordSummaryChannel;
+use App\Domain\Assistant\Support\SummaryChannels\MailSummaryChannel;
+use App\Domain\Assistant\Support\SummaryChannels\WebSummaryChannel;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Identity\Models\User;
 use App\Domain\Monitoring\Contracts\AgentGateway;
@@ -49,6 +53,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(AssistantTurn::class);
         $this->app->bind(ProposalExecutor::class, McpProposalExecutor::class);
         $this->app->bind(AssistantEngine::class, ClaudeCodeEngine::class);
+        // RF-14.06: where the weekly summary goes.
+        $this->app->tag([DiscordSummaryChannel::class, MailSummaryChannel::class, WebSummaryChannel::class], 'assistant.summary-channels');
+        $this->app->when(SendWeeklySummary::class)->needs('$channels')->giveTagged('assistant.summary-channels');
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
         $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
         $this->app->bind(DiscordGateway::class, fn () => filled($token = config('newdesk.monitoring.discord.bot_token'))

@@ -70,6 +70,8 @@ class NewDeskServer extends Server
         Tools\ListTeamShiftsTool::class,
         // RF-14.05: only inside an assistant turn
         Tools\ExportReportTool::class,
+        // RF-14.06: "resumime la semana"
+        Tools\GetWeeklySummaryTool::class,
     ];
 
     protected array $tools = self::TOOLS;

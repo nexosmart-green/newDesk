@@ -29,6 +29,10 @@ class UpdateCompanyRequest extends FormRequest
             'settings.assistant_model' => ['sometimes', Rule::in(AssistantModel::values())],
             'settings.assistant_monthly_budget_usd' => ['sometimes', 'numeric', 'min:0', 'max:10000'],
             'settings.assistant_turn_budget_usd' => ['sometimes', 'numeric', 'min:0.1', 'max:50'],
+            'settings.assistant_weekly_summary_enabled' => ['sometimes', 'boolean'],
+            'settings.assistant_summary_emails' => ['sometimes', 'array', 'max:10'],
+            'settings.assistant_summary_emails.*' => ['email', 'max:255', 'distinct'],
+            'settings.assistant_summary_discord' => ['sometimes', 'boolean'],
         ];
     }
 

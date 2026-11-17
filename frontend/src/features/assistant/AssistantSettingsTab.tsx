@@ -6,10 +6,20 @@ import { inputClassName, TextField } from '@/components/ui/TextField'
 import type { CompanyProfile, CompanySettings } from '@/features/company/types'
 import { useCompany, useUpdateCompany } from '@/features/company/useCompany'
 import { fieldErrorOf } from '@/lib/api'
+import { parseEmailList } from '@/lib/emailList'
 import type { AssistantUsage } from './types'
 import { useAssistantUsage } from './useAssistant'
+import { WeeklySummaryFields } from './WeeklySummaryFields'
 
-type AssistantSettings = Pick<CompanySettings, 'assistant_enabled' | 'assistant_model' | 'assistant_monthly_budget_usd' | 'assistant_turn_budget_usd'>
+type AssistantSettings = Pick<
+  CompanySettings,
+  | 'assistant_enabled'
+  | 'assistant_model'
+  | 'assistant_monthly_budget_usd'
+  | 'assistant_turn_budget_usd'
+  | 'assistant_weekly_summary_enabled'
+  | 'assistant_summary_discord'
+>
 
 const usd = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })
 
@@ -27,15 +37,24 @@ export function AssistantSettingsTab() {
 }
 
 function AssistantSettingsForm({ company, usage }: { company: CompanyProfile; usage: AssistantUsage }) {
-  const { assistant_enabled, assistant_model, assistant_monthly_budget_usd, assistant_turn_budget_usd } = company.settings
-  const [draft, setDraft] = useState<AssistantSettings>({ assistant_enabled, assistant_model, assistant_monthly_budget_usd, assistant_turn_budget_usd })
+  const { assistant_enabled, assistant_model, assistant_monthly_budget_usd, assistant_turn_budget_usd, assistant_weekly_summary_enabled, assistant_summary_discord } =
+    company.settings
+  const [draft, setDraft] = useState<AssistantSettings>({
+    assistant_enabled,
+    assistant_model,
+    assistant_monthly_budget_usd,
+    assistant_turn_budget_usd,
+    assistant_weekly_summary_enabled,
+    assistant_summary_discord,
+  })
+  const [emails, setEmails] = useState(company.settings.assistant_summary_emails.join(', '))
   const mutation = useUpdateCompany()
   const modelId = useId()
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const { name, tax_id, currency, timezone, settings } = company
-    mutation.mutate({ name, tax_id, currency, timezone, settings: { ...settings, ...draft } })
+    mutation.mutate({ name, tax_id, currency, timezone, settings: { ...settings, ...draft, assistant_summary_emails: parseEmailList(emails) } })
   }
 
   const error = (field: keyof AssistantSettings) => fieldErrorOf(mutation.error, `settings.${field}`)
@@ -98,6 +117,15 @@ function AssistantSettingsForm({ company, usage }: { company: CompanyProfile; us
           onChange={(event) => setDraft({ ...draft, assistant_turn_budget_usd: Number(event.target.value) })}
         />
       </fieldset>
+      <WeeklySummaryFields
+        enabled={draft.assistant_weekly_summary_enabled}
+        discord={draft.assistant_summary_discord}
+        onDiscordChange={(assistant_summary_discord) => setDraft({ ...draft, assistant_summary_discord })}
+        emails={emails}
+        emailsError={fieldErrorOf(mutation.error, 'settings.assistant_summary_emails')}
+        onEnabledChange={(assistant_weekly_summary_enabled) => setDraft({ ...draft, assistant_weekly_summary_enabled })}
+        onEmailsChange={setEmails}
+      />
       <Button type="submit" loading={mutation.isPending}>
         Guardar cambios
       </Button>

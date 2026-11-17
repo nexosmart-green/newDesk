@@ -206,11 +206,21 @@ Plan (2026-11-17). Base: `main` (con monitoreo) ya mergeado en `dev_green`; Disc
 - **A pedido:** tool MCP de lectura `weekly_summary` (`projects.manage` + módulo reportes) con los mismos datos, para
   "resumime la semana" en el chat.
 - **Configuración:** en Configuración → Asistente: prender/apagar el resumen y los mails destinatarios.
-- [ ] 1. `WeeklySummaryData` + tests (CA-14.06: horas == reporte web del mismo rango; empresa ajena; semana sin datos).
-- [ ] 2. Plantilla + `compose()` del motor + fallback + costo al tope (tests con motor fake).
-- [ ] 3. Tabla, acción `SendWeeklySummary`, canales (Discord fake, Mail::fake, web) + idempotencia + CA-14.09.
-- [ ] 4. Comando programado + settings + pestaña (front) + tool `weekly_summary`.
-- [ ] 5. Suites, eval real de una redacción, review, commit + push.
+- [x] 1. `WeeklySummaryData` + tests (CA-14.06: horas == reporte web del mismo rango; empresa ajena; semana sin datos).
+- [x] 2. Plantilla + `compose()` del motor + fallback + costo al tope (tests con motor fake).
+- [x] 3. Tabla, acción `SendWeeklySummary`, canales (Discord fake, Mail::fake, web) + idempotencia + CA-14.09.
+- [x] 4. Comando programado + settings + pestaña (front) + tool `weekly_summary`.
+- [x] 5. Suites, eval real de una redacción, review, commit + push.
+
+**Revisión Fase 3 (2026-11-17)** — review independiente corregido: reserva del registro antes de redactar (una carrera
+no paga la IA dos veces) y reparto por canal con reintento horario solo de lo que falló; `try/catch` por empresa;
+proyectos borrados fuera de vencidas y de ampliaciones pendientes (también arregla la web); control de la redacción de la
+IA más fuerte (cada "nombre + horas" tal cual, mismos números y cantidad de veces, sin links ni menciones, máx. 1800
+caracteres); copia web solo para `assistant.use` + `projects.manage` + módulo reportes, nunca clientes; Discord opt-in por
+empresa (`assistant_summary_discord`: el canal de resumen de monitoreo es de todo el server); nombres y títulos aplanados
+(sin saltos, markdown, links ni menciones). Redacción real con `claude -p`: OK, mismos números, USD 0,04.
+Pendiente conocido: el resumen queda congelado el lunes; una carga manual retroactiva posterior cambia el reporte web de esa
+semana (CA-14.06 vale al momento del envío).
 
 ### Fase 4 — Discord (RF-14.08)
 - [ ] App de Discord (coordinar con `feat/monitoreo`, que ya manda avisos a Discord: misma app/configuración).

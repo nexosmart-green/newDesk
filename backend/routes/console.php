@@ -60,3 +60,6 @@ Schedule::command('shifts:extend-recurrences')->dailyAt('02:30')->onOneServer();
 
 // RF-14: no answer stays "pensando…", proposals expire, report files and assistant tokens don't outlive their time.
 Schedule::command('assistant:housekeeping')->everyFiveMinutes()->withoutOverlapping(5)->onOneServer();
+
+// RF-14.06: last week's summary, once each company's Monday 9:00 (local) has passed; idempotent per week.
+Schedule::command('assistant:weekly-summary')->hourly()->withoutOverlapping(30)->onOneServer();

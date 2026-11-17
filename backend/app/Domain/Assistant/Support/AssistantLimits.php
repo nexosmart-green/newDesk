@@ -24,8 +24,7 @@ final class AssistantLimits
             throw new BusinessRuleViolation('El asistente está apagado. Un administrador lo puede prender en Configuración → Asistente.', 'assistant_disabled', 403);
         }
 
-        $cap = (float) $company->setting('assistant_monthly_budget_usd');
-        if (($this->spend)($company) >= $cap) {
+        if (! $this->underMonthlyCap($company)) {
             throw new BusinessRuleViolation('El asistente llegó al tope de uso de este mes. Vuelve a estar disponible el 1 del mes que viene, o un administrador puede subir el tope.', 'assistant_monthly_cap', 429);
         }
 
@@ -36,6 +35,12 @@ final class AssistantLimits
             throw new BusinessRuleViolation("Hiciste muchos pedidos seguidos (máximo {$perHour} por hora). Probá de nuevo en {$minutes} minutos.", 'assistant_rate_limited', 429);
         }
         RateLimiter::hit($key, 3600);
+    }
+
+    /** The AI may still be used this month (answers and the weekly summary share the cap). */
+    public function underMonthlyCap(Company $company): bool
+    {
+        return ($this->spend)($company) < (float) $company->setting('assistant_monthly_budget_usd');
     }
 
     public function turnBudget(Company $company): float

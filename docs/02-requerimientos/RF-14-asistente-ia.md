@@ -36,6 +36,16 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 | RF-14.10 | Configuración (Admin): habilitar/deshabilitar el asistente, modelo, tope mensual, canal de Discord para el resumen semanal, destinatarios del mail. | S |
 | RF-14.11 | Conector de claude.ai (OAuth en el MCP, RF-12.08) para usar las mismas herramientas desde la app de Claude. | C (después) |
 
+### Cómo quedó el resumen semanal (2026-11-17)
+
+- Sale apagado; lo prende un Admin en Configuración → Asistente. Lunes 9:00 hora de la empresa, una vez por semana.
+- Mail: a la lista que cargue el Admin; vacía = los administradores activos. Chat web: solo a quien tiene `assistant.use`,
+  `projects.manage` y el módulo de reportes (nunca usuarios cliente).
+- Discord: el canal de resumen de monitoreo (`DISCORD_SUMMARY_CHANNEL_ID`, mismo bot). Es del server, no de la empresa:
+  sale ahí solo si la empresa lo activa (`assistant_summary_discord`).
+- Números siempre del sistema (plantilla). La IA puede reescribirla, y su texto solo se usa si conserva cada
+  "nombre + horas", los mismos números y no agrega links ni menciones; si no, sale la plantilla.
+
 ## Criterios de aceptación
 
 - **CA-14.02** Dado un Admin que pide "cargale 20 h a bhn", cuando el asistente responde, entonces muestra la propuesta (proyecto, horas, motivo) y **no** cambia nada hasta que el mismo usuario confirma; si cancela, no queda ningún cambio.

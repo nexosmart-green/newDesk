@@ -9,6 +9,11 @@ export interface CompanySettings {
   assistant_model: string
   assistant_monthly_budget_usd: number
   assistant_turn_budget_usd: number
+  /** RF-14.06: the Monday summary (off until an Admin turns it on) and who gets it by mail (empty = the Admins). */
+  assistant_weekly_summary_enabled: boolean
+  assistant_summary_emails: string[]
+  /** monitoreo's Discord summary channel is server-wide: the company opts in. */
+  assistant_summary_discord: boolean
 }
 
 export interface CompanyProfile {

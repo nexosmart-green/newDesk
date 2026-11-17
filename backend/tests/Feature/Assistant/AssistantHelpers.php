@@ -21,6 +21,12 @@ final class FakeAssistantEngine implements AssistantEngine
     /** @var list<AssistantQuestion> */
     public array $questions = [];
 
+    /** @var list<array{instructions: string, text: string, model: string}> */
+    public array $compositions = [];
+
+    /** @var Closure(string): AssistantAnswer|null */
+    public ?Closure $composeReply = null;
+
     /** @param  Closure(AssistantQuestion): AssistantAnswer  $reply */
     public function __construct(private Closure $reply) {}
 
@@ -29,6 +35,13 @@ final class FakeAssistantEngine implements AssistantEngine
         $this->questions[] = $question;
 
         return ($this->reply)($question);
+    }
+
+    public function compose(string $instructions, string $text, string $model, float $budgetUsd): AssistantAnswer
+    {
+        $this->compositions[] = compact('instructions', 'text', 'model');
+
+        return $this->composeReply !== null ? ($this->composeReply)($text) : new AssistantAnswer($text, null, 0.02, 500);
     }
 }
 
