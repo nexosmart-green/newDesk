@@ -1,9 +1,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dashboardKey, extensionRequestsKey, hoursKey, projectHoursKey, projectKey, projectListsKey, timerKey } from '@/lib/queryKeys'
+import { toast } from '@/components/ui/toast/toastStore'
+import { downloadBlob } from '@/lib/csv'
 import { refreshQueries } from '@/lib/refreshQueries'
 import {
   allocateHours,
   approveExtension,
+  exportEntries,
   fetchDailyHours,
   fetchEntries,
   fetchExtensionRequests,
@@ -26,11 +29,23 @@ export function useProjectEntries(projectId: number, filters: ProjectEntryFilter
   })
 }
 
-export function useEntries(filters: MyEntryFilters) {
+/** Under `hours`: every timer/entry mutation already refreshes it. `enabled` false while the range is invalid. */
+export function useEntries(filters: MyEntryFilters, page: number, enabled = true) {
   return useQuery({
-    queryKey: [...hoursKey, 'entries', filters],
-    queryFn: () => fetchEntries(filters),
+    enabled,
+    queryKey: [...hoursKey, 'entries', filters, page],
+    queryFn: () => fetchEntries(filters, page),
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useExportEntries() {
+  return useMutation({
+    mutationFn: (filters: MyEntryFilters) => exportEntries(filters),
+    onSuccess: ({ blob, filename }) => {
+      downloadBlob(blob, filename)
+      toast.success(`Descargaste ${filename}.`)
+    },
   })
 }
 

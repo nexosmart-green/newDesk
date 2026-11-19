@@ -10,18 +10,18 @@ use App\Domain\TimeTracking\Actions\CorrectTimeEntry;
 use App\Domain\TimeTracking\Actions\DeleteTimeEntry;
 use App\Domain\TimeTracking\Actions\LogManualTime;
 use App\Domain\TimeTracking\Models\TimeEntry;
+use App\Domain\TimeTracking\Queries\TimeEntryHistory;
 use App\Domain\TimeTracking\Queries\Timesheet;
-use App\Domain\TimeTracking\Support\LocalDateRange;
 use App\Domain\TimeTracking\Support\ManualEntryWindow;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TimeTracking\CompletePendingCommentRequest;
 use App\Http\Requests\TimeTracking\CorrectTimeEntryRequest;
 use App\Http\Requests\TimeTracking\LogManualTimeRequest;
+use App\Http\Requests\TimeTracking\TimeEntryHistoryRequest;
 use App\Http\Requests\TimeTracking\TimesheetRequest;
 use App\Http\Resources\TimeEntryResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -30,26 +30,15 @@ use Illuminate\Validation\ValidationException;
 
 class TimeEntryController extends Controller
 {
-    /** RF-05.20 "Mis horas": my entries from every project; `time.manage` picks anyone's. */
-    public function index(Request $request, ManualEntryWindow $window): AnonymousResourceCollection
+    /** RF-05.20 "Mis horas": my entries of a free range from every project, with its total; `time.manage` picks anyone's. */
+    public function index(TimeEntryHistoryRequest $request, TimeEntryHistory $history, ManualEntryWindow $window): AnonymousResourceCollection
     {
-        $request->validate([
-            'user_id' => ['nullable', 'integer'],
-            'project_id' => ['nullable', 'integer'],
-            'from' => ['nullable', 'date_format:Y-m-d'],
-            'to' => ['nullable', 'date_format:Y-m-d'],
-        ]);
-        $person = $this->personAsked($request);
+        $filters = $request->filters();
 
-        $query = TimeEntry::query()->where('user_id', $person->id)
-            ->when($request->integer('project_id'), fn (Builder $q, int $id) => $q->where('project_id', $id));
-        $entries = LocalDateRange::of($request->query('from'), $request->query('to'), $person->effectiveTimezone())->apply($query)
-            ->with(['task', 'project', 'user'])
-            ->latest('started_at')
-            ->paginate(50);
-
-        return TimeEntryResource::collection($entries)
-            ->additional(['meta' => ['editable_since' => $window->editableSince($request->user())?->toIso8601String()]]);
+        return TimeEntryResource::collection($history->paginate($filters))->additional(['meta' => [
+            'total_seconds' => $history->totalSeconds($filters),
+            'editable_since' => $window->editableSince($request->user())?->toIso8601String(),
+        ]]);
     }
 
     /** RF-05.09 */

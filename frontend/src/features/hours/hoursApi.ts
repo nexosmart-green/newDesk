@@ -1,4 +1,5 @@
-import { api, dataOf, pageOf, queryParams, type ApiEnvelope } from '@/lib/api'
+import { AxiosError } from 'axios'
+import { api, ApiError, dataOf, pageOf, queryParams, toApiError, type ApiEnvelope } from '@/lib/api'
 import type {
   AllocationInput,
   DailyHours,
@@ -6,6 +7,7 @@ import type {
   EntryPage,
   ExtensionRequest,
   HourBag,
+  MyEntriesPage,
   MyEntryFilters,
   ProjectEntryFilters,
   ProjectHours,
@@ -19,9 +21,42 @@ export async function fetchProjectEntries(projectId: number, filters: ProjectEnt
   return pageOf(api.get<EntryPage>(`/projects/${projectId}/time-entries`, { params: queryParams({ ...filters }) }))
 }
 
-/** "Mis horas": my entries across projects (or someone else's with `time.manage`). */
-export async function fetchEntries(filters: MyEntryFilters): Promise<EntryPage> {
-  return pageOf(api.get<EntryPage>('/time-entries', { params: queryParams({ ...filters }) }))
+/** "Mis horas": my entries across projects (or someone else's with `time.manage`), 50 per page, newest first. */
+export async function fetchEntries(filters: MyEntryFilters, page: number): Promise<MyEntriesPage> {
+  return pageOf(api.get<MyEntriesPage>('/time-entries', { params: { ...queryParams({ ...filters }), page } }))
+}
+
+/** A blob response hides the JSON error envelope: read it back so the toast says the backend's reason. */
+async function blobErrorOf(error: unknown): Promise<ApiError> {
+  if (error instanceof AxiosError && error.response?.data instanceof Blob) {
+    try {
+      const body = JSON.parse(await error.response.data.text()) as Partial<ApiEnvelope<unknown>>
+      return new ApiError(error.response.status, body.message ?? '', body.errors ?? {})
+    } catch {
+      // Not JSON (an HTML error page): `errorTextOf` words it by status.
+      return new ApiError(error.response.status, '')
+    }
+  }
+  return toApiError(error)
+}
+
+function filenameOf(disposition: unknown, fallback: string): string {
+  const match = typeof disposition === 'string' ? /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition) : null
+  return match?.[1] ? decodeURIComponent(match[1]) : fallback
+}
+
+/** Same filters as the list; the server builds the CSV (`;`, UTF-8 with BOM) so it covers every page. */
+export async function exportEntries(filters: MyEntryFilters): Promise<{ blob: Blob; filename: string }> {
+  try {
+    const response = await api.get<Blob>('/time-entries/export', {
+      params: queryParams({ ...filters }),
+      responseType: 'blob',
+      headers: { Accept: 'text/csv, application/json' },
+    })
+    return { blob: response.data, filename: filenameOf(response.headers['content-disposition'], `horas-${filters.from}-a-${filters.to}.csv`) }
+  } catch (error) {
+    throw await blobErrorOf(error)
+  }
 }
 
 export async function fetchDailyHours(filters: DailyHoursFilters): Promise<DailyHours> {

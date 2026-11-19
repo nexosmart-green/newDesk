@@ -11,5 +11,8 @@ Broadcast::channel('monitoring.{companyId}', fn (User $user, int $companyId) => 
     && $user->company_id === $companyId
     && $user->hasPermission(Permission::MonitoringView));
 
+// RNF-12: "something of yours changed" (timer, entries, bell), only for that person.
+Broadcast::channel('user.{userId}', fn (User $user, int $userId) => $user->id === $userId);
+
 // RF-13.07: one client's portal events, only for that client's users.
 Broadcast::channel('portal.client.{clientId}', fn (User $user, int $clientId) => $user->client_id === $clientId);

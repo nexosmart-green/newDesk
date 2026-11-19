@@ -1,4 +1,4 @@
-import type { EntryPage, HourBag } from '@/features/hours/types'
+import type { EntryPage, HourBag, MyEntriesPage } from '@/features/hours/types'
 import type { Task, TaskStatus } from '@/features/tasks/types'
 import type { DayClock, TimeEntry, TimerState } from '@/features/timer/types'
 import type { Client } from '@/features/clients/types'
@@ -14,6 +14,12 @@ export function page<T>(data: T[]): Paginated<T> {
 export function entryPage(entries: TimeEntry[], editable_since: string | null = null): EntryPage {
   const { data, meta } = page(entries)
   return { data, meta: { ...meta, editable_since } }
+}
+
+/** "Mis horas": an entry page plus the total of the whole filter (by default, the sum of these entries). */
+export function myEntriesPage(entries: TimeEntry[], editable_since: string | null = null, total_seconds?: number): MyEntriesPage {
+  const { data, meta } = entryPage(entries, editable_since)
+  return { data, meta: { ...meta, total_seconds: total_seconds ?? entries.reduce((sum, entry) => sum + entry.elapsed_seconds, 0) } }
 }
 
 export function buildPerson(overrides: Partial<PersonSummary> = {}): PersonSummary {

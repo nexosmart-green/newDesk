@@ -24,6 +24,6 @@ test('the gestor walks the panel, all tasks, a task detail and the hours history
   await page.getByRole('tab', { name: 'Historial' }).click()
   await expect(page.getByRole('tabpanel')).not.toContainText('No pudimos')
 
-  await page.goto('/mi-semana?vista=historial')
+  await page.goto('/mis-horas')
   await expect(page.getByRole('button', { name: /Exportar CSV/ })).toBeVisible()
 })

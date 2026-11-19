@@ -1,4 +1,5 @@
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query'
+import { usePollInterval } from '@/features/realtime/realtimeStatus'
 import {
   fetchNotificationPreferences,
   fetchNotifications,
@@ -9,12 +10,13 @@ import {
 import { notificationPreferencesKey, notificationsKey, preferenceToggleMutationKey } from '@/lib/queryKeys'
 import type { NotificationPreference } from './types'
 
-/** RF-09 bell: polled every minute and on focus. */
+/** RF-09 bell: polled every minute and on focus, or rung at once by Reverb (`useUserSignals`). */
 export function useNotifications() {
+  const refetchInterval = usePollInterval(60_000)
   return useQuery({
     queryKey: notificationsKey,
     queryFn: fetchNotifications,
-    refetchInterval: 60_000,
+    refetchInterval,
     refetchOnWindowFocus: true,
   })
 }

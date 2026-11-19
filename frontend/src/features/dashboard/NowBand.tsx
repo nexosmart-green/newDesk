@@ -2,6 +2,7 @@ import { Square } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/Button'
+import { useEntries } from '@/features/hours/useHours'
 import { useProfileTimeZone } from '@/features/auth/useAuth'
 import { StartTimerButton } from '@/features/timer/StartTimerButton'
 import { StopTimerDialog } from '@/features/timer/StopTimerDialog'
@@ -9,7 +10,6 @@ import { isProvisional } from '@/features/timer/timerOptimistic'
 import type { TimeEntry } from '@/features/timer/types'
 import { useElapsedSeconds } from '@/features/timer/useElapsedSeconds'
 import { useTimerState } from '@/features/timer/useTimer'
-import { useTimeHistory } from '@/features/timesheet/useTimeHistory'
 import { formatClock } from '@/lib/duration'
 import { todayIn } from '@/lib/timezone'
 import { toLocalDateString } from '@/lib/week'
@@ -60,7 +60,7 @@ function Running({ entry, receivedAt }: { entry: TimeEntry; receivedAt: number }
 /** Nothing running: pick up the last task worked on, or a quiet nudge to choose one. */
 function Idle() {
   const today = todayIn(useProfileTimeZone())
-  const history = useTimeHistory({ from: daysBefore(today, LOOKBACK_DAYS), to: today, project_id: null, search: '', user_id: null }, 1, true)
+  const history = useEntries({ from: daysBefore(today, LOOKBACK_DAYS), to: today, project_id: null, search: '', user_id: null }, 1)
   // Same height as the band it becomes: the page below must not jump when the history arrives.
   if (!history.data) return <div aria-hidden="true" className="min-h-[4.5rem]" />
   const last = history.data.data[0]

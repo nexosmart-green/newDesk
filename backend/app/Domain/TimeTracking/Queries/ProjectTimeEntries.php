@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Project "Horas" tab (RF-05.11): the project's entries by person, task and local dates of the viewer,
- * newest first. Dates go through LocalDateRange, like "Historial de horas".
+ * newest first. Dates go through LocalDateRange, like "Mis horas".
  */
 final class ProjectTimeEntries
 {

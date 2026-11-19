@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { currentUserKey } from '@/lib/queryKeys'
 import { ApiError } from '@/lib/api'
 import * as timerApi from '@/features/timer/timerApi'
-import * as historyApi from '@/features/timesheet/historyApi'
+import * as hoursApi from '@/features/hours/hoursApi'
 import { buildTask, buildTimeEntry, buildTimerState } from '@/test/fixtures'
 import { buildUser, createTestQueryClient, renderAt } from '@/test/renderWithProviders'
 import * as dashboardApi from './dashboardApi'
@@ -33,7 +33,7 @@ function buildDashboard(overrides: Partial<Dashboard> = {}): Dashboard {
   }
 }
 
-const emptyHistory = { data: [], meta: { current_page: 1, last_page: 1, per_page: 50, total: 0, total_seconds: 0 } }
+const emptyHistory = { data: [], meta: { current_page: 1, last_page: 1, per_page: 50, total: 0, total_seconds: 0, editable_since: null } }
 
 function renderPanel() {
   const client = createTestQueryClient()
@@ -46,7 +46,7 @@ describe('DashboardPage', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-11-10T15:00:00Z'))
     vi.spyOn(timerApi, 'fetchTimer').mockResolvedValue(buildTimerState())
-    vi.spyOn(historyApi, 'fetchMyTimeEntries').mockResolvedValue(emptyHistory)
+    vi.spyOn(hoursApi, 'fetchEntries').mockResolvedValue(emptyHistory)
   })
   afterEach(() => vi.useRealTimers())
 
@@ -113,22 +113,18 @@ describe('DashboardPage', () => {
   })
 
   it('"Ahora" without a timer: pick up the last task worked on with "Seguir"', async () => {
-    vi.spyOn(historyApi, 'fetchMyTimeEntries').mockResolvedValue({
+    vi.spyOn(hoursApi, 'fetchEntries').mockResolvedValue({
       ...emptyHistory,
       data: [
-        {
+        buildTimeEntry({
           id: 5,
-          user: { id: 1, full_name: 'Ana García' },
-          task: { code: 'bhn-12', title: 'Maquetar home' },
-          project: { id: 9, name: 'Bahía Web' },
+          is_running: false,
+          task: { id: 12, code: 'bhn-12', title: 'Maquetar home' },
           started_at: '2026-11-09T12:00:00Z',
           ended_at: '2026-11-09T13:00:00Z',
-          seconds: 3600,
-          is_running: false,
+          elapsed_seconds: 3600,
           comment: 'Header listo',
-          comment_pending: false,
-          source: 'timer',
-        },
+        }),
       ],
     })
     vi.spyOn(dashboardApi, 'fetchDashboard').mockResolvedValue(buildDashboard())

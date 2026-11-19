@@ -7,7 +7,7 @@ use App\Domain\TimeTracking\Models\TimeEntry;
 use Illuminate\Http\Request;
 
 /**
- * Read-only row of the task "Horas" tab and of "Historial de horas". Never includes rates.
+ * Read-only row of the task "Horas" tab. Never includes rates.
  * `task` and `project` appear only when loaded (the task tab already knows them).
  *
  * @mixin TimeEntry

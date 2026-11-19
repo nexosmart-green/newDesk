@@ -3,7 +3,7 @@
 ## Next steps
 
 - Monitoreo ya está en `main` (2026-11-16) y la rama `feat/monitoreo` se borró. Decisiones de la primera unión en ADR-0002 §12; la segunda, en el worklog del 2026-11-16.
-- Hablar con el usuario: "Mis horas" (`/mis-horas`) y el Historial de horas de main se pisan; ¿unificar?
+- [x] 2026-11-19: "Mis horas" absorbió el Historial de Mi semana (un listado editable con total, búsqueda y CSV; `/me/time-entries` se fue).
 - Carga inicial: clientes y proyectos a mano en newDesk → `monitoring:import --dry-run` → sesión en vivo con Playwright para revisar las parejas → `--link=<slug>:<código>` donde haga falta → importación real (`docs/06-migracion/corte-monitoreo.md` §2).
 - Falta ejecutar el corte del monitoreo en producción: ver `docs/06-migracion/corte-monitoreo.md` (bloqueantes en la sección 0).
 - Local: PHP 8.3 en `C:\tools\php83\php.exe` (el de XAMPP es 8.2), MariaDB de XAMPP en 3306 (`newdesk`, `newdesk_testing`). Sin Redis local: el test de `/health` falla por eso.
@@ -35,7 +35,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: unid
 - [x] `GET /holidays` y estado del feed iCal
 - [x] Endpoint atómico `PUT /shifts/cells` para la grilla de turnos
 - [x] "Sin horas disponibles" antes del clic en ▶ (`project.hours_exhausted`)
-- [ ] Tiempo real por WebSocket (Reverb) — hoy polling 30 s + BroadcastChannel entre pestañas (RNF-12 lo admite). Monitoreo ya usa Reverb.
+- [x] Tiempo real por WebSocket (Reverb, 2026-11-19): canal privado `user.{id}` con señales `timer` y `notifications`; con socket el polling baja a red de seguridad (5 min), sin Reverb queda el de siempre (30 s / 60 s). Probado contra Reverb real.
 - [ ] P-25 HEIC (Imagick), P-26 fuente de feriados AR, P-23 una/varias empresas
 - [ ] `.claude/bug-report.json` cuando exista URL de staging/prod
 

@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { toast } from '@/components/ui/toast/toastStore'
 import { MODULES, useHasModule } from '@/features/auth/modules'
+import { usePollInterval } from '@/features/realtime/realtimeStatus'
 import { formatDuration, formatSignedDuration } from '@/lib/duration'
 import { toastTextOf } from '@/lib/errorText'
 import { dashboardKey, hoursKey, projectsKey, taskKey, tasksKey, timesheetKey } from '@/lib/queryKeys'
@@ -34,17 +35,26 @@ export const TIMER_POLL_MS = 30_000
 /** "0h 00m" reads like nothing was saved; under a minute says so. */
 const recordedText = (seconds: number) => (seconds < 60 ? 'menos de un minuto' : formatDuration(seconds))
 
-/** RF-05.03 / RNF-12: the server owns the timer; refetch on focus and every 30 s. Off without the time module. */
+/**
+ * RF-05.03 / RNF-12: the server owns the timer; refetch on focus and every 30 s, or only as a safety net while
+ * Reverb tells us about changes (`useUserSignals`). Off without the time module.
+ */
 export function useTimerState() {
   const enabled = useHasModule(MODULES.time)
+  const refetchInterval = usePollInterval(TIMER_POLL_MS)
   return useQuery({
     enabled,
     queryKey: timerKey,
     queryFn: fetchTimer,
     staleTime: 0,
     refetchOnWindowFocus: 'always',
-    refetchInterval: TIMER_POLL_MS,
+    refetchInterval,
   })
+}
+
+/** The server said this person's time changed (another device, the MCP, a cut): refresh it all in the background. */
+export function refreshTimeData(queryClient: QueryClient): Promise<void> {
+  return refreshQueries(queryClient, { later: timeDependentKeys })
 }
 
 /** Mount once (header): other tabs' starts/stops refresh this one instantly. */

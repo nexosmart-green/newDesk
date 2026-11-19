@@ -46,10 +46,10 @@ Fuera de esta tanda: subtareas (RF-04.08) y adjuntos (RF-04.09) — van después
 `tasks` (módulo projects) = asignadas a mí, abiertas. `projects.active` = proyectos activos visibles (miembro o ve todos). `week` (módulo time) = lunes a domingo local del usuario, mis horas. `bags_running_out` solo con `hours.allocate` o `projects.manage`: activos con consumo ≥ 80 % (máx 5, más consumidos primero). Bloque sin permiso → `null`.
 
 ### 4. Historial de horas — `module:time`
-`GET /api/v1/me/time-entries?from=Y-m-d&to=Y-m-d&project_id=&search=&user_id=&page=` → paginado 50, más nuevo primero.
+`GET /api/v1/time-entries?from=Y-m-d&to=Y-m-d&project_id=&search=&user_id=&page=` → paginado 50, más nuevo primero.
 Ítem: `{id, user: {id, full_name}, task: {code, title}, project: {id, name}, started_at, ended_at, seconds, is_running, comment, comment_pending, source}`. `meta.total_seconds` = total del filtro completo (no de la página).
 `user_id` ajeno solo con `time.manage` (si no, 403 con mensaje claro). Rango máx 366 días (422 claro). `search` busca en comentario, código y título de tarea.
-`GET /api/v1/me/time-entries/export?...mismos filtros` → `text/csv` (UTF-8 con BOM, separador `;` para Excel AR), columnas: Fecha, Inicio, Fin, Duración (h:mm), Horas (decimal con coma), Persona, Proyecto, Tarea, Título, Comentario, Origen.
+`GET /api/v1/time-entries/export?...mismos filtros` → `text/csv` (UTF-8 con BOM, separador `;` para Excel AR), columnas: Fecha, Inicio, Fin, Duración (h:mm), Horas (decimal con coma), Persona, Proyecto, Tarea, Título, Comentario, Origen.
 
 ### 5. Categorías y etiquetas — `module:projects`
 - `GET /api/v1/task-categories` → `[{id, name, tasks_count}]` ordenadas por nombre.

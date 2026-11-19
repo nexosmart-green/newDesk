@@ -5,7 +5,7 @@ namespace App\Domain\TimeTracking\Support;
 use App\Domain\TimeTracking\Models\TimeEntry;
 
 /**
- * "Historial de horas" as CSV for Excel in Argentina: UTF-8 with BOM, `;` separator, decimal comma,
+ * "Mis horas" as CSV for Excel in Argentina: UTF-8 with BOM, `;` separator, decimal comma,
  * local dates and times of whoever exports.
  */
 final class TimeEntryCsv

@@ -23,6 +23,8 @@ use App\Domain\Notifications\Listeners\SendDomainNotifications;
 use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Projects\Models\Project;
 use App\Domain\Shared\Activity\ActivityContext;
+use App\Domain\Shared\Realtime\PendingUserSignals;
+use App\Domain\Shared\Realtime\SignalUserChanges;
 use App\Domain\Support\Contracts\ClaudeRunner;
 use App\Domain\Support\Events\ReportSubmitted;
 use App\Domain\Tasks\Models\Task;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->scoped(ActivityContext::class);
         $this->app->scoped(AssistantTurn::class);
+        $this->app->scoped(PendingUserSignals::class);
         $this->app->bind(ProposalExecutor::class, McpProposalExecutor::class);
         $this->app->bind(AssistantEngine::class, ClaudeCodeEngine::class);
         // RF-14.06: where the weekly summary goes.
@@ -91,6 +94,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AssistantTurnFinished::class, RelayAnswerToDiscord::class);
         Event::subscribe(StopTimersOnDomainEvents::class);
         Event::subscribe(SendDomainNotifications::class);
+        // RNF-12: every open tab and device of the person refreshes at once (Reverb), polling stays as the fallback.
+        Event::subscribe(SignalUserChanges::class);
 
         $this->registerAuthorization();
         $this->registerRouteBindings();

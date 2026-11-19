@@ -44,7 +44,6 @@ export const extensionRequestsKey = [...hoursKey, 'extension-requests'] as const
 /** Mi semana and its history. */
 export const timesheetKey = ['timesheet'] as const
 export const timesheetWeekKey = (from: string, to: string) => [...timesheetKey, 'week', from, to] as const
-export const timeHistoryKey = [...timesheetKey, 'history'] as const
 
 // Projects and clients
 export const projectsKey = ['projects'] as const

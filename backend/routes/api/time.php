@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\V1\TimeTracking\HourExtensionController;
 use App\Http\Controllers\Api\V1\TimeTracking\ProjectHoursController;
 use App\Http\Controllers\Api\V1\TimeTracking\TaskTimeEntryController;
 use App\Http\Controllers\Api\V1\TimeTracking\TimeEntryController;
-use App\Http\Controllers\Api\V1\TimeTracking\TimeEntryHistoryController;
+use App\Http\Controllers\Api\V1\TimeTracking\TimeEntryExportController;
 use App\Http\Controllers\Api\V1\TimeTracking\TimerController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,8 +22,7 @@ Route::middleware('module:time')->group(function () {
     Route::get('/me/timesheet', [TimeEntryController::class, 'timesheet']);
     Route::get('/time-entries', [TimeEntryController::class, 'index']);
     Route::get('/time-entries/days', [TimeEntryController::class, 'days']);
-    Route::get('/me/time-entries', [TimeEntryHistoryController::class, 'index']);
-    Route::get('/me/time-entries/export', [TimeEntryHistoryController::class, 'export']);
+    Route::get('/time-entries/export', TimeEntryExportController::class);
     Route::get('/tasks/{task}/time-entries', [TaskTimeEntryController::class, 'index']);
     Route::post('/tasks/{task}/time-entries', [TimeEntryController::class, 'store']);
     Route::put('/time-entries/{timeEntry}', [TimeEntryController::class, 'update']);

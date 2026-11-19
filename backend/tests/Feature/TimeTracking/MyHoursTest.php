@@ -18,6 +18,14 @@ function myHoursEntry(User $user, Task $task, int $daysAgo = 1, string $from = '
     ])->assertCreated()->json('data.id');
 }
 
+/** The list always asks for a range: the last week, today included. */
+function myHoursRange(): string
+{
+    $today = today('America/Argentina/Buenos_Aires');
+
+    return 'from='.$today->copy()->subDays(7)->toDateString().'&to='.$today->toDateString();
+}
+
 function moveEntry(User $actor, int $entryId, Task $task)
 {
     return test()->actingAs($actor)->putJson("/api/v1/time-entries/{$entryId}", ['task_id' => $task->id, 'comment' => 'Lo cargué en el proyecto equivocado']);
@@ -33,13 +41,14 @@ it('lists only my entries from every project, newest first, with the window for 
     $newer = myHoursEntry($dev, $bhn, 1);
     myHoursEntry($mate, $bhn, 1);
 
-    $page = $this->actingAs($dev)->getJson('/api/v1/time-entries')->assertOk();
+    $week = myHoursRange();
+    $page = $this->actingAs($dev)->getJson("/api/v1/time-entries?{$week}")->assertOk();
     expect(array_column($page->json('data'), 'id'))->toBe([$newer, $older])
         ->and($page->json('data.1.project.name'))->toBe('CDOS')
         ->and($page->json('meta.per_page'))->toBe(50)
         ->and($page->json('meta.editable_since'))->toStartWith(today('America/Argentina/Buenos_Aires')->subDays(7)->toDateString());
 
-    $this->actingAs($admin)->getJson('/api/v1/time-entries')->assertOk()
+    $this->actingAs($admin)->getJson("/api/v1/time-entries?{$week}")->assertOk()
         ->assertJsonCount(0, 'data')->assertJsonPath('meta.editable_since', null);
 });
 
@@ -57,7 +66,7 @@ it('filters by project and by days of my timezone, also in the project tab', fun
     $this->actingAs($dev)->getJson("/api/v1/time-entries?project_id={$bhnProject->id}&from={$yesterday}&to={$yesterday}")
         ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $late);
     $this->actingAs($dev)->getJson("/api/v1/time-entries?from={$today}&to={$today}")->assertOk()->assertJsonCount(0, 'data');
-    $this->actingAs($dev)->getJson("/api/v1/time-entries?project_id={$cdosProject->id}")->assertOk()->assertJsonCount(1, 'data');
+    $this->actingAs($dev)->getJson('/api/v1/time-entries?'.myHoursRange()."&project_id={$cdosProject->id}")->assertOk()->assertJsonCount(1, 'data');
     $this->actingAs($admin)->getJson("/api/v1/projects/{$bhnProject->id}/time-entries?from={$yesterday}&to={$yesterday}")
         ->assertOk()->assertJsonPath('data.0.id', $late)->assertJsonPath('meta.editable_since', null);
 });
@@ -69,8 +78,9 @@ it('shows another person\'s hours only to time.manage', function () {
     ['task' => $task] = bagProject($admin, [$dev, $mate], 10 * 3600);
     $entry = myHoursEntry($dev, $task);
 
-    $this->actingAs($mate)->getJson("/api/v1/time-entries?user_id={$dev->id}")->assertForbidden();
-    $this->actingAs($admin)->getJson("/api/v1/time-entries?user_id={$dev->id}")->assertOk()->assertJsonPath('data.0.id', $entry);
+    $week = myHoursRange();
+    $this->actingAs($mate)->getJson("/api/v1/time-entries?{$week}&user_id={$dev->id}")->assertForbidden();
+    $this->actingAs($admin)->getJson("/api/v1/time-entries?{$week}&user_id={$dev->id}")->assertOk()->assertJsonPath('data.0.id', $entry);
 });
 
 // CA-05.20d, R-7

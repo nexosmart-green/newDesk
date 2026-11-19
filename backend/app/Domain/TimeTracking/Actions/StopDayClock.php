@@ -4,6 +4,7 @@ namespace App\Domain\TimeTracking\Actions;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
+use App\Domain\Shared\Realtime\UserSignal;
 use App\Domain\TimeTracking\Models\DayClock;
 use Illuminate\Support\Carbon;
 
@@ -39,7 +40,13 @@ final class StopDayClock
 
     private function end(DayClock $day, Carbon $now): int
     {
-        return DayClock::query()->withoutGlobalScopes()->whereKey($day->id)->whereNull('ended_at')
+        $ended = DayClock::query()->withoutGlobalScopes()->whereKey($day->id)->whereNull('ended_at')
             ->update(['ended_at' => $now->copy()->min($day->cutoffAt()), 'updated_at' => $now]);
+        if ($ended > 0) {
+            // A mass update skips model events: tell the person's open tabs directly.
+            UserSignal::send($day->user_id, UserSignal::TIMER);
+        }
+
+        return $ended;
     }
 }

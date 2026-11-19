@@ -3,6 +3,7 @@
 namespace App\Http\Requests\TimeTracking;
 
 use App\Domain\Identity\Enums\Permission;
+use App\Domain\Identity\Models\User;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
 use App\Domain\Shared\Support\DateRange;
 use Illuminate\Auth\Access\Response;
@@ -11,7 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Filters of "Historial de horas" (page and CSV). Own entries by default; someone else's need `time.manage`.
+ * Filters of "Mis horas" (list and CSV). Own entries by default; someone else's need `time.manage`.
  */
 class TimeEntryHistoryRequest extends FormRequest
 {
@@ -69,14 +70,22 @@ class TimeEntryHistoryRequest extends FormRequest
         }];
     }
 
-    /** @return array{user_id: int, from: string, to: string, timezone: string, project_id: int|null, search: string|null} */
+    /**
+     * Days are the person's local days, like the calendar (`/time-entries/days`): a day picked there lists the same entries.
+     *
+     * @return array{user_id: int, from: string, to: string, timezone: string, project_id: int|null, search: string|null}
+     */
     public function filters(): array
     {
+        $person = $this->filled('user_id') && $this->integer('user_id') !== $this->user()->id
+            ? User::query()->where('company_id', $this->user()->company_id)->findOrFail($this->integer('user_id'))
+            : $this->user();
+
         return [
-            'user_id' => $this->filled('user_id') ? $this->integer('user_id') : $this->user()->id,
+            'user_id' => $person->id,
             'from' => $this->string('from')->value(),
             'to' => $this->string('to')->value(),
-            'timezone' => $this->user()->effectiveTimezone(),
+            'timezone' => $person->effectiveTimezone(),
             'project_id' => $this->filled('project_id') ? $this->integer('project_id') : null,
             'search' => $this->validated('search'),
         ];

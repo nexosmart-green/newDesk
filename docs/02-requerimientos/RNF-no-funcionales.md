@@ -13,5 +13,5 @@
 | RNF-09 | Disponibilidad: backups diarios de DB con retención 30 días y **restore probado**. |
 | RNF-10 | Observabilidad: endpoints `/health` y `/errors` según el contrato de `/bug-report` (obligatorio en todos los proyectos NexoSmart), canal de log `errors`, `ERRORS_TOKEN`. |
 | RNF-11 | Procesos en segundo plano (cortes de timer, alertas, ingesta de cerradura, emails) como programas de **Supervisord**, nunca crontab. |
-| RNF-12 | Tiempo real: el cronómetro del header y el corte por horas se reflejan en todas las pestañas/dispositivos abiertos del usuario sin recargar (WebSocket o polling corto). |
+| RNF-12 | Tiempo real: el cronómetro del header y el corte por horas se reflejan en todas las pestañas/dispositivos abiertos del usuario sin recargar (WebSocket o polling corto). **Hecho:** canal privado `user.{id}` en Reverb (señales `timer` y `notifications`, solo el tipo viaja; el navegador vuelve a pedir con sus permisos) y polling como respaldo. |
 | RNF-13 | Accesibilidad AA en contraste y navegación por teclado (el rojo de "vencida" de hoy no pasa contraste sobre gris oscuro). |

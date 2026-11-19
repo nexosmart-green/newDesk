@@ -103,4 +103,16 @@ describe('MyWeekPage', () => {
 
     expect(complete).toHaveBeenCalledWith(2, 'Revisé los logs del deploy')
   })
+
+  it('sends the old Historial link to Mis horas, where any range lives now', async () => {
+    renderRoutes(
+      [
+        { path: '/mi-semana', element: <MyWeekPage /> },
+        { path: '/mis-horas', element: <p>Mis horas</p> },
+      ],
+      '/mi-semana?vista=historial',
+    )
+
+    expect(await screen.findByText('Mis horas')).toBeInTheDocument()
+  })
 })

@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * "Historial de horas": one person's entries over a free range of local dates, newest first.
+ * "Mis horas": one person's entries over a free range of local dates, newest first.
  * The same filter feeds the page, its total and the CSV export, so the three always agree.
  */
 final class TimeEntryHistory

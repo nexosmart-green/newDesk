@@ -1,12 +1,11 @@
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PageState } from '@/components/ui/PageState'
 import { StaleContent } from '@/components/ui/StaleContent'
-import { useSearchParamPatch, useTabParam } from '@/lib/useSearchParamPatch'
-import { Tabs, type TabItem } from '@/components/ui/Tabs'
+import { Link, Navigate } from 'react-router'
+import { useSearchParamPatch } from '@/lib/useSearchParamPatch'
 import { PendingCommentDialog } from '@/features/timer/PendingCommentDialog'
 import type { PendingEntrySummary } from '@/features/timer/pendingEntry'
 import { formatDuration } from '@/lib/duration'
-import { TimeHistoryTab } from './TimeHistoryTab'
 import { DayTotal, TimesheetDayEntries } from './TimesheetDayEntries'
 import type { Timesheet, TimesheetEntry } from './types'
 import { useTimesheet } from './useTimesheet'
@@ -30,24 +29,23 @@ function findEntry(timesheet: Timesheet | undefined, id: number): TimesheetEntry
   return timesheet?.days.flatMap((day) => day.entries).find((entry) => entry.id === id)
 }
 
-type WeekView = 'semana' | 'historial'
-
-const views: TabItem<WeekView>[] = [
-  { id: 'semana', label: 'Semana' },
-  { id: 'historial', label: 'Historial' },
-]
-const viewIds = views.map((view) => view.id)
-
-/** RF-05.12 "Mi semana": the Monday–Sunday timesheet, and "Historial" for any range (`?vista=historial`). */
+/** RF-05.12 "Mi semana": the Monday–Sunday timesheet. Any other range lives in "Mis horas". */
 export function MyWeekPage() {
-  const { selected: view, select: selectView } = useTabParam(viewIds, 'semana', 'vista')
+  const [searchParams] = useSearchParamPatch()
+  // The old "Historial" tab moved to "Mis horas": keep its links working.
+  if (searchParams.get('vista') === 'historial') return <Navigate to="/mis-horas" replace />
 
   return (
     <section className="max-w-4xl space-y-6">
-      <PageHeader title="Mi semana" />
-      <Tabs label="Vistas de horas" tabs={views} selected={view} onSelect={selectView}>
-        {view === 'semana' ? <WeekTimesheet /> : <TimeHistoryTab />}
-      </Tabs>
+      <PageHeader
+        title="Mi semana"
+        actions={
+          <Link to="/mis-horas" className="text-sm text-accent hover:underline">
+            Ver otro rango en Mis horas
+          </Link>
+        }
+      />
+      <WeekTimesheet />
     </section>
   )
 }

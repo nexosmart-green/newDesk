@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { MODULES, useHasModule } from '@/features/auth/modules'
+import { useUserSignals } from '@/features/realtime/useUserSignals'
 import { PendingCommentsBanner } from '@/features/timer/PendingCommentsBanner'
 import { FetchingBar } from './FetchingBar'
 import { readStoredJson, writeStoredJson } from '@/lib/storage'
@@ -18,6 +19,7 @@ export function AppLayout() {
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const hasTime = useHasModule(MODULES.time)
+  useUserSignals()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => readStoredJson(COLLAPSED_KEY) === true)
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
