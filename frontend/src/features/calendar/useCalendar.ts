@@ -5,6 +5,7 @@ import {
   fetchCalendarFeedStatus,
   fetchHolidays,
   fetchMyCalendar,
+  importHolidays,
   issueCalendarFeed,
   revokeCalendarFeed,
 } from './calendarApi'
@@ -78,6 +79,17 @@ export function useDeleteHoliday() {
     mutationFn: (holiday: Holiday) => deleteHoliday(holiday.id),
     onSuccess: (_result, holiday) => {
       toast.success(`Feriado «${holiday.name}» borrado.`)
+      return refresh()
+    },
+  })
+}
+
+export function useImportHolidays() {
+  const refresh = useRefreshHolidays()
+  return useMutation({
+    mutationFn: (year: number) => importHolidays(year),
+    onSuccess: (message) => {
+      toast.success(message)
       return refresh()
     },
   })

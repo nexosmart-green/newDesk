@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1\Scheduling;
 
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Scheduling\Actions\DeleteHoliday;
+use App\Domain\Scheduling\Actions\ImportNationalHolidays;
 use App\Domain\Scheduling\Actions\IssueCalendarFeed;
 use App\Domain\Scheduling\Actions\RevokeCalendarFeed;
 use App\Domain\Scheduling\Actions\SaveHoliday;
+use App\Domain\Scheduling\Exceptions\NationalHolidaysUnavailable;
 use App\Domain\Scheduling\Models\Holiday;
 use App\Domain\Scheduling\Queries\Calendar;
 use App\Domain\Scheduling\Queries\CalendarFeedLookup;
@@ -14,6 +16,7 @@ use App\Domain\Scheduling\Support\PersonalCalendarFeed;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Scheduling\CalendarRangeRequest;
 use App\Http\Requests\Scheduling\HolidayListRequest;
+use App\Http\Requests\Scheduling\ImportHolidaysRequest;
 use App\Http\Requests\Scheduling\SaveHolidayRequest;
 use App\Http\Resources\HolidayResource;
 use App\Http\Responses\ApiResponse;
@@ -45,6 +48,24 @@ class CalendarController extends Controller
     public function storeHoliday(SaveHolidayRequest $request, SaveHoliday $save): JsonResponse
     {
         return ApiResponse::ok(HolidayResource::make($save($request->user(), $request->validated())), 'Feriado guardado.', 201);
+    }
+
+    /** P-26: the year's national holidays from ArgentinaDatos; days that already have one stay as they are. */
+    public function importHolidays(ImportHolidaysRequest $request, ImportNationalHolidays $import): JsonResponse
+    {
+        $year = $request->integer('year');
+        try {
+            $result = $import($request->user()->company_id, $year, $request->user());
+        } catch (NationalHolidaysUnavailable $e) {
+            return ApiResponse::error($e->getMessage(), 503);
+        }
+
+        return ApiResponse::ok($result, match (true) {
+            $result['added'] === 1 => "Se agregó 1 feriado nacional de {$year}.",
+            $result['added'] > 1 => "Se agregaron {$result['added']} feriados nacionales de {$year}.",
+            $result['already'] > 0 => "Los feriados nacionales de {$year} ya estaban cargados.",
+            default => "Todavía no hay feriados nacionales publicados para {$year}.",
+        });
     }
 
     public function destroyHoliday(Request $request, Holiday $holiday, DeleteHoliday $delete): JsonResponse

@@ -48,6 +48,11 @@ return [
         'reverb_port' => (int) env('REVERB_SERVER_PORT', 8080),
     ],
 
+    // P-26: national holidays (AR) by year, `{url}/{year}`. Public, no key.
+    'holidays' => [
+        'source_url' => env('HOLIDAYS_SOURCE_URL', 'https://api.argentinadatos.com/v1/feriados'),
+    ],
+
     // RF-14: the assistant runs Claude Code headless (`claude -p`) from the `assistant` queue. Its credentials
     // (CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY) live in the worker's environment, never in the repo.
     'assistant' => [

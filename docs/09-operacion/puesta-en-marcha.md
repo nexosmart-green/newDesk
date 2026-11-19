@@ -54,7 +54,7 @@ El SPA llama a `/api`, `/sanctum` y `/mcp` en el mismo dominio (cookies de Sanct
 4. Configuración → Usuarios: invitar a cada persona con su rol (le llega un email para crear su contraseña; el link vence en 7 días).
 5. Configuración → Catálogos / Roles: ajustar puestos, áreas, habilidades y permisos.
 6. Clientes → Proyectos activos → **Cargar horas** con motivo (bolsa inicial) → agregar miembros.
-7. Turnos: plantillas y grilla de la primera semana. Feriados nacionales del año (P-26).
+7. Turnos: plantillas y grilla de la primera semana. Feriados nacionales del año: Configuración → Feriados → "Importar feriados nacionales" (o `php artisan holidays:import <año>`); después, el 1/12 se importan solos los del año siguiente (P-26).
 8. Avisar al equipo: "Mi perfil → Conexiones de IA" para usar newDesk desde Claude Code.
 
 ## 6. Conectar Claude Code (cada persona)

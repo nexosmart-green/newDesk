@@ -22,6 +22,7 @@ use App\Domain\Monitoring\Events\VulnerabilitiesScanned;
 use App\Domain\Notifications\Listeners\SendDomainNotifications;
 use App\Domain\People\Contracts\AvatarProcessor;
 use App\Domain\Projects\Models\Project;
+use App\Domain\Scheduling\Contracts\NationalHolidaySource;
 use App\Domain\Shared\Activity\ActivityContext;
 use App\Domain\Shared\Realtime\PendingUserSignals;
 use App\Domain\Shared\Realtime\SignalUserChanges;
@@ -36,6 +37,7 @@ use App\Infrastructure\ClaudeCode\ClaudeCodeEngine;
 use App\Infrastructure\Discord\DiscordBotGateway;
 use App\Infrastructure\Discord\DiscordInteractionHttpClient;
 use App\Infrastructure\Discord\MutedDiscordGateway;
+use App\Infrastructure\Holidays\ArgentinaDatosHolidays;
 use App\Infrastructure\Images\GdAvatarProcessor;
 use App\Mcp\Support\McpProposalExecutor;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         // RF-14.08: /newdesk on monitoreo's Discord app.
         $this->app->bind(DiscordInteractionClient::class, DiscordInteractionHttpClient::class);
         $this->app->bind(AvatarProcessor::class, GdAvatarProcessor::class);
+        $this->app->bind(NationalHolidaySource::class, ArgentinaDatosHolidays::class);
         $this->app->singleton(AgentGateway::class, CurlAgentGateway::class);
         $this->app->bind(DiscordGateway::class, fn () => filled($token = config('newdesk.monitoring.discord.bot_token'))
             ? new DiscordBotGateway($token, (string) config('newdesk.monitoring.discord.guild_id'),

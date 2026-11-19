@@ -1,5 +1,5 @@
 import type { Holiday } from '@/features/shifts/types'
-import { api, dataOf, type ApiEnvelope } from '@/lib/api'
+import { api, dataOf, envelopeOf, type ApiEnvelope } from '@/lib/api'
 import type { HolidayInput, MyCalendar } from './types'
 
 export async function fetchMyCalendar(from: string, to: string): Promise<MyCalendar> {
@@ -31,4 +31,9 @@ export async function createHoliday(input: HolidayInput): Promise<Holiday> {
 
 export async function deleteHoliday(id: number): Promise<void> {
   await dataOf(api.delete<ApiEnvelope<null>>(`/holidays/${id}`))
+}
+
+/** P-26: brings the year's national holidays from ArgentinaDatos; the message says how many were added. */
+export async function importHolidays(year: number): Promise<string> {
+  return (await envelopeOf(api.post<ApiEnvelope<{ added: number; already: number }>>('/holidays/import', { year }))).message ?? ''
 }

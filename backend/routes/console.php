@@ -57,6 +57,8 @@ Schedule::command('status-page:domains')->hourly()->withoutOverlapping()->runInB
 Schedule::command('status-page:pagespeed')->hourly()->withoutOverlapping()->runInBackground();
 // RF-06.03: recurring shifts stay generated 8 weeks ahead (idempotent).
 Schedule::command('shifts:extend-recurrences')->dailyAt('02:30')->onOneServer();
+// P-26: next year's national holidays on December 1st (a day that already has one is left alone).
+Schedule::command('holidays:import')->yearlyOn(12, 1, '06:00')->onOneServer();
 
 // RF-14: no answer stays "pensando…", proposals expire, report files and assistant tokens don't outlive their time.
 Schedule::command('assistant:housekeeping')->everyFiveMinutes()->withoutOverlapping(5)->onOneServer();

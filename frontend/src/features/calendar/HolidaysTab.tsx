@@ -1,3 +1,4 @@
+import { Download } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -9,7 +10,7 @@ import type { Holiday } from '@/features/shifts/types'
 import { fieldErrorOf } from '@/lib/api'
 import { formatDate } from '@/lib/dates'
 import { holidayScopeLabels, type HolidayInput } from './types'
-import { useCreateHoliday, useDeleteHoliday, useHolidays } from './useCalendar'
+import { useCreateHoliday, useDeleteHoliday, useHolidays, useImportHolidays } from './useCalendar'
 
 const emptyHoliday: HolidayInput = { date: '', name: '', scope: 'company' }
 
@@ -20,6 +21,9 @@ export function HolidaysTab() {
   const holidays = useHolidays(year)
   const create = useCreateHoliday()
   const remove = useDeleteHoliday()
+  const importing = useImportHolidays()
+  // The back imports last year, this one and the next (P-26).
+  const importable = Math.abs(year - currentYear) <= 1
   const [form, setForm] = useState<HolidayInput>(emptyHoliday)
   const [deleting, setDeleting] = useState<Holiday | null>(null)
 
@@ -46,17 +50,31 @@ export function HolidaysTab() {
           Agregar
         </Button>
       </form>
-      <PeriodNav
-        label="Elegir año"
-        current={String(year)}
-        previousLabel="Año anterior"
-        todayLabel="Este año"
-        nextLabel="Año siguiente"
-        isToday={year === currentYear}
-        onPrevious={() => setYear(year - 1)}
-        onToday={() => setYear(currentYear)}
-        onNext={() => setYear(year + 1)}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PeriodNav
+          label="Elegir año"
+          current={String(year)}
+          previousLabel="Año anterior"
+          todayLabel="Este año"
+          nextLabel="Año siguiente"
+          isToday={year === currentYear}
+          onPrevious={() => setYear(year - 1)}
+          onToday={() => setYear(currentYear)}
+          onNext={() => setYear(year + 1)}
+        />
+        {importable && (
+          <Button variant="secondary" loading={importing.isPending} onClick={() => importing.mutate(year)}>
+            <Download aria-hidden="true" className="size-4" strokeWidth={1.75} />
+            Importar feriados nacionales de {year}
+          </Button>
+        )}
+      </div>
+      {importable && (
+        <p className="text-sm text-muted">
+          Trae los feriados nacionales del año. Los días que ya tienen un feriado quedan como están. Los días no laborables
+          con fines turísticos no se importan: si la empresa los da, cargalos a mano.
+        </p>
+      )}
       {!holidays.data ? (
         <PageState isPending={holidays.isPending} error={holidays.error} onRetry={() => void holidays.refetch()} />
       ) : holidays.data.length === 0 ? (

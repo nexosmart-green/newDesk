@@ -29,4 +29,27 @@ describe('HolidaysTab', () => {
     expect(fetch).toHaveBeenCalledWith(2027)
     expect(fetchCalendar).not.toHaveBeenCalled()
   })
+
+  it('imports the national holidays of the year shown, only for last, this and next year (P-26)', async () => {
+    let imported = false
+    vi.spyOn(calendarApi, 'fetchHolidays').mockImplementation(async (year) =>
+      imported && year === 2027 ? [{ id: 9, date: '2027-01-01', name: 'Año nuevo', scope: 'national' }] : [],
+    )
+    const importHolidays = vi.spyOn(calendarApi, 'importHolidays').mockImplementation(async () => {
+      imported = true
+      return 'Se agregó 1 feriado nacional de 2027.'
+    })
+    renderAt(<HolidaysTab />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /Año siguiente/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Importar feriados nacionales de 2027' }))
+
+    expect(importHolidays).toHaveBeenCalledWith(2027)
+    expect(await screen.findByText('Se agregó 1 feriado nacional de 2027.')).toBeInTheDocument()
+    expect(within(await screen.findByRole('list', { name: 'Feriados 2027' })).getByText('Año nuevo')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Año siguiente/ }))
+    expect(await screen.findByText('No hay feriados cargados en 2028.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Importar feriados/ })).not.toBeInTheDocument()
+  })
 })

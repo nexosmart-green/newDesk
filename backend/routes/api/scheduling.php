@@ -22,6 +22,7 @@ Route::middleware('module:calendar')->group(function () {
     Route::put('/shifts/cells', [ShiftController::class, 'setCells']);
     Route::delete('/me/calendar-feed', [CalendarController::class, 'revokeFeed']);
     Route::post('/holidays', [CalendarController::class, 'storeHoliday']);
+    Route::post('/holidays/import', [CalendarController::class, 'importHolidays'])->middleware('throttle:6,1');
     Route::delete('/holidays/{holiday}', [CalendarController::class, 'destroyHoliday']);
 
     // RF-06.03 recurring shifts ("turnos fijos") and RF-06.05 team calendar.
