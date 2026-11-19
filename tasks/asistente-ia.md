@@ -165,15 +165,13 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 
 **Cierre de Fase 2 (2026-11-17)** — Vitest 307/307 (local y `TZ=UTC`), build OK, E2E 8 pasan / 4 skip (por diseño), backend 310/310 (2026-11-16). Sin herramientas de GitHub en esa PC (sin `gh`, MCP caído): **el CI hay que mirarlo en Actions**. Siguiente: Fase 3 (resumen semanal) — avisar antes de Fase 4 (Discord).
 
-**Estado al cortar (2026-11-16, tarde)** — commit de cierre en `dev_green` (NO en `main`).
-- Backend: `php artisan test` 310/310 después de los fixes del review.
-- Front: typecheck y lint limpios, tests del asistente 7/7. La suite completa (local + `TZ=UTC`) y el `npm run build` pasaron
-  ANTES del último ajuste (hook `useSlowAnswer` + test de "tarda más de lo normal"); **re-correrlas mañana** antes de nada.
-- **Mañana:** 1) suite front completa + UTC + build; 2) E2E Playwright del asistente (sin motor real: abrir `/asistente`,
-  sugerencias, propuesta cancelada) — ojo: el 5173 lo ocupa el front de Contador Digital, levantar newDesk en 5174 con
-  `SANCTUM_STATEFUL_DOMAINS` extendido solo por entorno; 3) revisar CI del push; 4) avisar antes de Fase 3/4 (Discord y
-  `feat/monitoreo`); 5) Maxi confirma uso de la suscripción Max.
-- Base de desarrollo restaurada (asistente apagado, Gestor sin `assistant.use`, sin conversaciones de prueba).
+**Estado (2026-11-19)** — Fases 1–4 en `main` (`2bdabfc`, CI verde run 39). Backend 602/602 (1 skip de main), Vitest
+495/495 local y `TZ=UTC`, build OK.
+- Queda, fuera del código: activar Discord en el servidor (`DISCORD_APPLICATION_ID` / `DISCORD_PUBLIC_KEY`, Interactions
+  URL, `php artisan assistant:discord-commands`) y que Maxi confirme que la suscripción Max se puede usar así.
+- Más adelante: DMs / texto libre (gateway).
+- Puerto 5173 puede estar ocupado por el front de Contador Digital: levantar newDesk en 5174 con
+  `SANCTUM_STATEFUL_DOMAINS` extendido solo por entorno.
 
 **Decisiones de Juani (2026-11-16)**
 1. Autenticación: **suscripción Max de la empresa (200 USD)** → `CLAUDE_CODE_OAUTH_TOKEN` (de `claude setup-token`) en el
