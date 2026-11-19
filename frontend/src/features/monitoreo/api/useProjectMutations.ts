@@ -9,6 +9,15 @@ function useInvalidatePortalAdmin() {
   return () => client.invalidateQueries({ queryKey: keys.portalAdmin })
 }
 
+// A team member's Discord account (null = none). The team list refreshes with whatever the back kept.
+export function useSetDiscordAccount() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, discordUserId }: { userId: number; discordUserId: string | null }) => api.put<User>(`users/${userId}`, { discord_user_id: discordUserId }),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.teamUsers }),
+  })
+}
+
 // The client itself (name, status) is newDesk's and is edited in Clientes; here only its portal users.
 export function usePortalUserMutations() {
   const invalidate = useInvalidatePortalAdmin()

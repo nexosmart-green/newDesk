@@ -140,3 +140,16 @@ it('sets the Discord id of team users only', function () {
     ($this->as)($this->orlando);
     $this->putJson(ADMIN_API."/users/{$this->orlando->id}", ['discord_user_id' => null])->assertForbidden();
 });
+
+it('lists the team with names and whose account the person linked, and never gives one account to two people', function () {
+    $this->putJson(ADMIN_API."/users/{$this->orlando->id}", ['discord_user_id' => '1077787097219473408'])->assertOk()
+        ->assertJsonPath('data.name', $this->orlando->fullName())->assertJsonPath('data.discord_verified', false);
+    $this->putJson(ADMIN_API."/users/{$this->admin->id}", ['discord_user_id' => '1077787097219473408'])->assertUnprocessable()
+        ->assertJsonPath('errors.discord_user_id.0', 'Esa cuenta de Discord ya es de otra persona.');
+    $this->putJson(ADMIN_API."/users/{$this->orlando->id}", ['discord_user_id' => '1077787097219473408'])->assertOk(); // their own, again
+
+    $this->orlando->forceFill(['discord_verified_at' => now()])->save();
+    $team = collect($this->getJson(ADMIN_API.'/users')->assertOk()->json('data'))->keyBy('email');
+    expect($team['orlando@nexosmart.com.ar']['discord_verified'])->toBeTrue()
+        ->and($team['admin@nexosmart.com.ar']['discord_verified'])->toBeFalse();
+});

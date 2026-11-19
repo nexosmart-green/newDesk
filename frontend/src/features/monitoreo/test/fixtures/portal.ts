@@ -1,7 +1,7 @@
 // Clientes, proyectos y equipo de ejemplo: el subconjunto de monitoreo/web/src/mocks/{portal,data}.ts que usan los tests.
 import type { CurrentUser } from '@/features/auth/types'
 import type {
-  ClientRow, ComponentAdmin, DiscordChannel, FolderOption, Incident, ProjectAdmin, ProjectRow, ProjectVulns, Suggestion, User,
+  ClientRow, ComponentAdmin, DiscordChannel, DiscordMember, FolderOption, Incident, ProjectAdmin, ProjectRow, ProjectVulns, Suggestion, User,
 } from '../../api/types'
 
 export const ago = (seconds: number) => new Date(Date.now() - seconds * 1000).toISOString()
@@ -14,10 +14,19 @@ export const teamAdmin: CurrentUser = {
   two_factor: { enabled: false, required: false }, client: null,
 }
 
-const teamUser = (id: number, email: string, discord: string | null): User => ({
-  id, email, is_admin: id === 1, active: true, totp_enabled: false, created_at: '2026-09-30T12:00:00Z', last_login_at: null, client: null, discord_user_id: discord,
+const teamUser = (id: number, email: string, name: string, discord: string | null, verified = false): User => ({
+  id, email, name, is_admin: id === 1, active: true, totp_enabled: false, created_at: '2026-09-30T12:00:00Z', last_login_at: null, client: null,
+  discord_user_id: discord, discord_verified: verified,
 })
-export const team: User[] = [teamUser(1, 'teamviolet@nexosmart.com.ar', '1403351571303104612'), teamUser(2, 'dev@nexosmart.com.ar', null)]
+export const team: User[] = [
+  teamUser(1, 'teamviolet@nexosmart.com.ar', 'Team Violet', '1403351571303104612', true),
+  teamUser(2, 'dev@nexosmart.com.ar', 'Dev Uno', null),
+]
+
+export const discordMembers = (): DiscordMember[] => [
+  { id: '1403351571303104612', username: 'teamviolet', display_name: 'Team Violet' },
+  { id: '1077787097219473408', username: 'orlando85.', display_name: 'Orlando' },
+]
 
 export const PLAYINN_CHANNEL_ID = '1427806155307745290'
 export const OLIMPO_CHANNEL_ID = '1427806268331659334'

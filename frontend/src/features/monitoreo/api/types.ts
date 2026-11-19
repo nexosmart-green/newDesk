@@ -11,10 +11,11 @@ export interface PageMeta { page: number; per_page: number; total: number }
 
 // client: null = equipo; con datos = usuario de un cliente (solo ve /portal).
 // discord_user_id: la cuenta de Discord con la que el bot lo etiqueta en los avisos de sus proyectos.
+// discord_verified: la conectó la persona misma con un código (RF-14.08); solo así el asistente actúa por ella en Discord.
 export interface User {
-  id: number; email: string; is_admin: boolean; active: boolean; totp_enabled: boolean
+  id: number; email: string; name: string; is_admin: boolean; active: boolean; totp_enabled: boolean
   created_at: string; last_login_at: string | null; client: { id: number; name: string } | null
-  discord_user_id: string | null
+  discord_user_id: string | null; discord_verified: boolean
 }
 
 export type ServerStatus = 'online' | 'agent_down' | 'down' | 'unknown' | 'disabled'

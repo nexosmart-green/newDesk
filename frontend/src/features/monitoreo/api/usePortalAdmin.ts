@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { monitoringApi as api } from './monitoringApi'
 import { keys } from './useMonitoring'
 import type {
-  ClientDetail, ClientRow, DiscordChannel, FolderOption, Incident, PortalStatus, ProjectAdmin, ProjectRow, ProjectVulns, ResponseRange,
+  ClientDetail, ClientRow, DiscordChannel, DiscordMember, FolderOption, Incident, PortalStatus, ProjectAdmin, ProjectRow, ProjectVulns, ResponseRange,
   ResponseTimes, ServerTargets, Suggestion, User,
 } from './types'
 
@@ -63,12 +63,27 @@ export function useTargets() {
 
 // Los usuarios del equipo, para elegir los desarrolladores de un proyecto (solo admin).
 // ponytail: primera página de usuarios; el equipo son pocas personas.
+// The back pages the team (20, or 10 a page from 20 people on): every page, so nobody goes missing from a picker.
+async function wholeTeam(): Promise<User[]> {
+  const users: User[] = []
+  for (let page = 1; ; page++) {
+    const { data, meta } = await api.getEnvelope<User[]>(`users?page=${page}`)
+    users.push(...data)
+    if (!meta || data.length === 0 || page * meta.per_page >= meta.total) return users
+  }
+}
+
 export function useTeamUsers() {
   return useQuery({
     queryKey: keys.teamUsers,
-    queryFn: () => api.get<User[]>('users?page=1'),
+    queryFn: wholeTeam,
     select: (users) => users.filter((user) => !user.client && user.active),
   })
+}
+
+// La gente del servidor, para elegir la cuenta de cada uno. Sin bot, 503 (como los canales).
+export function useDiscordMembers() {
+  return useQuery({ queryKey: keys.discordMembers, queryFn: () => api.get<DiscordMember[]>('discord/members'), staleTime: 60_000, retry: false })
 }
 
 // Lo que ve el bot. Sin bot configurado el back responde 503: no tiene sentido reintentar.

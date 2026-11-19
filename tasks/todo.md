@@ -58,7 +58,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: unid
 - [ ] Sesión en vivo (Playwright) para vincular los proyectos del monitoreo con los cargados a mano
 - [ ] F9 Ejecutar el corte en producción (bloqueado: hosting P-28, deploy de newDesk, invitación de usuarios)
 - [ ] Probar en Linux el reporte diario por socket unix (en Windows no se puede)
-- [ ] Pantalla para editar el Discord ID de los devs (hoy: endpoint + importación)
+- [x] Pantalla para editar el Discord ID de los devs (2026-11-19): Monitoreo → Configuración → Equipo; elige entre la gente del servidor (sin bot, se pega el ID), dice si la conectó la persona (asistente) o se cargó a mano; una cuenta = una persona
 
 ## Review
 

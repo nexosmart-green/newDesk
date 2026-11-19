@@ -42,6 +42,7 @@ export const keys = {
   roadmap: ['monitoring', 'portal-admin', 'reports', 'roadmap'] as const,
   teamUsers: ['monitoring', 'users'] as const,
   discordChannels: ['monitoring', 'discord', 'channels'] as const,
+  discordMembers: ['monitoring', 'discord', 'members'] as const,
   dailyReportStatus: ['monitoring', 'daily-report', 'status'] as const,
 }
 

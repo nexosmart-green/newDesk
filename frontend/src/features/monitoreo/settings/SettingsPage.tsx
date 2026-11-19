@@ -2,10 +2,14 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { useCan } from '@/features/auth/useAuth'
 import { Tabs } from '../components/Tabs'
 import { ServersAdmin } from './ServersAdmin'
+import { TeamDiscord } from './TeamDiscord'
 
-// Usuarios y sesiones son los de newDesk (RF-13, diferencia 5): acá quedan Servidores (admin).
+// Usuarios y sesiones son los de newDesk (RF-13, diferencia 5): acá quedan Servidores y la cuenta de Discord de cada uno (admin).
 // The personal MCP tokens live in Mi perfil → Conexiones de IA (/perfil?tab=ia), which also shows the monitoreo command.
-const allTabs = [{ id: 'servers', label: 'Servidores', permission: 'monitoring.manage' }] as const
+const allTabs = [
+  { id: 'servers', label: 'Servidores', permission: 'monitoring.manage' },
+  { id: 'equipo', label: 'Equipo', permission: 'monitoring.manage' },
+] as const
 
 type SettingsTab = (typeof allTabs)[number]['id']
 
@@ -24,6 +28,7 @@ export function SettingsPage() {
       <Tabs label="Configuración" tabs={tabs} active={active} onChange={(id) => navigate(`/monitoreo/settings/${id}`)} />
       <div key={active} className="fade-in">
         {active === 'servers' && <ServersAdmin />}
+        {active === 'equipo' && <TeamDiscord />}
       </div>
     </div>
   )
