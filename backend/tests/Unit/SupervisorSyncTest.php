@@ -19,3 +19,14 @@ it('renders one supervisord program per background process', function () {
         ->toMatch('/\[program:newdesk-assistant\]\ncommand=\S+ \S+ queue:work redis --queue=assistant .*?numprocs=1/s')
         ->toContain('programs=newdesk-queue,newdesk-scheduler,newdesk-reverb,newdesk-monitoring-poller,newdesk-monitoring-worker,newdesk-monitoring-discord,newdesk-assistant');
 });
+
+it('adds the Discord gateway for the assistant\'s DMs only once the bot and the app are configured', function () {
+    config(['newdesk.monitoring.discord.bot_token' => null, 'newdesk.assistant.discord.application_id' => null]);
+    Artisan::call('supervisor:sync', ['--dry-run' => true]);
+    expect(Artisan::output())->not->toContain('assistant-discord-gateway');
+
+    config(['newdesk.monitoring.discord.bot_token' => 'bot', 'newdesk.assistant.discord.application_id' => '123']);
+    Artisan::call('supervisor:sync', ['--dry-run' => true]);
+    expect(Artisan::output())->toMatch('/\[program:newdesk-assistant-discord-gateway\]\ncommand=\S+ \S+ assistant:discord-gateway\n.*?numprocs=1/s')
+        ->toContain(',newdesk-assistant,newdesk-assistant-discord-gateway');
+});

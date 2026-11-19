@@ -250,7 +250,37 @@ recorta solo el texto) y pasadas 5 se manda a la web; el token se guarda antes d
 en todas las empresas; el asistente solo confía en vínculos hechos por la persona (`discord_verified_at`, que
 `SetDiscordUserId` borra si el id cambia: un admin de monitoreo no puede actuar como otro); rate limit por cuenta;
 canje del código con lock.
-- [ ] Después: DMs / texto libre con un proceso gateway bajo Supervisord.
+- [x] Después: DMs / texto libre con un proceso gateway bajo Supervisord. → Fase 5.
+
+## Fase 5 — Mensajes directos al bot (2026-11-19, "seguí con todo")
+
+Objetivo: hablarle al asistente por DM, en texto libre, sin `/newdesk`. Discord solo entrega mensajes por el gateway
+(WebSocket), así que hace falta un proceso que quede conectado. Sin intents privilegiados: el contenido de un DM al bot
+llega igual (solo `DIRECT_MESSAGES`, `1 << 12`).
+
+- `GatewaySession` (dominio, pura, testeable): el protocolo — HELLO → IDENTIFY o RESUME, heartbeat con jitter y
+  detección de conexión zombi (sin ACK), op 1/7/9, READY (session_id + resume_gateway_url), códigos de cierre que no
+  se reintentan (4004 token, 4010–4014). Nunca loguea payloads (llevan el token).
+- `DiscordGatewayRunner` (infra, `ratchet/pawl` sobre ReactPHP, ya presente por Reverb): solo transporta frames y
+  timers; reconecta con espera creciente (1 s → 60 s). Comando `assistant:discord-gateway`, programa de Supervisord
+  solo si el bot y la app están configurados.
+- Por cada `MESSAGE_CREATE` de un DM (sin `guild_id`, autor no bot) encola `AnswerDiscordDirectMessage` en la cola
+  `discord`: el loop nunca hace HTTP ni toca la base.
+- El job: mismas reglas que `/newdesk pedir` (vínculo verificado, `assistant.use`, tope, 20/h) + rate limit por cuenta;
+  "escribiendo…" mientras tanto; continúa la conversación de Discord de las últimas 2 h; respuesta como mensaje
+  nuevo en el DM (texto, botones, adjuntos) desde el mismo relay; los botones ya funcionan por el endpoint de
+  interacciones.
+- Tests: sesión del gateway (cada op y cierre), job (no vinculado, sin permiso, pedido, propuestas con botones,
+  adjuntos), relay a DM, programa de Supervisor condicionado.
+
+- [x] 1. `ratchet/pawl`, `GatewaySession` + tests.
+- [x] 2. Runner + comando + Supervisor.
+- [x] 3. Job del DM + relay a canal + cliente (`createMessage`, `typing`) + tests.
+- [x] 4. Docs (RF-14), commit + push. Suite completa del backend: cortada por RAM, falta re-correrla.
+
+**Revisión Fase 5** — sin bugs de protocolo ni fugas del token. Aplicado de las notas: con token o intents rechazados el
+proceso espera 5 min antes de salir (Supervisor no reidentifica en loop); reconecta si HELLO no llega en 30 s; si el job
+falla, la persona recibe "No pude procesar tu mensaje".
 
 ## Investigación (2026-11-16) — resumen
 

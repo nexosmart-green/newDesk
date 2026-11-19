@@ -3,8 +3,8 @@
 namespace App\Domain\Assistant\Discord;
 
 /**
- * Interaction responses. Everything the assistant shows in Discord is ephemeral (only the person who asked sees it:
- * it carries clients and hours, CA-14.09) and mentions nobody.
+ * Interaction responses. Everything the assistant shows in a server is ephemeral (only the person who asked sees it:
+ * it carries clients and hours, CA-14.09); a DM is already private. Nothing mentions anybody.
  */
 final class DiscordReply
 {
@@ -46,18 +46,19 @@ final class DiscordReply
      */
     public static function update(string $content, array $components): array
     {
-        return ['type' => self::UPDATE_MESSAGE, 'data' => self::body($content, $components)];
+        // An update keeps the message's own flags (ephemeral in a server, plain in a DM): none are sent.
+        return ['type' => self::UPDATE_MESSAGE, 'data' => self::body($content, $components, ephemeral: false)];
     }
 
     /**
      * @param  list<array<string, mixed>>  $components
      * @return array<string, mixed>
      */
-    public static function body(string $content, array $components): array
+    public static function body(string $content, array $components, bool $ephemeral = true): array
     {
         return [
             'content' => DiscordAnswerMessage::clip($content),
-            'flags' => self::EPHEMERAL,
+            ...($ephemeral ? ['flags' => self::EPHEMERAL] : []),
             'components' => $components,
             'allowed_mentions' => ['parse' => []],
         ];

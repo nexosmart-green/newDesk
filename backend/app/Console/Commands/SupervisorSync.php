@@ -41,6 +41,9 @@ class SupervisorSync extends Command
             'monitoring-discord' => ['command' => 'queue:work redis --queue=discord-priority,discord --sleep=1 --max-time=3600', 'stopwaitsecs' => 60],
             // RF-14: one assistant turn at a time (`claude -p`, a few minutes at most); the timeout is above the job's own.
             'assistant' => ['command' => 'queue:work redis --queue=assistant --sleep=1 --tries=1 --timeout=320 --max-time=3600', 'stopwaitsecs' => 330],
+            // RF-14.08 phase 5: one connection to Discord's gateway for the DMs, only once the bot and the app exist
+            // (without them it would exit and supervisor would keep restarting it).
+            ...(AssistantDiscordGateway::configured() ? ['assistant-discord-gateway' => ['command' => 'assistant:discord-gateway', 'stopwaitsecs' => 15]] : []),
         ];
     }
 

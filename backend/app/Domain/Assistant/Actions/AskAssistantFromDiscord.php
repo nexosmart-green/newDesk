@@ -3,11 +3,11 @@
 namespace App\Domain\Assistant\Actions;
 
 use App\Domain\Assistant\Discord\DiscordAskers;
+use App\Domain\Assistant\Discord\DiscordConversations;
 use App\Domain\Assistant\Discord\DiscordInteraction;
 use App\Domain\Assistant\Discord\DiscordInteractionTokens;
 use App\Domain\Assistant\Discord\DiscordReply;
 use App\Domain\Assistant\Enums\AssistantChannel;
-use App\Domain\Assistant\Models\AssistantConversation;
 use App\Domain\Assistant\Models\AssistantMessage;
 use App\Domain\Identity\Enums\Permission;
 use App\Domain\Shared\Exceptions\BusinessRuleViolation;
@@ -19,15 +19,13 @@ use Illuminate\Support\Facades\Auth;
  */
 final class AskAssistantFromDiscord
 {
-    /** A new /newdesk within this time continues the same conversation (and Claude Code session). */
-    private const CONVERSATION_HOURS = 2;
-
     public const NOT_LINKED = 'Tu cuenta de Discord no está vinculada a newDesk. Entrá a newDesk → Asistente → Conectar Discord, copiá el código y escribí acá /newdesk vincular codigo:TU-CÓDIGO.';
 
     public function __construct(
         private readonly DiscordAskers $askers,
         private readonly AskAssistant $ask,
         private readonly DiscordInteractionTokens $tokens,
+        private readonly DiscordConversations $conversations,
     ) {}
 
     /** @return array<string, mixed> the interaction response */
@@ -46,13 +44,9 @@ final class AskAssistantFromDiscord
             return DiscordReply::message('Escribí el pedido después de /newdesk pedir.');
         }
 
-        $conversation = AssistantConversation::query()->forCompany($user->company_id)->where('user_id', $user->id)
-            ->where('channel', AssistantChannel::Discord)->where('last_message_at', '>=', now()->subHours(self::CONVERSATION_HOURS))
-            ->latest('last_message_at')->first();
-
         try {
             // The token is kept before the turn is queued: a turn that ends at once still finds it.
-            ($this->ask)($user, mb_substr($text, 0, AssistantMessage::CONTENT_MAX), AssistantChannel::Discord, $conversation,
+            ($this->ask)($user, mb_substr($text, 0, AssistantMessage::CONTENT_MAX), AssistantChannel::Discord, $this->conversations->current($user),
                 fn (AssistantMessage $answer) => $this->tokens->remember($answer->id, $interaction->token));
         } catch (BusinessRuleViolation $e) {
             return DiscordReply::message($e->getMessage());

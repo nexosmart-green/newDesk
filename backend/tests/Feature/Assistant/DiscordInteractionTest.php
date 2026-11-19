@@ -3,7 +3,9 @@
 use App\Console\Commands\AssistantDiscordCommands;
 use App\Domain\Assistant\Actions\AskAssistantFromDiscord;
 use App\Domain\Assistant\Actions\ResolveProposalFromDiscord;
+use App\Domain\Assistant\Discord\DirectMessage;
 use App\Domain\Assistant\Discord\DiscordAnswerMessage;
+use App\Domain\Assistant\Jobs\AnswerDiscordDirectMessage;
 use App\Domain\Assistant\Jobs\RunAssistantTurn;
 use App\Domain\Assistant\Models\AssistantConversation;
 use App\Domain\Assistant\Models\AssistantMessage;
@@ -238,4 +240,113 @@ it('never lets the interaction token reach a log through a connection error', fu
 
     expect(fn () => app(DiscordInteractionHttpClient::class)->editOriginal('SECRET-TOKEN', 'hola', []))
         ->toThrow(fn (RuntimeException $e) => expect($e->getMessage())->not->toContain('SECRET-TOKEN')->toBe('Discord no respondió (ConnectionException).'));
+});
+
+// RF-14.08 phase 5: DMs to the bot, through the gateway.
+
+function directMessage(string $authorId, string $content, array $extra = []): void
+{
+    $message = DirectMessage::fromEvent(['type' => 0, 'channel_id' => "dm-{$authorId}", 'author' => ['id' => $authorId], 'content' => $content, ...$extra]);
+    expect($message)->not->toBeNull();
+    AnswerDiscordDirectMessage::dispatchSync($message->authorId, $message->channelId, $message->content);
+}
+
+it('takes only what a person types to the bot in a DM as a question', function () {
+    $dm = ['type' => 0, 'channel_id' => '55', 'author' => ['id' => '111'], 'content' => '  ¿cuántas horas quedan en bhn?  '];
+
+    expect(DirectMessage::fromEvent($dm))->toMatchObject(['authorId' => '111', 'channelId' => '55', 'content' => '¿cuántas horas quedan en bhn?'])
+        ->and(DirectMessage::fromEvent([...$dm, 'guild_id' => '700']))->toBeNull() // a server's channel
+        ->and(DirectMessage::fromEvent([...$dm, 'author' => ['id' => '9', 'bot' => true]]))->toBeNull() // the bot's own answers
+        ->and(DirectMessage::fromEvent([...$dm, 'type' => 7]))->toBeNull() // system messages
+        ->and(DirectMessage::fromEvent([...$dm, 'content' => '']))->toBeNull() // only an attachment
+        ->and(DirectMessage::fromEvent([...$dm, 'type' => 19]))->not->toBeNull(); // a reply is typed too
+});
+
+it('answers a DM with a new message in the DM, with buttons only the asker can press (RF-14.08)', function () {
+    Queue::fake([RunAssistantTurn::class]);
+    Http::fake(['discord.com/*' => Http::response([], 200)]);
+    config(['newdesk.monitoring.discord.bot_token' => 'bot-secret']);
+    $admin = adminUser();
+    $admin->forceFill(['discord_user_id' => '111', 'discord_verified_at' => now()])->save();
+    enableAssistant($admin);
+    ['project' => $project] = bagProject($admin, [], 10 * 3600);
+    fakeAssistant(function (AssistantQuestion $question) {
+        mcpCall($question->token, 'allocate_hours', ['project' => 'bhn', 'minutes' => 1200, 'reason' => 'Presupuesto #123']);
+
+        return 'Te dejé la propuesta para confirmar.';
+    });
+
+    directMessage('111', 'cargale 20 h a bhn');
+    expect(app('auth')->user())->toBeNull(); // the worker does not keep acting as the asker
+    Http::assertSent(fn (HttpRequest $request) => $request->url() === 'https://discord.com/api/v10/channels/dm-111/typing');
+    $answer = AssistantMessage::query()->withoutGlobalScopes()->where('role', 'assistant')->sole();
+    expect($answer->conversation->channel->value)->toBe('discord');
+    runAssistantTurn($answer->id);
+
+    $proposal = AssistantProposal::query()->withoutGlobalScopes()->sole();
+    Http::assertSent(fn (HttpRequest $request) => $request->method() === 'POST'
+        && $request->url() === 'https://discord.com/api/v10/channels/dm-111/messages'
+        && $request->hasHeader('Authorization', 'Bot bot-secret')
+        && str_contains($request['content'], '**Para confirmar:** Cargar 20h 00m a bhn')
+        && ! isset($request['flags']) && $request['allowed_mentions'] === ['parse' => []]
+        && $request['components'][0]['components'][0]['custom_id'] === "assistant:confirm:{$proposal->id}");
+
+    // A button in a DM comes with `user`, not `member`; the update keeps the message's own flags.
+    $press = fn (string $who) => discord(['type' => 3, 'token' => "tok-{$who}", 'user' => ['id' => $who], 'data' => ['custom_id' => "assistant:confirm:{$proposal->id}"]]);
+    $response = $press('111')->assertOk()->assertJsonPath('type', 7)->assertJsonMissingPath('data.flags');
+    expect($response->json('data.content'))->toContain('**Hecho:** Cargar 20h 00m a bhn')
+        ->and($project->fresh()->allocated_seconds)->toBe(30 * 3600);
+
+    // A second DM within two hours continues the same conversation.
+    directMessage('111', '¿y cuánto quedó?');
+    expect(AssistantMessage::query()->withoutGlobalScopes()->where('role', 'user')->distinct()->count('conversation_id'))->toBe(1);
+});
+
+it('runs nothing for a DM from someone not linked, typed by an admin, without permission or with the assistant off', function () {
+    Queue::fake([RunAssistantTurn::class]);
+    Http::fake(['discord.com/*' => Http::response([], 200)]);
+    $admin = adminUser();
+    $sent = fn (string $channel, string $text) => Http::assertSent(fn (HttpRequest $request) => str_ends_with($request->url(), "/channels/{$channel}/messages") && $request['content'] === $text);
+
+    directMessage('404', 'dame las horas');
+    $sent('dm-404', AnswerDiscordDirectMessage::NOT_LINKED);
+
+    app(SetDiscordUserId::class)($admin, '222', $admin); // an id typed in monitoreo, not linked by the person
+    directMessage('222', 'dame las horas');
+    $sent('dm-222', AnswerDiscordDirectMessage::NOT_LINKED);
+
+    $admin->forceFill(['discord_user_id' => '111', 'discord_verified_at' => now()])->save();
+    directMessage('111', 'hola');
+    $sent('dm-111', 'El asistente está apagado. Un administrador lo puede prender en Configuración → Asistente.');
+
+    $developer = userWithRole($admin, DefaultRoles::DEVELOPER);
+    $developer->forceFill(['discord_user_id' => '333', 'discord_verified_at' => now()])->save();
+    enableAssistant($admin);
+    directMessage('333', 'hola');
+    $sent('dm-333', 'Tu rol no tiene habilitado el asistente de IA.');
+
+    expect(AssistantMessage::query()->withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('slows down a flood of DMs from one account, and says it only once', function () {
+    Queue::fake([RunAssistantTurn::class]);
+    Http::fake(['discord.com/*' => Http::response([], 200)]);
+
+    foreach (range(1, 9) as $n) {
+        directMessage('404', "mensaje {$n}");
+    }
+
+    $replies = collect(Http::recorded())->map(fn ($pair) => $pair[0]['content'] ?? null)->filter()->values();
+    expect($replies->filter(fn ($text) => $text === AnswerDiscordDirectMessage::NOT_LINKED))->toHaveCount(6)
+        ->and($replies->filter(fn ($text) => $text === AnswerDiscordDirectMessage::TOO_FAST))->toHaveCount(1)
+        ->and($replies)->toHaveCount(7);
+});
+
+it('tells the person when their DM could not be handled, instead of leaving them without an answer', function () {
+    // Discord refuses the first reply (the "not linked" one): the job fails there and still tells the person.
+    Http::fakeSequence('discord.com/*')->push(['message' => 'Bad Request'], 400)->push([], 200);
+
+    directMessage('111', 'hola');
+
+    Http::assertSent(fn (HttpRequest $request) => str_ends_with($request->url(), '/channels/dm-111/messages') && $request['content'] === AnswerDiscordDirectMessage::FAILED);
 });

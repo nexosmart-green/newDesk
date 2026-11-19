@@ -16,6 +16,7 @@
         "phpoffice/phpspreadsheet": "^5.11",
         "pragmarx/google2fa": "^9.1",
         "predis/predis": "^3.7",
+        "ratchet/pawl": "^0.4",
         "resend/resend-laravel": "^1.7"
     },
     "require-dev": {

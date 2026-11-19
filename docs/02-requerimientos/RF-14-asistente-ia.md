@@ -31,7 +31,7 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 | RF-14.05 | **Reportes en archivo:** el asistente puede devolver Excel o PDF descargable (horas por proyecto/cliente/persona, bolsas, vencidas). | M |
 | RF-14.06 | **Resumen de la semana en texto:** a pedido ("resumime la semana") y **programado** (lunes 9:00, hora de la empresa): mensaje breve en castellano con horas de la semana por proyecto y persona, bolsas por agotarse, tareas vencidas, ampliaciones pendientes y lo destacable (picos, proyectos sin movimiento). Se publica en el canal de Discord configurado y por mail a los administradores; también queda en el chat web. Números calculados por el sistema, no por la IA. | M |
 | RF-14.07 | **Herramientas de gestión nuevas** (también disponibles por MCP): reporte de horas de todos los proyectos, bolsas por agotarse, horas por cliente, horas por persona (equipo), tareas vencidas del equipo, clientes (listar/alta/editar/activar-inactivar), proyectos (crear/editar/estado/miembros), ampliaciones (listar/aprobar/rechazar), personas (listar), turnos del equipo. | M |
-| RF-14.08 | **Discord:** bot de newDesk en el servidor de la empresa. Vinculación de cuenta una vez (código desde Mi perfil → Conexiones, `/newdesk vincular CÓDIGO`); comando `/newdesk <pedido>`; respuesta en hilo; confirmaciones con botones que solo puede apretar quien pidió; reportes como adjunto. Mensajes en texto libre / DM: fase 2. | M |
+| RF-14.08 | **Discord:** bot de newDesk en el servidor de la empresa. Vinculación de cuenta una vez (código desde Mi perfil → Conexiones, `/newdesk vincular CÓDIGO`); comando `/newdesk <pedido>`; respuesta en hilo; confirmaciones con botones que solo puede apretar quien pidió; reportes como adjunto. Mensajes en texto libre por DM al bot (fase 5, 2026-11-19). | M |
 | RF-14.09 | **Límites:** tope de gasto mensual de IA configurable; rate limit por usuario; si se alcanza el tope, el asistente avisa y deja de responder hasta el mes siguiente (los reportes programados con números siguen saliendo, sin el texto redactado). | M |
 | RF-14.10 | Configuración (Admin): habilitar/deshabilitar el asistente, modelo, tope mensual, canal de Discord para el resumen semanal, destinatarios del mail. | S |
 | RF-14.11 | Conector de claude.ai (OAuth en el MCP, RF-12.08) para usar las mismas herramientas desde la app de Claude. | C (después) |
@@ -57,6 +57,12 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 - Configuración (una vez): en el portal de desarrolladores de la app de monitoreo copiar Application ID y Public Key a
   `DISCORD_APPLICATION_ID` / `DISCORD_PUBLIC_KEY`, poner como Interactions Endpoint URL `https://<dominio>/api/discord/interactions`
   y correr `php artisan assistant:discord-commands`.
+- **DM al bot (fase 5, 2026-11-19):** se le escribe al bot por mensaje directo, en texto libre, sin `/newdesk`. Mismas
+  reglas (vínculo hecho por la persona, `assistant.use`, topes) + 6 mensajes por minuto por cuenta. La respuesta llega
+  como mensaje nuevo en el DM (es privado: no hace falta efímero), con los mismos botones y adjuntos. Lo recibe un proceso
+  conectado al gateway de Discord (`php artisan assistant:discord-gateway`), que `supervisor:sync` agrega solo cuando
+  están `DISCORD_BOT_TOKEN` y `DISCORD_APPLICATION_ID`. No necesita intents privilegiados (solo `DIRECT_MESSAGES`). Los
+  mensajes en canales del servidor no se leen.
 
 ## Criterios de aceptación
 
@@ -68,4 +74,4 @@ policies y acciones de dominio que el MCP (RF-12), ningún atajo.
 
 ## Fuera de alcance (por ahora)
 
-Usuarios no administradores, mensajes libres por DM en Discord (fase 2), Slack/WhatsApp, voz, que el asistente edite configuración o roles.
+Usuarios no administradores, mensajes libres en canales del servidor (solo DM), Slack/WhatsApp, voz, que el asistente edite configuración o roles.
