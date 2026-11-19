@@ -2,7 +2,8 @@ import '@fontsource-variable/inter/wght.css'
 import './skin.css'
 
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { Outlet } from 'react-router'
+import { Navigate, Outlet } from 'react-router'
+import { useCan } from '@/features/auth/useAuth'
 import { BackToDesk, Brand, ConnectionStatus, MobileBar, RoadmapToggle, SidebarNav } from './LayoutParts'
 import { DESKTOP, useMediaQuery } from './lib/useMediaQuery'
 import { useEvents } from './realtime/useEvents'
@@ -19,8 +20,13 @@ function readRoadmapOpen(): boolean {
   }
 }
 
-// El panel de monitoreo a pantalla completa, fuera del shell de newDesk: usuario, tema y salir quedan del lado de newDesk.
+// P-30: solo quien tiene monitoring.view entra; a los demás, la API ya les niega los datos y acá ni se arma el panel.
 export function MonitoringLayout() {
+  return useCan('monitoring.view') ? <MonitoringShell /> : <Navigate to="/" replace />
+}
+
+// El panel de monitoreo a pantalla completa, fuera del shell de newDesk: usuario, tema y salir quedan del lado de newDesk.
+function MonitoringShell() {
   // Una sola conexión a Reverb para todo el módulo; el modo en vivo lo pide ServerPage.
   const connection = useEvents()
   const [menuOpen, setMenuOpen] = useState(false)

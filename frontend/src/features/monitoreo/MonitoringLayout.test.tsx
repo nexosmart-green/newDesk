@@ -2,6 +2,8 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router'
 import { MonitoringLayout } from './MonitoringLayout'
+import type { CurrentUser } from '@/features/auth/types'
+import { teamViewer } from './test/fixtures/portal'
 import { initialReports } from './test/fixtures/reports'
 import { mockMonitoringApi, mockMonitoringGet } from './test/mockApi'
 import { renderWithProviders } from './test/render'
@@ -18,16 +20,23 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function renderLayout({ admin = false } = {}) {
+function renderLayout({ admin = false, user = teamViewer }: { admin?: boolean; user?: CurrentUser } = {}) {
   return renderWithProviders(
     <Routes>
+      <Route path="/" element={<p>inicio de newDesk</p>} />
       <Route path="/monitoreo" element={<MonitoringLayout />}>
         <Route index element={<p>inicio</p>} />
       </Route>
     </Routes>,
-    { route: '/monitoreo', admin },
+    { route: '/monitoreo', ...(admin ? { admin } : { user }) },
   )
 }
+
+it('sin monitoring.view no arma el panel y vuelve a newDesk (P-30)', () => {
+  renderLayout({ user: { ...teamViewer, permissions: ['time.track'] } })
+  expect(screen.getByText('inicio de newDesk')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Abrir menú' })).not.toBeInTheDocument()
+})
 
 it('el cajón móvil lleva el foco adentro, cierra con Escape y lo devuelve al botón', async () => {
   const user = userEvent.setup()

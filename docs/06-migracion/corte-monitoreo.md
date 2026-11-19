@@ -6,7 +6,7 @@ RF-13.12 · ADR-0002. Pasos manuales, en orden. Nada se corre con scripts. Cada 
 
 | Qué | Por qué | Estado |
 |---|---|---|
-| Decidir dónde corre newDesk (P-28) | Si no es el Servidor 5 (51.222.205.245), hay que sumar su IP en cada agente (paso 2.3) y crear su propio socket de Claude para el reporte diario | ⏳ |
+| Decidir dónde corre newDesk (P-28) | Decidido 2026-11-19: en el Servidor 5 (51.222.205.245). Los agentes ya aceptan esa IP y el socket de Claude ya está: el paso 2.3 no aplica | ✅ |
 | newDesk desplegado con Redis, Reverb, `supervisor:sync` (poller, workers `monitoring` y `discord`, scheduler, Reverb) | Sin el poller no hay datos; sin Reverb no hay tiempo real | ⏳ |
 | Los usuarios del equipo pueden entrar a newDesk | La importación crea a los que no existen como **invitados sin contraseña**. Hace falta la invitación de E0 (RF-01.01) o que se les defina contraseña antes del corte | ⏳ |
 | PHP-FPM y nginx con timeout ≥ 100 s, `upload_max_filesize` y `post_max_size` ≥ 16 MB | "Generar reporte" espera hasta 90 s al Claude del server; chequeo en vivo al reportar (~25 s); capturas | ⏳ |

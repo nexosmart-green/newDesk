@@ -25,22 +25,22 @@ Cada una trae **la recomendación del equipo**. Si está bien, alcanza con "OK".
 
 | ID | | Pregunta | Recomendación / default |
 |---|---|---|---|
-| P-07 | ⚪ | Timer olvidado: ¿cuándo cortar? | Fin del turno + 1 h; sin turno, a las 10 h. |
-| P-08 | ⚪ | Áreas | Dev, Diseño, Marketing, CM, Administración. |
-| P-09 | ⚪ | Slack / WhatsApp | Quitar Slack; WhatsApp en R3. |
-| P-11 | ⚪ | Preaviso | Quitar. |
-| P-12 | ⚪ | CUIL y contacto de emergencia | Sí, solo visibles para Admin. |
-| P-14 | ⚪ | Tolerancia de llegada tarde | 10 minutos. |
-| P-15 | 🟡 | ¿Hay gente **remota**? | Primer timer del día = inicio de jornada. |
-| P-16 | ⚪ | Cupos de vacaciones | Definidos por la empresa. |
-| P-21 | ⚪ | ¿Varios asignados por tarea? | Sí; cada uno cronometra lo suyo. |
-| P-22 | ⚪ | Dominio | `desk.nexosmart.es` al salir; staging aparte. |
-| P-23 | 🟡 | **"Configurable por empresa"**: ¿newDesk lo va a usar **más de una empresa** (multi-empresa / SaaS) o solo NexoSmart con su configuración? | Solo NexoSmart, pero con tabla `companies` y `company_id` desde el día 1 para no cerrar la puerta. |
+| P-07 | ✅ | Timer olvidado: ¿cuándo cortar? | Fin del turno + 1 h; sin turno, a las 10 h. **Aceptada la recomendación (2026-11-19).** Implementado: fin del turno + 1 h, y a las 10 h de corrido como tope (config. de la empresa). |
+| P-08 | ✅ | Áreas | Dev, Diseño, Marketing, CM, Administración. **Aceptada la recomendación (2026-11-19).** Implementado: catálogo de áreas de cada empresa nueva. |
+| P-09 | ✅ | Slack / WhatsApp | Quitar Slack; WhatsApp en R3. **Aceptada la recomendación (2026-11-19).** Implementado: no hay integración con Slack. |
+| P-11 | ✅ | Preaviso | Quitar. **Aceptada la recomendación (2026-11-19).** Implementado: no existe el campo. |
+| P-12 | ✅ | CUIL y contacto de emergencia | Sí, solo visibles para Admin. **Aceptada la recomendación (2026-11-19).** Implementado: solo Admin (users.manage) ve los de los demás; cada persona ve los suyos. |
+| P-14 | ✅ | Tolerancia de llegada tarde | 10 minutos. **Aceptada la recomendación (2026-11-19).** Se aplica al construir asistencia (RF-07.05). |
+| P-15 | ✅ | ¿Hay gente **remota**? | Primer timer del día = inicio de jornada. **Aceptada la recomendación (2026-11-19).** Se aplica al construir asistencia (RF-07.08). |
+| P-16 | ✅ | Cupos de vacaciones | Definidos por la empresa. **Aceptada la recomendación (2026-11-19).** Se aplica al construir licencias (RF-08). |
+| P-21 | ✅ | ¿Varios asignados por tarea? | Sí; cada uno cronometra lo suyo. **Aceptada la recomendación (2026-11-19).** Implementado: varios asignados, cada uno con su timer. |
+| P-22 | ✅ | Dominio | `desk.nexosmart.es` al salir; staging aparte. **Aceptada la recomendación (2026-11-19).** Para el deploy (APP_URL y FRONTEND_URL de prod); staging aparte. |
+| P-23 | ✅ | **"Configurable por empresa"**: ¿newDesk lo va a usar **más de una empresa** (multi-empresa / SaaS) o solo NexoSmart con su configuración? | Solo NexoSmart, pero con tabla `companies` y `company_id` desde el día 1 para no cerrar la puerta. **Aceptada la recomendación (2026-11-19).** Implementado: una empresa, con company_id en todo. |
 | P-24 | 🟡 | Cerradura: ¿la salida se abre girando la perilla de adentro? ¿Quién tiene la cuenta admin de Nexxt Home? ¿Confirmamos modelo con foto de la etiqueta? | — Ver G-25: la cerradura registra **aperturas desde afuera**, la salida suele no quedar registrada a nombre de nadie. |
-| P-25 | ⚪ | RF-01.05 pide fotos **HEIC**. GD (PHP) no decodifica HEIC; hace falta Imagick + libheif en el servidor de prod. ¿Instalamos Imagick en prod o alcanza con que iPhone suba JPG? | Hoy: JPG/PNG/WebP con mensaje claro para iPhone ("Cámara → Formatos → Más compatible"); Safari ya convierte HEIC→JPEG al subir en la mayoría de los casos. El procesador está detrás de la interfaz `AvatarProcessor`: agregar HEIC = un adaptador Imagick, sin tocar el dominio. |
+| P-25 | ✅ | RF-01.05 pide fotos **HEIC**. GD (PHP) no decodifica HEIC; hace falta Imagick + libheif en el servidor de prod. ¿Instalamos Imagick en prod o alcanza con que iPhone suba JPG? | Hoy: JPG/PNG/WebP con mensaje claro para iPhone ("Cámara → Formatos → Más compatible"); Safari ya convierte HEIC→JPEG al subir en la mayoría de los casos. El procesador está detrás de la interfaz `AvatarProcessor`: agregar HEIC = un adaptador Imagick, sin tocar el dominio. **Aceptada la recomendación (2026-11-19).** Queda JPG/PNG/WebP con el mensaje para iPhone; sin Imagick. Si hace falta HEIC, es un adaptador de AvatarProcessor. |
 | P-26 | ✅ | RF-06.06 "Feriados nacionales (AR) cargados": ¿de qué fuente oficial los tomamos? Los trasladables cambian cada año por decreto. | Hoy se cargan desde la app (Admin → feriados, alcance nacional/empresa). Propuesta: importar al inicio de cada año desde la API pública ArgentinaDatos o el calendario oficial de argentina.gob.ar, con revisión manual.  **Hecho (2026-11-19, default del equipo):** botón "Importar feriados nacionales" en Configuración → Feriados (año pasado, este y el que viene) y `holidays:import` agendado el 1/12 para el año siguiente, desde ArgentinaDatos. Solo inamovibles y trasladables (los puentes turísticos los decide cada empresa); un día que ya tiene feriado no se toca. |
-| P-28 | 🟡 | **Monitoreo:** ¿en qué servidor corre newDesk en producción? | Servidor 5 (51.222.205.245): los agentes ya aceptan esa IP y el socket de Claude del reporte diario ya está ahí. Si es otro, hay que sumar su IP en `allowed_ips` + ufw de los 6 agentes y crear su propio socket de Claude. |
-| P-29 | ⚪ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. |
-| P-30 | ⚪ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. |
-| P-31 | ⚪ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. |
-| P-32 | ⚪ | Monitoreo: los devs secundarios de un proyecto son sus miembros (RF-03.03). Guardar devs desde Monitoreo reemplaza la lista de miembros. Cuando haya pantallas de proyectos con miembros que no son devs (diseño, PM), ¿se separan "desarrolladores" de "miembros"? | Por ahora iguales. Revisar en E2: si hace falta, columna `role` en `project_members` (lead/secondary/member). |
+| P-28 | ✅ | **Monitoreo:** ¿en qué servidor corre newDesk en producción? | Servidor 5 (51.222.205.245): los agentes ya aceptan esa IP y el socket de Claude del reporte diario ya está ahí. Si es otro, hay que sumar su IP en `allowed_ips` + ufw de los 6 agentes y crear su propio socket de Claude. **Aceptada la recomendación (2026-11-19).** newDesk en el Servidor 5: no hay que tocar los agentes (corte-monitoreo §2.3 no aplica). |
+| P-29 | ✅ | Monitoreo: ¿quién tiene `monitoring.manage`? | Los admin de monitoreo pasan a Admin. El resto del equipo de monitoreo, a un rol "Desarrollador" con `monitoring.view` + `mcp.use`. **Aceptada la recomendación (2026-11-19).** Implementado: roles Admin y Desarrollador. |
+| P-30 | ✅ | Monitoreo: ¿un colaborador que no es dev ve monitoreo? | No, solo quien tenga `monitoring.view`. **Aceptada la recomendación (2026-11-19).** Implementado: API y pantalla con monitoring.view. |
+| P-31 | ✅ | Monitoreo: "portal activo" del proyecto, ¿aparte del estado del proyecto? | Sí, columna aparte, como hoy. **Aceptada la recomendación (2026-11-19).** Implementado: columna portal_active aparte. |
+| P-32 | ✅ | Monitoreo: los devs secundarios de un proyecto son sus miembros (RF-03.03). Guardar devs desde Monitoreo reemplaza la lista de miembros. Cuando haya pantallas de proyectos con miembros que no son devs (diseño, PM), ¿se separan "desarrolladores" de "miembros"? | Por ahora iguales. Revisar en E2: si hace falta, columna `role` en `project_members` (lead/secondary/member). **Aceptada la recomendación (2026-11-19).** Implementado: por ahora iguales. |

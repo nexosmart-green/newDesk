@@ -8,10 +8,10 @@ Ver también `integraciones/cerradura/README.md`.
 | RF-07.02 | Guardar cada marca **cruda e inmutable** (tal cual vino) + su versión normalizada. Reprocesable. Idempotente (la misma marca dos veces = una). | M (R2) |
 | RF-07.03 | Vincular usuario de la cerradura ↔ usuario de newDesk (pantalla de mapeo; marcas sin vincular quedan en "sin asignar", no se pierden). | M (R2) |
 | RF-07.04 | Armar la **jornada**: entrada = primera apertura identificada; salida = botón "terminar jornada" / fin del último timer / apertura interior si se informa (G-25). Se guarda la fuente de cada dato. | M (R2) |
-| RF-07.05 | **Llegada tarde** = entrada > inicio del turno + tolerancia (default 10 min ⚠P-14). Contador por mes en el perfil (hoy "Marca de asistencia tardía"). | M (R2) |
+| RF-07.05 | **Llegada tarde** = entrada > inicio del turno + tolerancia (10 min, P-14 ✅). Contador por mes en el perfil (hoy "Marca de asistencia tardía"). | M (R2) |
 | RF-07.06 | Ausencia = día con turno de modalidad Oficina, sin marca y sin licencia. | S |
 | RF-07.07 | Fichaje manual / corrección por Admin con motivo (la marca original no se borra). | M (R2) |
-| RF-07.08 | Remotos: "marcar inicio de jornada" desde la app (o tomar el primer timer del día ⚠P-15). | S |
+| RF-07.08 | Remotos: "marcar inicio de jornada" desde la app o, si no lo marca, el primer timer del día (P-15 ✅). | S |
 | RF-07.09 | Panel de asistencia del día (quién entró, quién falta, quién llegó tarde). | S |
 | RF-07.10 | Cruce horas en oficina vs horas cronometradas (detectar jornadas con mucha diferencia). | C |
 

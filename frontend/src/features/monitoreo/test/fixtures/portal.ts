@@ -14,6 +14,9 @@ export const teamAdmin: CurrentUser = {
   two_factor: { enabled: false, required: false }, client: null,
 }
 
+// Alguien del equipo que ve monitoreo pero no lo administra (monitoring.view, P-29).
+export const teamViewer: CurrentUser = { ...teamAdmin, id: 2, first_name: 'Dev', last_name: 'Uno', full_name: 'Dev Uno', email: 'dev@nexosmart.com.ar', role: { id: 2, name: 'Desarrollador' }, permissions: ['monitoring.view'] }
+
 const teamUser = (id: number, email: string, name: string, discord: string | null, verified = false): User => ({
   id, email, name, is_admin: id === 1, active: true, totp_enabled: false, created_at: '2026-09-30T12:00:00Z', last_login_at: null, client: null,
   discord_user_id: discord, discord_verified: verified,

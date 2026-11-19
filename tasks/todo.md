@@ -25,7 +25,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: unid
 - [x] E13 MCP (RF-12) — 18 tools, tokens `nd_`, QA-01..03 vía MCP
 - [ ] E8 Puesta en marcha — guía lista (`docs/09-operacion/puesta-en-marcha.md`); falta servidor de staging, `.claude/bug-report.json`, backups (RNF-09)
 
-- [x] RF-04.12 Mover tareas entre proyectos con sus horas (pedido 2026-11-06) — confirmar defaults P-27
+- [x] RF-04.12 Mover tareas entre proyectos con sus horas (pedido 2026-11-06) — P-27 ✅ respondida el 2026-11-06
 - [x] RF-05.19 Reloj del día: un reloj por día, se reparte entre proyectos al frenarlo (pedido 2026-11-10) — QA-15..18 con procesos reales; probado en vivo (reparto con hueco y tarea nueva). Sin probar en vivo: negativo con ▶ ajeno corriendo y "Repartir más tarde" (cubiertos por tests)
 - [x] RF-05.20 Mis horas: todos mis registros, corregir (también de tarea/proyecto) y borrar dentro de la ventana; admin con filtro por persona (pedido 2026-11-10) — QA-19 con procesos reales; probado en vivo (mover entre bolsas, candado, borrar, vista del admin)
 - [x] RF-05.20 Mis horas, vista Calendario: total por día, semana y mes; tocar un día abre la lista (pedido 2026-11-12)
@@ -36,7 +36,7 @@ Rama de trabajo R1: `dev_green` (pedido del usuario 2026-11-06). Monitoreo: unid
 - [x] Endpoint atómico `PUT /shifts/cells` para la grilla de turnos
 - [x] "Sin horas disponibles" antes del clic en ▶ (`project.hours_exhausted`)
 - [x] Tiempo real por WebSocket (Reverb, 2026-11-19): canal privado `user.{id}` con señales `timer` y `notifications`; con socket el polling baja a red de seguridad (5 min), sin Reverb queda el de siempre (30 s / 60 s). Probado contra Reverb real.
-- [ ] P-25 HEIC (Imagick), P-26 fuente de feriados AR, P-23 una/varias empresas
+- [x] P-25 HEIC, P-26 feriados AR, P-23 una/varias empresas — aceptadas las recomendaciones (2026-11-19): P-26 implementada; P-25 y P-23 quedan con el default. Todas las preguntas abiertas con recomendación quedaron ✅ salvo P-24 (cerradura: falta info del equipo).
 - [ ] `.claude/bug-report.json` cuando exista URL de staging/prod
 
 ## Monitoreo (RF-13) — en `main`

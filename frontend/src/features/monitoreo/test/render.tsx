@@ -4,12 +4,13 @@ import type { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router'
 import { currentUserKey } from '@/features/auth/useAuth'
 import { FloatingReportsProvider } from '../reports/FloatingReports'
+import type { CurrentUser } from '@/features/auth/types'
 import { teamAdmin } from './fixtures/portal'
 
-// admin: un usuario con monitoring.manage, como el admin de monitoreo (las escrituras).
-export function renderWithProviders(ui: ReactElement, { route = '/', admin = false }: { route?: string; admin?: boolean } = {}) {
+// admin: un usuario con monitoring.manage, como el admin de monitoreo (las escrituras). user: cualquier otro.
+export function renderWithProviders(ui: ReactElement, { route = '/', admin = false, user }: { route?: string; admin?: boolean; user?: CurrentUser } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  if (admin) client.setQueryData(currentUserKey, teamAdmin)
+  if (admin || user) client.setQueryData(currentUserKey, user ?? teamAdmin)
   return {
     client,
     ...render(

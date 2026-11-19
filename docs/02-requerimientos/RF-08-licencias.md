@@ -8,4 +8,4 @@
 | RF-08.04 | Licencia aprobada aparece en Mi calendario y en el de equipo; justifica ausencias en Asistencia. | S |
 
 - **CA-08.02** Pedir licencia sobre días con licencia ya aprobada se rechaza.
-- ⚠P-16: ¿cupos de vacaciones según LCT por antigüedad o los define la empresa?
+- P-16 ✅ (2026-11-19): los cupos de vacaciones los define la empresa (no se calculan por LCT).

@@ -8,7 +8,7 @@
 - [x] Gap analysis + preguntas abiertas
 - [x] PO respondió las 🔴 (2026-11-06): proyecto nuevo, colaborador crea/asigna, horas manuales sin facturación, ARS configurable, migración post-R1, cerradura Nexxt (Tuya)
 - [x] P-02 roles editables con permisos (confirmado)
-- [ ] P-23 (¿una o varias empresas?) — tienen default, no bloquean
+- [x] P-23 (¿una o varias empresas?) — aceptado el default: una empresa, con company_id (2026-11-19)
 - [ ] Wireframes: Mis tareas, Proyecto (5 tabs), cronómetro header, grilla de turnos, Mi calendario
 - [ ] Quick win: nombre de empresa en Worksuite (G-22)
 
