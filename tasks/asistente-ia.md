@@ -168,7 +168,7 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 **Estado (2026-11-19)** — Fases 1–4 en `main` (`2bdabfc`, CI verde run 39). Backend 602/602 (1 skip de main), Vitest
 495/495 local y `TZ=UTC`, build OK.
 - Queda, fuera del código: activar Discord en el servidor (`DISCORD_APPLICATION_ID` / `DISCORD_PUBLIC_KEY`, Interactions
-  URL, `php artisan assistant:discord-commands`) y que Maxi confirme que la suscripción Max se puede usar así.
+  URL, `php artisan assistant:discord-commands`).
 - Más adelante: DMs / texto libre (gateway).
 - Puerto 5173 puede estar ocupado por el front de Contador Digital: levantar newDesk en 5174 con
   `SANCTUM_STATEFUL_DOMAINS` extendido solo por entorno.
@@ -176,8 +176,8 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
 **Decisiones de Juani (2026-11-16)**
 1. Autenticación: **suscripción Max de la empresa (200 USD)** → `CLAUDE_CODE_OAUTH_TOKEN` (de `claude setup-token`) en el
    entorno del worker, **sin `--bare`** (bare solo acepta API key). El adaptador también acepta `ANTHROPIC_API_KEY` por `.env`.
-   ⚠️ A confirmar por Maxi: que los términos del plan permitan que el sistema lo use para varias personas; si no, se pasa a
-   API key cambiando solo el `.env`.
+   Cerrado 2026-11-24 (Juani): no hace falta confirmación; es un solo agente en el servidor con la cuenta de la empresa.
+   Si algún día se quiere API key, se cambia solo el `.env`.
    **2026-11-24 (Juani):** motor Opus con la suscripción Max, corriendo directo en el servidor: `claude` logueado
    (`claude login`) con el mismo usuario del SO que corre el worker `assistant`, así que no hace falta
    `CLAUDE_CODE_OAUTH_TOKEN` (queda como alternativa). En la PC de desarrollo se prueba igual, con la sesión de Claude
