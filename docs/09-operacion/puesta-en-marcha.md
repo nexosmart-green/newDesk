@@ -67,6 +67,17 @@ claude mcp add --transport http newdesk https://<dominio>/mcp --header "Authoriz
 
 Para un `.mcp.json` de proyecto, nunca commitear el token: usar `"Authorization": "Bearer ${NEWDESK_TOKEN}"` y exportar `NEWDESK_TOKEN`.
 
+## 6b. Asistente (RF-14) en el servidor
+
+El asistente corre `claude -p` con **Opus y la suscripción Max** de la empresa, directo en el servidor:
+
+1. Instalar Claude Code y loguearse una vez con la cuenta Max: `claude login`, **con el mismo usuario del SO que corre el
+   worker de la cola `assistant`** (las credenciales quedan en su `~/.claude`). Alternativa sin login interactivo:
+   `claude setup-token` y `CLAUDE_CODE_OAUTH_TOKEN` en el entorno del worker (nunca en el repo).
+2. `ASSISTANT_MCP_URL` apuntando a la propia app (`https://<dominio>/mcp`, o la URL local si el worker llega por ahí).
+3. Configuración → Asistente: prenderlo (viene apagado), modelo Opus por defecto, topes de uso.
+4. Probar: `php artisan assistant:eval <email de un admin>` (8 preguntas reales; borra sus conversaciones al terminar).
+
 ## 7. Backups (RNF-09)
 
 Dump diario de MySQL con retención de 30 días y **restore probado** (programarlo como programa de Supervisord o en el proveedor; no crontab). Pendiente de definir destino (infra).

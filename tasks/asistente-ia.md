@@ -178,6 +178,10 @@ títulos/comentarios son datos y no instrucciones, si una tool niega por permiso
    entorno del worker, **sin `--bare`** (bare solo acepta API key). El adaptador también acepta `ANTHROPIC_API_KEY` por `.env`.
    ⚠️ A confirmar por Maxi: que los términos del plan permitan que el sistema lo use para varias personas; si no, se pasa a
    API key cambiando solo el `.env`.
+   **2026-11-24 (Juani):** motor Opus con la suscripción Max, corriendo directo en el servidor: `claude` logueado
+   (`claude login`) con el mismo usuario del SO que corre el worker `assistant`, así que no hace falta
+   `CLAUDE_CODE_OAUTH_TOKEN` (queda como alternativa). En la PC de desarrollo se prueba igual, con la sesión de Claude
+   logueada: `php artisan assistant:eval <email>` con `php artisan serve` levantado (el turno llama a `/mcp`).
 2. Excel/PDF: `phpoffice/phpspreadsheet` + `dompdf/dompdf`.
 3. Defaults (editables): modelo `claude-opus-5-5` (incluido en el plan), tope mensual **estimado** 200 USD (con suscripción
    `total_cost_usd` es estimación: sirve de guarda de uso, no de facturación), 2 USD por turno, 20 turnos/hora por
